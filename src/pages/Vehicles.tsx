@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Plus, Car, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,8 @@ const statusColors: Record<string, string> = {
 };
 
 export default function Vehicles() {
+  const navigate = useNavigate();
+
   return (
     <div className="p-4 md:p-6 space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -44,7 +46,8 @@ export default function Vehicles() {
             </thead>
             <tbody>
               {vehicles.map((v) => (
-                <tr key={v.id} className="border-b border-border gold-border-left hover:bg-accent/50 transition-colors">
+                <tr key={v.id} onClick={() => navigate(`/vehicles/${v.id}`)}
+                  className="border-b border-border gold-border-left hover:bg-accent/50 transition-colors cursor-pointer">
                   <td className="p-3">
                     <div className="w-10 h-10 rounded bg-accent flex items-center justify-center">
                       <Car className="w-5 h-5 text-muted-foreground" />
@@ -55,9 +58,7 @@ export default function Vehicles() {
                   <td className="p-3 text-primary font-semibold">R$ {v.price.toLocaleString("pt-BR")}</td>
                   <td className="p-3 text-muted-foreground">{v.owner}</td>
                   <td className="p-3">
-                    <span className={cn("text-xs px-2 py-1 rounded-full", statusColors[v.status])}>
-                      {v.status}
-                    </span>
+                    <span className={cn("text-xs px-2 py-1 rounded-full", statusColors[v.status])}>{v.status}</span>
                   </td>
                   <td className="p-3 text-muted-foreground">{v.daysInPipeline}d</td>
                 </tr>

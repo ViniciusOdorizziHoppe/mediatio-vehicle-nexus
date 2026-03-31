@@ -1,9 +1,19 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Search, Bell, Plus, TrendingUp, TrendingDown, Car, DollarSign, Percent, Clock, MessageSquare, Sparkles, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { vehicles } from "@/lib/mock-data";
+import { vehicles as initialVehicles, Vehicle } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
+import { NotificationPanel } from "@/components/NotificationPanel";
+import { VehicleEditPanel } from "@/components/VehicleEditPanel";
+import { calculateVehicleScore, getScoreColor } from "@/lib/vehicle-score";
+import {
+  DndContext, closestCenter, DragEndEvent, DragStartEvent, DragOverlay,
+  useDroppable, PointerSensor, useSensor, useSensors,
+} from "@dnd-kit/core";
+import { useSortable, SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 const stats = [
   { label: "Veículos Ativos", value: "5", trend: "+2", up: true, icon: Car },
@@ -14,9 +24,118 @@ const stats = [
 
 const columns = ["Disponível", "Contato Ativo", "Proposta", "Vendido", "Arquivado"] as const;
 
+function SortableCard({ vehicle, onChat, onMorph, onEdit }: {
+  vehicle: Vehicle; onChat: () => void; onMorph: () => void; onEdit: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: vehicle.id });
+  const navigate = useNavigate();
+  const { score } = calculateVehicleScore(vehicle);
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    scale: isDragging ? "1.05" : "1",
+    cursor: isDragging ? "grabbing" : "grab",
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners}
+      className={cn("bg-card border border-border rounded-lg p-3 hover:border-primary/30 transition-colors relative", isDragging && "border-primary shadow-lg shadow-primary/20")}>
+      {score < 40 && <div className="absolute top-2 right-2 w-2.5 h-2.5 bg-destructive rounded-full" />}
+      <div className="flex items-start justify-between mb-2">
+        <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate(`/vehicles/${vehicle.id}`)}>
+          <div className="w-10 h-10 rounded-md bg-accent flex items-center justify-center">
+            <Car className="w-5 h-5 text-muted-foreground" />
+          </div>
+          {vehicle.morphEnhanced && <span className="text-[10px] font-bold bg-primary/20 text-primary px-1.5 py-0.5 rounded">IA</span>}
+        </div>
+      </div>
+      <p className="text-sm font-medium text-foreground cursor-pointer" onClick={() => navigate(`/vehicles/${vehicle.id}`)}>
+        {vehicle.brand} {vehicle.model} {vehicle.year}
+      </p>
+      <p className="text-lg font-bold text-primary mt-1">R$ {vehicle.price.toLocaleString("pt-BR")}</p>
+      <div className="flex gap-1.5 mt-2 flex-wrap">
+        {vehicle.acceptsTrade && <span className="text-[10px] bg-success/10 text-success px-2 py-0.5 rounded-full">Aceita Troca</span>}
+        {vehicle.acceptsFinancing && <span className="text-[10px] bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded-full">Financiamento</span>}
+      </div>
+      <div className="flex items-center justify-between mt-3 pt-2 border-t border-border">
+        <div className="flex items-center gap-2">
+          <span className={cn("text-[10px] font-semibold flex items-center gap-1", getScoreColor(score))}>
+            <span className={cn("w-1.5 h-1.5 rounded-full", score >= 70 ? "bg-success" : score >= 40 ? "bg-warning" : "bg-destructive")} />
+            Score {score}
+          </span>
+        </div>
+        <div className="flex items-center gap-1">
+          <span className="text-xs text-muted-foreground flex items-center gap-1 mr-1">
+            <Clock className="w-3 h-3" /> {vehicle.daysInPipeline}d
+          </span>
+          <button className="p-1.5 rounded hover:bg-accent transition-colors" onClick={(e) => { e.stopPropagation(); onChat(); }}>
+            <MessageSquare className="w-3.5 h-3.5 text-muted-foreground" />
+          </button>
+          <button className="p-1.5 rounded hover:bg-accent transition-colors" onClick={(e) => { e.stopPropagation(); onMorph(); }}>
+            <Sparkles className="w-3.5 h-3.5 text-muted-foreground" />
+          </button>
+          <button className="p-1.5 rounded hover:bg-accent transition-colors" onClick={(e) => { e.stopPropagation(); onEdit(); }}>
+            <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DroppableColumn({ id, children }: { id: string; children: React.ReactNode }) {
+  const { isOver, setNodeRef } = useDroppable({ id });
+  return (
+    <div ref={setNodeRef} className={cn("min-w-[260px] flex-shrink-0 rounded-lg p-2 transition-colors", isOver && "bg-accent/30")}>
+      {children}
+    </div>
+  );
+}
+
 export default function Dashboard() {
+  const [vehicleList, setVehicleList] = useState<Vehicle[]>(initialVehicles);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [editVehicle, setEditVehicle] = useState<Vehicle | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const navigate = useNavigate();
+
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+
+  const handleDragStart = (event: DragStartEvent) => setActiveId(String(event.active.id));
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    setActiveId(null);
+    const { active, over } = event;
+    if (!over) return;
+
+    const overId = String(over.id);
+    const targetColumn = columns.find(c => c === overId);
+
+    if (targetColumn) {
+      setVehicleList(prev => prev.map(v => v.id === String(active.id) ? { ...v, status: targetColumn } : v));
+    }
+  };
+
+  // Sort: score < 40 first within each column
+  const sortedByColumn = (col: string) => {
+    return vehicleList
+      .filter(v => v.status === col)
+      .sort((a, b) => {
+        const sa = calculateVehicleScore(a).score;
+        const sb = calculateVehicleScore(b).score;
+        if (sa < 40 && sb >= 40) return -1;
+        if (sb < 40 && sa >= 40) return 1;
+        return sa - sb;
+      });
+  };
+
   return (
     <div className="p-4 md:p-6 space-y-6">
+      <NotificationPanel open={notifOpen} onClose={() => setNotifOpen(false)} />
+      <VehicleEditPanel vehicle={editVehicle} onClose={() => setEditVehicle(null)} />
+
       {/* Top bar */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-between">
         <div className="relative w-full sm:w-80">
@@ -24,14 +143,12 @@ export default function Dashboard() {
           <Input placeholder="Buscar veículos, leads..." className="pl-10 bg-surface border-border" />
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" className="relative">
+          <Button variant="ghost" size="icon" className="relative" onClick={() => setNotifOpen(true)}>
             <Bell className="w-5 h-5" />
             <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-primary rounded-full" />
           </Button>
           <Button variant="gold" asChild>
-            <Link to="/vehicles/new">
-              <Plus className="w-4 h-4" /> Cadastrar Veículo
-            </Link>
+            <Link to="/vehicles/new"><Plus className="w-4 h-4" /> Cadastrar Veículo</Link>
           </Button>
         </div>
       </div>
@@ -53,74 +170,52 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* Kanban */}
+      {/* Kanban with DnD */}
       <div>
         <h2 className="text-lg font-semibold text-foreground mb-4">Pipeline</h2>
-        <div className="flex gap-4 overflow-x-auto pb-4">
-          {columns.map((col) => {
-            const colVehicles = vehicles.filter((v) => v.status === col);
-            return (
-              <div key={col} className="min-w-[260px] flex-shrink-0">
-                <div className="flex items-center gap-2 mb-3">
-                  <h3 className="text-sm font-medium text-muted-foreground">{col}</h3>
-                  <span className="text-xs bg-accent text-accent-foreground rounded-full px-2 py-0.5">
-                    {colVehicles.length}
-                  </span>
-                </div>
-                <div className="space-y-3">
-                  {colVehicles.map((v) => (
-                    <div key={v.id} className="bg-card border border-border rounded-lg p-3 hover:border-primary/30 transition-colors">
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <div className="w-10 h-10 rounded-md bg-accent flex items-center justify-center">
-                            <Car className="w-5 h-5 text-muted-foreground" />
-                          </div>
-                          {v.morphEnhanced && (
-                            <span className="text-[10px] font-bold bg-primary/20 text-primary px-1.5 py-0.5 rounded">IA</span>
-                          )}
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+          <div className="flex gap-4 overflow-x-auto pb-4">
+            {columns.map((col) => {
+              const colVehicles = sortedByColumn(col);
+              return (
+                <DroppableColumn key={col} id={col}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <h3 className="text-sm font-medium text-muted-foreground">{col}</h3>
+                    <span className="text-xs bg-accent text-accent-foreground rounded-full px-2 py-0.5">{colVehicles.length}</span>
+                  </div>
+                  <SortableContext items={colVehicles.map(v => v.id)} strategy={verticalListSortingStrategy}>
+                    <div className="space-y-3">
+                      {colVehicles.map((v) => (
+                        <SortableCard key={v.id} vehicle={v}
+                          onChat={() => navigate(`/nexus?vehicle=${v.id}`)}
+                          onMorph={() => navigate(`/morph?vehicle=${v.id}`)}
+                          onEdit={() => setEditVehicle(v)} />
+                      ))}
+                      {colVehicles.length === 0 && (
+                        <div className="border border-dashed border-border rounded-lg p-6 text-center">
+                          <Car className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
+                          <p className="text-xs text-muted-foreground">Nenhum veículo</p>
                         </div>
-                      </div>
-                      <p className="text-sm font-medium text-foreground">{v.brand} {v.model} {v.year}</p>
-                      <p className="text-lg font-bold text-primary mt-1">
-                        R$ {v.price.toLocaleString("pt-BR")}
-                      </p>
-                      <div className="flex gap-1.5 mt-2 flex-wrap">
-                        {v.acceptsTrade && (
-                          <span className="text-[10px] bg-success/10 text-success px-2 py-0.5 rounded-full">Aceita Troca</span>
-                        )}
-                        {v.acceptsFinancing && (
-                          <span className="text-[10px] bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded-full">Financiamento</span>
-                        )}
-                      </div>
-                      <div className="flex items-center justify-between mt-3 pt-2 border-t border-border">
-                        <span className="text-xs text-muted-foreground flex items-center gap-1">
-                          <Clock className="w-3 h-3" /> {v.daysInPipeline}d
-                        </span>
-                        <div className="flex gap-1">
-                          <button className="p-1.5 rounded hover:bg-accent transition-colors">
-                            <MessageSquare className="w-3.5 h-3.5 text-muted-foreground" />
-                          </button>
-                          <button className="p-1.5 rounded hover:bg-accent transition-colors">
-                            <Sparkles className="w-3.5 h-3.5 text-muted-foreground" />
-                          </button>
-                          <button className="p-1.5 rounded hover:bg-accent transition-colors">
-                            <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
-                          </button>
-                        </div>
-                      </div>
+                      )}
                     </div>
-                  ))}
-                  {colVehicles.length === 0 && (
-                    <div className="border border-dashed border-border rounded-lg p-6 text-center">
-                      <Car className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
-                      <p className="text-xs text-muted-foreground">Nenhum veículo</p>
-                    </div>
-                  )}
+                  </SortableContext>
+                </DroppableColumn>
+              );
+            })}
+          </div>
+          <DragOverlay>
+            {activeId ? (() => {
+              const v = vehicleList.find(v => v.id === activeId);
+              if (!v) return null;
+              return (
+                <div className="bg-card border-2 border-primary rounded-lg p-3 shadow-xl shadow-primary/20 opacity-90 w-[260px]">
+                  <p className="text-sm font-medium text-foreground">{v.brand} {v.model} {v.year}</p>
+                  <p className="text-lg font-bold text-primary">R$ {v.price.toLocaleString("pt-BR")}</p>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })() : null}
+          </DragOverlay>
+        </DndContext>
       </div>
     </div>
   );
