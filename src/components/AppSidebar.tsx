@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
-  LayoutDashboard, Car, Users, MessageSquare, Sparkles, BarChart3, Settings,
+  LayoutDashboard, Car, Users, MessageSquare, MessageCircle, Sparkles, BarChart3, Settings,
   ChevronLeft, ChevronRight, LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -13,6 +13,7 @@ const navItems = [
   { title: "Veículos", url: "/vehicles", icon: Car },
   { title: "Leads", url: "/leads", icon: Users },
   { title: "Nexus Chat", url: "/nexus", icon: MessageSquare },
+  { title: "WhatsApp", url: "/whatsapp", icon: MessageCircle, badge: 2 },
   { title: "MORPH Fotos", url: "/morph", icon: Sparkles },
   { title: "Analytics", url: "/analytics", icon: BarChart3 },
   { title: "Configurações", url: "/settings", icon: Settings },
@@ -41,10 +42,15 @@ export function AppSidebar() {
           const active = location.pathname === item.url || (item.url !== "/" && location.pathname.startsWith(item.url));
           return (
             <Link key={item.url} to={item.url}
-              className={cn("flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-all duration-200 group",
+              className={cn("flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-all duration-200 group relative",
                 active ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:bg-accent hover:text-foreground")}>
               <item.icon className="w-5 h-5 shrink-0" />
               {!collapsed && <span>{item.title}</span>}
+              {item.badge && item.badge > 0 && (
+                <span className="absolute right-2 top-1/2 -translate-y-1/2 bg-primary text-primary-foreground text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                  {item.badge}
+                </span>
+              )}
             </Link>
           );
         })}

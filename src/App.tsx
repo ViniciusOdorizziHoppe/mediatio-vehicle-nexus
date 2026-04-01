@@ -13,6 +13,7 @@ import MorphPhotos from "./pages/MorphPhotos";
 import Analytics from "./pages/Analytics";
 import Leads from "./pages/Leads";
 import Settings from "./pages/Settings";
+import WhatsApp from "./pages/WhatsApp";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
@@ -41,6 +42,7 @@ const App = () => (
             <Route path="/morph" element={<MorphPhotos />} />
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/leads" element={<Leads />} />
+            <Route path="/whatsapp" element={<WhatsApp />} />
             <Route path="/settings" element={<Settings />} />
           </Route>
           <Route path="*" element={<NotFound />} />
