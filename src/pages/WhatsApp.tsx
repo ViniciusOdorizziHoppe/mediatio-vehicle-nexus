@@ -155,26 +155,80 @@ export default function WhatsApp() {
   const [activeTab, setActiveTab] = useState<"comprador" | "vendedor">("comprador");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [manualMessage, setManualMessage] = useState("");
+  const [conversations, setConversations] = useState<Conversation[]>(mockConversations);
+  const [sentFeedback, setSentFeedback] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const filtered = mockConversations.filter(
+  const filtered = conversations.filter(
     (c) =>
-      c.type === (activeTab === "comprador" ? "comprador" : "vendedor") &&
+      c.type === activeTab &&
       (c.contactName.toLowerCase().includes(search.toLowerCase()) ||
         c.phone.includes(search))
   );
 
-  const selected = mockConversations.find((c) => c.id === selectedId);
-  const totalToday = mockConversations.length;
-  const leadsGenerated = mockConversations.filter((c) => c.type === "comprador").length;
-  const totalUnread = mockConversations.reduce((acc, c) => acc + c.unread, 0);
+  const selected = conversations.find((c) => c.id === selectedId);
+  const totalToday = conversations.length;
+  const leadsGenerated = conversations.filter((c) => c.type === "comprador").length;
 
   const botOnline = true;
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [selected?.messages.length]);
+
+  const updateConversation = (id: string, updater: (c: Conversation) => Conversation) => {
+    setConversations((prev) => prev.map((c) => (c.id === id ? updater(c) : c)));
+  };
+
+  const handleSend = () => {
+    if (!manualMessage.trim() || !selectedId) return;
+    const now = new Date();
+    const timestamp = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
+    const newMsg: Message = {
+      id: `manual-${Date.now()}`,
+      text: manualMessage.trim(),
+      sender: "manual",
+      timestamp,
+      senderLabel: "Vinícius",
+    };
+    updateConversation(selectedId, (c) => ({
+      ...c,
+      messages: [...c.messages, newMsg],
+      lastMessage: newMsg.text,
+      timestamp,
+    }));
+    setManualMessage("");
+    setSentFeedback(true);
+    setTimeout(() => setSentFeedback(false), 2000);
+    toast({ title: "Mensagem enviada", description: "Sua mensagem foi enviada com sucesso." });
+  };
+
+  const handleAssumir = (id: string) => {
+    updateConversation(id, (c) => ({ ...c, status: "assumido" }));
+    toast({ title: "Conversa assumida", description: "O bot foi pausado. Você está no controle." });
+  };
+
+  const handleIntervir = (id: string) => {
+    updateConversation(id, (c) => ({ ...c, status: "assumido" }));
+    toast({ title: "Intervenção ativada", description: "Bot pausado. Envie suas mensagens." });
+  };
+
+  const handleEncerrar = (id: string) => {
+    updateConversation(id, (c) => ({ ...c, status: "encerrado" }));
+    toast({ title: "Conversa encerrada", description: `Conversa com ${conversations.find(cv => cv.id === id)?.contactName} foi encerrada.` });
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
 
   return (
     <div className="flex h-[calc(100vh-56px)] md:h-screen overflow-hidden">
       {/* Left Panel */}
       <div className="w-full md:w-[320px] flex-shrink-0 border-r border-border flex flex-col bg-surface">
-        {/* Header */}
         <div className="p-4 border-b border-border">
           <div className="flex items-center justify-between mb-3">
             <h1 className="text-lg font-semibold text-foreground">WhatsApp Bot</h1>
@@ -194,7 +248,6 @@ export default function WhatsApp() {
           </div>
         </div>
 
-        {/* Tabs */}
         <div className="flex border-b border-border">
           {(["comprador", "vendedor"] as const).map((tab) => (
             <button
@@ -212,7 +265,6 @@ export default function WhatsApp() {
           ))}
         </div>
 
-        {/* Conversation List */}
         <ScrollArea className="flex-1">
           <div className="divide-y divide-border">
             {filtered.map((conv) => {
@@ -226,11 +278,9 @@ export default function WhatsApp() {
                     selectedId === conv.id && "bg-card border-l-2 border-l-primary"
                   )}
                 >
-                  {/* Avatar */}
                   <div className={cn("w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0", conv.avatarColor)}>
                     {conv.contactName.split(" ").map((n) => n[0]).join("").slice(0, 2)}
                   </div>
-
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium text-foreground truncate">{conv.contactName}</span>
@@ -255,7 +305,6 @@ export default function WhatsApp() {
           </div>
         </ScrollArea>
 
-        {/* Bottom stats */}
         <div className="p-3 border-t border-border text-xs text-muted-foreground text-center">
           Conversas hoje: {totalToday} | Leads gerados: {leadsGenerated}
         </div>
@@ -288,10 +337,10 @@ export default function WhatsApp() {
               </div>
               <div className="flex items-center gap-2">
                 {selected.status === "bot_ativo" && (
-                  <Button variant="gold" size="sm">Assumir Conversa</Button>
+                  <Button variant="gold" size="sm" onClick={() => handleAssumir(selected.id)}>Assumir Conversa</Button>
                 )}
                 {selected.status !== "encerrado" && (
-                  <Button variant="outline" size="sm">Encerrar</Button>
+                  <Button variant="outline" size="sm" onClick={() => handleEncerrar(selected.id)}>Encerrar</Button>
                 )}
               </div>
             </div>
@@ -305,7 +354,7 @@ export default function WhatsApp() {
             {selected.status === "bot_ativo" && (
               <div className="px-4 py-2 bg-blue-500/10 border-b border-blue-500/20 text-xs text-blue-400 flex items-center justify-between">
                 <span>🤖 Bot respondendo automaticamente</span>
-                <Button variant="outline" size="sm" className="h-6 text-[10px] border-primary/30 text-primary hover:bg-primary/10">
+                <Button variant="outline" size="sm" className="h-6 text-[10px] border-primary/30 text-primary hover:bg-primary/10" onClick={() => handleIntervir(selected.id)}>
                   Intervir
                 </Button>
               </div>
@@ -341,7 +390,10 @@ export default function WhatsApp() {
                         )}
                         <div className="flex items-center justify-between mt-1 gap-3">
                           <span className="text-[9px] text-muted-foreground">{msg.senderLabel}</span>
-                          <span className="text-[9px] text-muted-foreground">{msg.timestamp}</span>
+                          <div className="flex items-center gap-1">
+                            <span className="text-[9px] text-muted-foreground">{msg.timestamp}</span>
+                            {msg.sender === "manual" && <Check className="w-2.5 h-2.5 text-success" />}
+                          </div>
                         </div>
                         {msg.sender === "bot" && (
                           <p className="text-[9px] text-primary/60 italic mt-0.5 flex items-center gap-1">
@@ -352,12 +404,18 @@ export default function WhatsApp() {
                     </div>
                   );
                 })}
+                <div ref={messagesEndRef} />
               </div>
             </ScrollArea>
 
-            {/* Input area for assumed conversations */}
+            {/* Input area */}
             {selected.status === "assumido" && (
               <div className="p-4 border-t border-border bg-surface">
+                {sentFeedback && (
+                  <div className="mb-2 flex items-center gap-1.5 text-xs text-success">
+                    <Check className="w-3.5 h-3.5" /> Mensagem enviada com sucesso
+                  </div>
+                )}
                 <div className="flex gap-2">
                   <Textarea
                     placeholder="Digite sua mensagem..."
@@ -365,11 +423,23 @@ export default function WhatsApp() {
                     rows={1}
                     value={manualMessage}
                     onChange={(e) => setManualMessage(e.target.value)}
+                    onKeyDown={handleKeyDown}
                   />
-                  <Button variant="gold" size="icon" className="shrink-0 self-end">
-                    <Phone className="w-4 h-4" />
+                  <Button
+                    variant="gold"
+                    size="icon"
+                    className="shrink-0 self-end"
+                    onClick={handleSend}
+                    disabled={!manualMessage.trim()}
+                  >
+                    <Send className="w-4 h-4" />
                   </Button>
                 </div>
+              </div>
+            )}
+            {selected.status === "encerrado" && (
+              <div className="p-4 border-t border-border bg-surface text-center text-xs text-muted-foreground">
+                Conversa encerrada
               </div>
             )}
           </>
