@@ -42,6 +42,7 @@ const App = () => (
             <Route path="/morph" element={<MorphPhotos />} />
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/leads" element={<Leads />} />
+            <Route path="/whatsapp" element={<WhatsApp />} />
             <Route path="/settings" element={<Settings />} />
           </Route>
           <Route path="*" element={<NotFound />} />
