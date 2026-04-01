@@ -13,6 +13,7 @@ import MorphPhotos from "./pages/MorphPhotos";
 import Analytics from "./pages/Analytics";
 import Leads from "./pages/Leads";
 import Settings from "./pages/Settings";
+import WhatsApp from "./pages/WhatsApp";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
