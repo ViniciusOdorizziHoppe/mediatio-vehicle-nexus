@@ -1,12 +1,12 @@
-import { useState } from "react";
-import { Search, Phone, Play, X, Sparkles, MessageCircle } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Search, Send, Play, X, Sparkles, MessageCircle, Check } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-
+import { toast } from "@/hooks/use-toast";
 interface Message {
   id: string;
   text: string;
