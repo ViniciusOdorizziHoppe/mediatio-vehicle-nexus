@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
-  LayoutDashboard, Car, Users, MessageSquare, Sparkles, BarChart3, Settings,
+  LayoutDashboard, Car, Users, MessageSquare, MessageCircle, Sparkles, BarChart3, Settings,
   ChevronLeft, ChevronRight, LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -13,6 +13,7 @@ const navItems = [
   { title: "Veículos", url: "/vehicles", icon: Car },
   { title: "Leads", url: "/leads", icon: Users },
   { title: "Nexus Chat", url: "/nexus", icon: MessageSquare },
+  { title: "WhatsApp", url: "/whatsapp", icon: MessageCircle, badge: 2 },
   { title: "MORPH Fotos", url: "/morph", icon: Sparkles },
   { title: "Analytics", url: "/analytics", icon: BarChart3 },
   { title: "Configurações", url: "/settings", icon: Settings },
