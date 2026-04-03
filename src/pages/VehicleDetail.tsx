@@ -61,8 +61,8 @@ export default function VehicleDetail() {
 
   const handleGenerateAd = async () => {
     try {
-      const data = await generateAd.mutateAsync(vehicle.id);
-      setGeneratedAds(data.ads || data);
+      const data = await generateAd.mutateAsync(vehicle.id) as any;
+      setGeneratedAds(data?.ads || data);
       toast({ title: "Anúncios gerados com IA!" });
     } catch {
       toast({ title: "Erro ao gerar anúncio", variant: "destructive" });
