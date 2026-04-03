@@ -1,26 +1,38 @@
 import { useState } from "react";
-import { Plus, X, Users } from "lucide-react";
+import { Plus, X, Users, Loader2, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { leads as mockLeads } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { useLeads, useCreateLead, useUpdateLeadStatus } from "@/hooks/use-leads";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const statusColors: Record<string, string> = {
-  Novo: "bg-success/10 text-success",
-  Contatado: "bg-blue-500/10 text-blue-400",
-  Qualificado: "bg-primary/10 text-primary",
-  Perdido: "bg-destructive/10 text-destructive",
+  "Novo": "bg-success/10 text-success",
+  "Em contato": "bg-blue-500/10 text-blue-400",
+  "Interessado": "bg-warning/10 text-warning",
+  "Proposta enviada": "bg-primary/10 text-primary",
+  "Fechado": "bg-success/10 text-success",
+  "Perdido": "bg-destructive/10 text-destructive",
 };
 
 export default function Leads() {
   const [panelOpen, setPanelOpen] = useState(false);
+  const [newLead, setNewLead] = useState({ nome: "", whatsapp: "", interesse: "", notas: "" });
   const { toast } = useToast();
+  const { data: leads = [], isLoading } = useLeads();
+  const createLead = useCreateLead();
 
-  const handleAdd = () => {
-    toast({ title: "Lead adicionado!", description: "O lead foi salvo com sucesso." });
-    setPanelOpen(false);
+  const handleAdd = async () => {
+    try {
+      await createLead.mutateAsync(newLead);
+      toast({ title: "Lead adicionado!", description: "O lead foi salvo com sucesso." });
+      setPanelOpen(false);
+      setNewLead({ nome: "", whatsapp: "", interesse: "", notas: "" });
+    } catch (err: any) {
+      toast({ title: "Erro", description: err.message || "Erro ao salvar lead.", variant: "destructive" });
+    }
   };
 
   return (
@@ -42,22 +54,39 @@ export default function Leads() {
                 <th className="text-left p-3 text-muted-foreground font-medium">Interesse</th>
                 <th className="text-left p-3 text-muted-foreground font-medium">Data</th>
                 <th className="text-left p-3 text-muted-foreground font-medium">Status</th>
-                <th className="text-left p-3 text-muted-foreground font-medium">Notas</th>
+                <th className="text-left p-3 text-muted-foreground font-medium">Ações</th>
               </tr>
             </thead>
             <tbody>
-              {mockLeads.map((lead) => (
+              {isLoading ? (
+                Array.from({ length: 4 }).map((_, i) => (
+                  <tr key={i} className="border-b border-border">
+                    {Array.from({ length: 6 }).map((_, j) => (
+                      <td key={j} className="p-3"><Skeleton className="h-4 w-20" /></td>
+                    ))}
+                  </tr>
+                ))
+              ) : leads.map((lead: any) => (
                 <tr key={lead.id} className="border-b border-border gold-border-left hover:bg-accent/50 transition-colors">
                   <td className="p-3 text-foreground font-medium">{lead.name}</td>
-                  <td className="p-3 text-muted-foreground font-mono text-xs">{lead.whatsapp}</td>
+                  <td className="p-3">
+                    <a href={`https://wa.me/55${lead.whatsapp?.replace(/\D/g, "")}`} target="_blank" rel="noreferrer"
+                      className="text-muted-foreground font-mono text-xs hover:text-primary flex items-center gap-1">
+                      {lead.whatsapp} <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </td>
                   <td className="p-3 text-muted-foreground text-xs">{lead.vehicleInterest}</td>
                   <td className="p-3 text-muted-foreground text-xs">{lead.date}</td>
                   <td className="p-3">
-                    <span className={cn("text-xs px-2 py-1 rounded-full", statusColors[lead.status])}>
+                    <span className={cn("text-xs px-2 py-1 rounded-full", statusColors[lead.status] || "bg-muted text-muted-foreground")}>
                       {lead.status}
                     </span>
                   </td>
-                  <td className="p-3 text-muted-foreground text-xs max-w-[200px] truncate">{lead.notes || "—"}</td>
+                  <td className="p-3">
+                    <a href={`https://wa.me/55${lead.whatsapp?.replace(/\D/g, "")}`} target="_blank" rel="noreferrer">
+                      <Button variant="outline" size="sm">Contatar</Button>
+                    </a>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -65,7 +94,6 @@ export default function Leads() {
         </div>
       </div>
 
-      {/* Slide-in panel */}
       {panelOpen && (
         <>
           <div className="fixed inset-0 bg-background/60 z-40" onClick={() => setPanelOpen(false)} />
@@ -77,20 +105,22 @@ export default function Leads() {
               </button>
             </div>
             <div className="space-y-4">
-              <div><Label className="text-muted-foreground">Nome</Label><Input className="mt-1.5 bg-background" placeholder="João Mendes" /></div>
-              <div><Label className="text-muted-foreground">WhatsApp</Label><Input className="mt-1.5 bg-background" placeholder="(47) 99876-5432" /></div>
-              <div><Label className="text-muted-foreground">Veículo de interesse</Label><Input className="mt-1.5 bg-background" placeholder="Honda CG 160 2022" /></div>
+              <div><Label className="text-muted-foreground">Nome</Label><Input className="mt-1.5 bg-background" placeholder="João Mendes" value={newLead.nome} onChange={e => setNewLead(p => ({ ...p, nome: e.target.value }))} /></div>
+              <div><Label className="text-muted-foreground">WhatsApp</Label><Input className="mt-1.5 bg-background" placeholder="(47) 99876-5432" value={newLead.whatsapp} onChange={e => setNewLead(p => ({ ...p, whatsapp: e.target.value }))} /></div>
+              <div><Label className="text-muted-foreground">Veículo de interesse</Label><Input className="mt-1.5 bg-background" placeholder="Honda CG 160 2022" value={newLead.interesse} onChange={e => setNewLead(p => ({ ...p, interesse: e.target.value }))} /></div>
               <div>
                 <Label className="text-muted-foreground">Notas</Label>
-                <textarea className="w-full mt-1.5 rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground min-h-[80px] resize-none" placeholder="Observações..." />
+                <textarea className="w-full mt-1.5 rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground min-h-[80px] resize-none" placeholder="Observações..." value={newLead.notas} onChange={e => setNewLead(p => ({ ...p, notas: e.target.value }))} />
               </div>
-              <Button variant="gold" className="w-full" onClick={handleAdd}>Salvar Lead</Button>
+              <Button variant="gold" className="w-full" onClick={handleAdd} disabled={createLead.isPending}>
+                {createLead.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Salvar Lead"}
+              </Button>
             </div>
           </div>
         </>
       )}
 
-      {mockLeads.length === 0 && (
+      {!isLoading && leads.length === 0 && (
         <div className="border border-dashed border-border rounded-lg p-12 text-center">
           <Users className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
           <p className="text-muted-foreground">Nenhum lead cadastrado</p>
