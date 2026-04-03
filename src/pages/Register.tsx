@@ -1,25 +1,36 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { register } from "@/lib/auth";
 
 export default function Register() {
   const [form, setForm] = useState({ name: "", email: "", whatsapp: "", password: "", confirm: "", role: "Colaborador" });
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const update = (key: string, value: string) => setForm(f => ({ ...f, [key]: value }));
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (form.password !== form.confirm) {
       toast({ title: "Erro", description: "As senhas não coincidem.", variant: "destructive" });
       return;
     }
-    toast({ title: "Conta criada!", description: "Faça login para continuar." });
-    navigate("/login");
+    setLoading(true);
+    try {
+      await register({ name: form.name, email: form.email, password: form.password, whatsapp: form.whatsapp, role: form.role });
+      toast({ title: "Conta criada!", description: "Faça login para continuar." });
+      navigate("/login");
+    } catch (err: any) {
+      toast({ title: "Erro", description: err.message || "Erro ao criar conta.", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -42,7 +53,9 @@ export default function Register() {
             </div>
             <div><Label className="text-muted-foreground">Senha</Label><Input className="mt-1.5 bg-background" type="password" value={form.password} onChange={e => update("password", e.target.value)} required /></div>
             <div><Label className="text-muted-foreground">Confirmar Senha</Label><Input className="mt-1.5 bg-background" type="password" value={form.confirm} onChange={e => update("confirm", e.target.value)} required /></div>
-            <Button variant="gold" className="w-full" type="submit">Criar Conta</Button>
+            <Button variant="gold" className="w-full" type="submit" disabled={loading}>
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Criar Conta"}
+            </Button>
           </form>
           <p className="text-sm text-center text-muted-foreground">
             Já tem conta? <Link to="/login" className="text-primary hover:underline">Entrar</Link>

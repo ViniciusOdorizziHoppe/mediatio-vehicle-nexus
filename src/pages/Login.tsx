@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,16 +11,20 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    const user = login(email, password);
-    if (user) {
+    setLoading(true);
+    try {
+      await login(email, password);
       navigate("/");
-    } else {
-      setError("E-mail ou senha inválidos.");
+    } catch (err: any) {
+      setError(err.message || "E-mail ou senha inválidos.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -50,7 +54,9 @@ export default function Login() {
               </div>
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button variant="gold" className="w-full" type="submit">Entrar</Button>
+            <Button variant="gold" className="w-full" type="submit" disabled={loading}>
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Entrar"}
+            </Button>
           </form>
 
           <p className="text-sm text-center text-muted-foreground">
