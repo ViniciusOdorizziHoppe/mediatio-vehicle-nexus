@@ -6,24 +6,43 @@ export const api = {
   async request(endpoint: string, options: RequestInit = {}) {
     const token = localStorage.getItem('mediatio_token');
 
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token && { Authorization: `Bearer ${token}` }),
-        ...options.headers,
-      },
-    });
+    console.log(`🔵 API Request: ${options.method || 'GET'} ${endpoint}`);
+    console.log(`🔵 API URL: ${API_BASE_URL}${endpoint}`);
 
-    if (response.status === 401) {
-      localStorage.removeItem('mediatio_token');
-      window.location.href = '/login';
-      throw new Error('Sessão expirada');
+    try {
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` }),
+          ...options.headers,
+        },
+      });
+
+      console.log(`🟢 API Response: ${response.status} ${endpoint}`);
+
+      if (response.status === 401) {
+        localStorage.removeItem('mediatio_token');
+        window.location.href = '/login';
+        throw new Error('Sessão expirada. Faça login novamente.');
+      }
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || data.message || `Erro ${response.status}`);
+      }
+
+      return data;
+    } catch (error) {
+      console.error(`🔴 API Error ${endpoint}:`, error);
+
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('Não foi possível conectar ao servidor. Verifique sua internet ou tente novamente mais tarde.');
+      }
+
+      throw error;
     }
-
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error || data.message || 'Erro na requisição');
-    return data;
   },
 
   get(endpoint: string) {
@@ -31,17 +50,25 @@ export const api = {
   },
 
   post(endpoint: string, body: any) {
-    return this.request(endpoint, { method: 'POST', body: JSON.stringify(body) });
+    return this.request(endpoint, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
   },
 
   patch(endpoint: string, body: any) {
-    return this.request(endpoint, { method: 'PATCH', body: JSON.stringify(body) });
+    return this.request(endpoint, {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    });
   },
 
   delete(endpoint: string) {
     return this.request(endpoint, { method: 'DELETE' });
   },
 };
+
+export default api;
 
 // Status mappings
 export const vehicleStatusMap: Record<string, string> = {
