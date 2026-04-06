@@ -1,9 +1,6 @@
-// Cliente HTTP centralizado
-// Em produção com proxy Vercel: VITE_API_URL = https://mediatio-vehicle-nexus.vercel.app
-// O proxy Vercel repassa /api/* para o Koyeb — sem CORS!
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const API_BASE = ((import.meta as any).env?.VITE_API_URL || '') + '/api';
+// src/lib/api.ts
+// Forçamos o uso de caminhos relativos para ativar o Proxy da Vercel
+const API_BASE = '/api';
 
 interface RequestOptions {
   method?: string;
@@ -13,7 +10,7 @@ interface RequestOptions {
 
 async function request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
   const token = localStorage.getItem('mediatio_token');
-
+  
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...options.headers,
@@ -23,7 +20,12 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${API_BASE}${endpoint}`, {
+  const url = `${API_BASE}${endpoint}`;
+  
+  // Log para debug (você verá /api/auth/register no console)
+  console.log(`🔵 API Request: ${options.method || 'GET'} ${url}`);
+
+  const response = await fetch(url, {
     method: options.method || 'GET',
     headers,
     body: options.body ? JSON.stringify(options.body) : undefined,
@@ -32,24 +34,16 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
   const data = await response.json();
 
   if (!response.ok) {
-    // Token expirado — redireciona para login
-    if (response.status === 401) {
-      localStorage.removeItem('mediatio_token');
-      localStorage.removeItem('mediatio_user');
-      window.location.href = '/login';
-    }
-    throw new Error(data.error || `Erro ${response.status}`);
+    console.error(`🔴 API Error ${endpoint}:`, data);
+    throw new Error(data.error || 'Erro na requisição');
   }
 
   return data;
 }
 
-export const api = {
-  get: <T>(endpoint: string) => request<T>(endpoint),
-  post: <T>(endpoint: string, body: unknown) => request<T>(endpoint, { method: 'POST', body }),
-  patch: <T>(endpoint: string, body: unknown) => request<T>(endpoint, { method: 'PATCH', body }),
-  put: <T>(endpoint: string, body: unknown) => request<T>(endpoint, { method: 'PUT', body }),
-  delete: <T>(endpoint: string) => request<T>(endpoint, { method: 'DELETE' }),
+export default {
+  get: <T>(endpoint: string, headers?: Record<string, string>) => request<T>(endpoint, { method: 'GET', headers }),
+  post: <T>(endpoint: string, body: unknown, headers?: Record<string, string>) => request<T>(endpoint, { method: 'POST', body, headers }),
+  patch: <T>(endpoint: string, body: unknown, headers?: Record<string, string>) => request<T>(endpoint, { method: 'PATCH', body, headers }),
+  delete: <T>(endpoint: string, headers?: Record<string, string>) => request<T>(endpoint, { method: 'DELETE', headers }),
 };
-
-export default api;
