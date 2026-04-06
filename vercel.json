@@ -2,7 +2,15 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://extensive-avril-morpheus-ffc73d22.koyeb.app/api/:path*"
+      "destination": "https://extensive-avril-morph-d5a8aee2.koyeb.app/api/:path*"
+    },
+    {
+      "source": "/health",
+      "destination": "https://extensive-avril-morph-d5a8aee2.koyeb.app/health"
+    },
+    {
+      "source": "/((?!api|health|assets|_next|favicon\\.ico|robots\\.txt|vite\\.svg).*)",
+      "destination": "/index.html"
     }
   ]
 }

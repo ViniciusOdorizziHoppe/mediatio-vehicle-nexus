@@ -1,33 +1,65 @@
-// src/lib/api.ts
-// FORÇADO: Sempre usar o proxy da Vercel para evitar erro de CORS
-const API_BASE = '/api';
+/**
+ * Cliente HTTP do Mediatio
+ * 
+ * Com o vercel.json configurado como proxy, todas as chamadas
+ * vão para o mesmo domínio (sem CORS). O Vercel repassa para o Koyeb.
+ * 
+ * VITE_API_URL deve ser vazio ou "/" — não apontar para o Koyeb diretamente.
+ */
 
-async function request<T>(endpoint: string, options: any = {}): Promise<T> {
-  const token = localStorage.getItem('mediatio_token');
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...options.headers,
+const BASE_URL = import.meta.env.VITE_API_URL || '';
+
+// Pega o token do localStorage
+const getToken = (): string | null => localStorage.getItem('mediatio_token');
+
+interface RequestOptions {
+  method?: string;
+  body?: object;
+  headers?: Record<string, string>;
+}
+
+async function request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
+  const { method = 'GET', body, headers = {} } = options;
+
+  const token = getToken();
+
+  const config: RequestInit = {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...headers,
+    },
+    ...(body ? { body: JSON.stringify(body) } : {}),
   };
 
-  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const url = `${BASE_URL}/api${endpoint}`;
+  console.log(`🔵 API Request: ${method} ${endpoint}`);
+  console.log(`🔵 API URL: ${url}`);
 
-  const url = `${API_BASE}${endpoint}`;
-  
-  // Se você ver a URL do Koyeb no log abaixo, o deploy falhou ou o arquivo não foi salvo!
-  console.log(`🚀 CHAMANDO VIA PROXY VERCEL: ${url}`);
+  const response = await fetch(url, config);
 
-  const response = await fetch(url, {
-    method: options.method || 'GET',
-    headers,
-    body: options.body ? JSON.stringify(options.body) : undefined,
-  });
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ error: 'Erro desconhecido' }));
+    console.error(`🔴 API Error ${response.status} ${endpoint}:`, errorData);
+    throw new Error(errorData.error || `Erro ${response.status}`);
+  }
 
   return response.json();
 }
 
-export default {
-  get: (e: string) => request(e),
-  post: (e: string, b: any) => request(e, { method: 'POST', body: b }),
-  patch: (e: string, b: any) => request(e, { method: 'PATCH', body: b }),
-  delete: (e: string) => request(e, { method: 'DELETE' }),
+export const api = {
+  get:    <T>(endpoint: string, headers?: Record<string, string>) =>
+    request<T>(endpoint, { method: 'GET', headers }),
+
+  post:   <T>(endpoint: string, body: object, headers?: Record<string, string>) =>
+    request<T>(endpoint, { method: 'POST', body, headers }),
+
+  patch:  <T>(endpoint: string, body: object, headers?: Record<string, string>) =>
+    request<T>(endpoint, { method: 'PATCH', body, headers }),
+
+  delete: <T>(endpoint: string, headers?: Record<string, string>) =>
+    request<T>(endpoint, { method: 'DELETE', headers }),
 };
+
+export default api;
