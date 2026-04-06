@@ -1,77 +1,90 @@
 import { useState } from "react";
-import { Check, X, Wifi } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
-
-interface Integration {
-  name: string;
-  fields: { key: string; label: string; placeholder: string }[];
-  status: "idle" | "ok" | "error";
-}
+import { Wifi, Check, X } from "lucide-react";
+import { toast } from "sonner";
+import { getUser } from "@/lib/auth";
 
 export default function Settings() {
-  const { toast } = useToast();
-  const [integrations, setIntegrations] = useState<Integration[]>([
+  const user = getUser();
+
+  const [integrations, setIntegrations] = useState<Array<{ name: string; fields: Array<{ key: string; label: string; placeholder: string }>; status: "idle" | "ok" | "error" }>>([
     { name: "Motor Match API", fields: [{ key: "url", label: "URL", placeholder: "https://api.motormatch.com" }], status: "idle" },
     { name: "Nexus / Dify", fields: [{ key: "url", label: "URL", placeholder: "https://dify.example.com" }, { key: "apiKey", label: "API Key", placeholder: "sk-..." }], status: "idle" },
     { name: "MORPH API", fields: [{ key: "url", label: "URL", placeholder: "https://morph.example.com" }], status: "idle" },
-    { name: "Google Sheets", fields: [{ key: "sheetId", label: "Sheet ID", placeholder: "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms" }], status: "idle" },
   ]);
 
   const testConnection = (index: number) => {
-    setIntegrations(prev => prev.map((ig, i) => i === index ? { ...ig, status: Math.random() > 0.3 ? "ok" : "error" } : ig));
+    setIntegrations(prev => prev.map((ig, i) => i === index ? { ...ig, status: (Math.random() > 0.3 ? "ok" : "error") as any } : ig));
   };
 
   return (
-    <div className="p-4 md:p-6 max-w-3xl mx-auto space-y-8">
-      <h1 className="text-2xl font-bold text-foreground">Configurações</h1>
+    <div className="p-6 max-w-2xl space-y-6 animate-fade-in">
+      <div>
+        <h2 className="text-lg font-semibold text-foreground">Configurações</h2>
+        <p className="text-[13px] text-muted-foreground">Gerencie seu perfil e integrações</p>
+      </div>
 
-      {/* Perfil */}
-      <section className="bg-card border border-border rounded-lg p-6 space-y-4">
-        <h2 className="text-lg font-semibold text-foreground">Perfil</h2>
+      {/* Profile */}
+      <section className="bg-card border border-border rounded-lg p-5 space-y-4">
+        <h3 className="text-sm font-semibold text-foreground">Perfil</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div><Label className="text-muted-foreground">Nome</Label><Input className="mt-1.5 bg-surface" defaultValue="Vinícius Hoppe" /></div>
-          <div><Label className="text-muted-foreground">E-mail</Label><Input className="mt-1.5 bg-surface" defaultValue="vinicius@mediatio.com" /></div>
-          <div className="sm:col-span-2"><Label className="text-muted-foreground">WhatsApp</Label><Input className="mt-1.5 bg-surface" defaultValue="(47) 99912-3456" /></div>
+          <div>
+            <label className="block text-[12px] font-medium text-foreground mb-1">Nome</label>
+            <input defaultValue={user?.name || ''} className="w-full h-9 px-3 text-[13px] bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+          </div>
+          <div>
+            <label className="block text-[12px] font-medium text-foreground mb-1">Email</label>
+            <input defaultValue={user?.email || ''} className="w-full h-9 px-3 text-[13px] bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+          </div>
+          <div className="sm:col-span-2">
+            <label className="block text-[12px] font-medium text-foreground mb-1">WhatsApp</label>
+            <input defaultValue={user?.phone || ''} className="w-full h-9 px-3 text-[13px] bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+          </div>
         </div>
-        <Button variant="gold" onClick={() => toast({ title: "Perfil salvo!" })}>Salvar</Button>
+        <button onClick={() => toast.success('Perfil salvo!')} className="h-9 px-4 bg-primary hover:bg-primary/90 text-primary-foreground text-[13px] font-medium rounded-md transition-colors">
+          Salvar
+        </button>
       </section>
 
-      {/* Negócio */}
-      <section className="bg-card border border-border rounded-lg p-6 space-y-4">
-        <h2 className="text-lg font-semibold text-foreground">Negócio</h2>
+      {/* Business */}
+      <section className="bg-card border border-border rounded-lg p-5 space-y-4">
+        <h3 className="text-sm font-semibold text-foreground">Negócio</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div><Label className="text-muted-foreground">Meta de comissão/mês (R$)</Label><Input className="mt-1.5 bg-surface" type="number" defaultValue="5000" /></div>
-          <div><Label className="text-muted-foreground">Alerta de inatividade (dias)</Label><Input className="mt-1.5 bg-surface" type="number" defaultValue="3" /></div>
-          <div className="sm:col-span-2"><Label className="text-muted-foreground">Nomes dos sócios (separados por vírgula)</Label><Input className="mt-1.5 bg-surface" defaultValue="Vinícius Hoppe, Gabriel" /></div>
+          <div>
+            <label className="block text-[12px] font-medium text-foreground mb-1">Meta de comissão/mês (R$)</label>
+            <input type="number" defaultValue="5000" className="w-full h-9 px-3 text-[13px] bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+          </div>
+          <div>
+            <label className="block text-[12px] font-medium text-foreground mb-1">Alerta inatividade (dias)</label>
+            <input type="number" defaultValue="3" className="w-full h-9 px-3 text-[13px] bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+          </div>
         </div>
-        <Button variant="gold" onClick={() => toast({ title: "Configurações salvas!" })}>Salvar</Button>
+        <button onClick={() => toast.success('Configurações salvas!')} className="h-9 px-4 bg-primary hover:bg-primary/90 text-primary-foreground text-[13px] font-medium rounded-md transition-colors">
+          Salvar
+        </button>
       </section>
 
-      {/* Integrações */}
+      {/* Integrations */}
       <section className="space-y-4">
-        <h2 className="text-lg font-semibold text-foreground">Integrações</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <h3 className="text-sm font-semibold text-foreground">Integrações</h3>
+        <div className="grid grid-cols-1 gap-3">
           {integrations.map((ig, idx) => (
             <div key={ig.name} className="bg-card border border-border rounded-lg p-4 space-y-3">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                  <Wifi className="w-4 h-4 text-muted-foreground" /> {ig.name}
-                </h3>
-                {ig.status === "ok" && <Check className="w-5 h-5 text-success" />}
-                {ig.status === "error" && <X className="w-5 h-5 text-destructive" />}
+                <h4 className="text-[13px] font-medium text-foreground flex items-center gap-2">
+                  <Wifi className="w-3.5 h-3.5 text-muted-foreground" /> {ig.name}
+                </h4>
+                {ig.status === "ok" && <Check className="w-4 h-4 text-emerald-500" />}
+                {ig.status === "error" && <X className="w-4 h-4 text-destructive" />}
               </div>
               {ig.fields.map(f => (
                 <div key={f.key}>
-                  <Label className="text-xs text-muted-foreground">{f.label}</Label>
-                  <Input className="mt-1 bg-surface text-xs" placeholder={f.placeholder} />
+                  <label className="block text-[11px] font-medium text-muted-foreground mb-1">{f.label}</label>
+                  <input placeholder={f.placeholder} className="w-full h-8 px-3 text-[12px] bg-background border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
                 </div>
               ))}
-              <Button variant="outline" size="sm" className="w-full" onClick={() => testConnection(idx)}>
+              <button onClick={() => testConnection(idx)} className="w-full h-8 bg-muted hover:bg-muted/80 text-foreground text-[12px] font-medium rounded-md transition-colors">
                 Testar conexão
-              </Button>
+              </button>
             </div>
           ))}
         </div>

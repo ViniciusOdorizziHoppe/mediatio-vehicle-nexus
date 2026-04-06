@@ -1,168 +1,138 @@
-import { useQuery } from '@tanstack/react-query';
-import api from '@/lib/api';
-import { formatCurrency } from '@/lib/utils';
-
-interface DashboardData {
-  success: boolean;
-  data: {
-    veiculos: {
-      total: number;
-      valorTotal: number;
-      comissaoTotal: number;
-      porStatus: Record<string, { count: number; valorTotal: number; comissaoTotal: number }>;
-    };
-    leads: {
-      total: number;
-      porStatus: Record<string, number>;
-    };
-  };
-}
-
-const STATUS_LABELS: Record<string, string> = {
-  disponivel: 'Disponível',
-  contato_ativo: 'Contato Ativo',
-  proposta: 'Proposta',
-  vendido: 'Vendido',
-  arquivado: 'Arquivado',
-};
+import { Car, Users, DollarSign, TrendingUp } from 'lucide-react';
+import { StatCard } from '@/components/ui/StatCard';
+import { StatusBadge } from '@/components/ui/StatusBadge';
+import { PageSkeleton } from '@/components/ui/PageSkeleton';
+import { useVehicles } from '@/hooks/use-vehicles';
+import { useLeads } from '@/hooks/use-leads';
+import { formatCurrency, PIPELINE_STATUS, LEAD_STATUS } from '@/lib/utils';
+import { Link } from 'react-router-dom';
+import { getUser } from '@/lib/auth';
 
 export default function Dashboard() {
-  const { data, isLoading, error } = useQuery<DashboardData>({
-    queryKey: ['analytics-dashboard'],
-    queryFn: () => api.get('/analytics/dashboard'),
+  const { data: vehicles, isLoading: loadingV } = useVehicles();
+  const { data: leads, isLoading: loadingL } = useLeads();
+  const user = getUser();
+
+  if (loadingV || loadingL) return <PageSkeleton />;
+
+  const vehicleList = vehicles || [];
+  const leadList = leads || [];
+
+  const totalVehicles = vehicleList.length;
+  const totalLeads = leadList.length;
+  const totalValue = vehicleList.reduce((sum: number, v: any) => sum + (v.precos?.venda || 0), 0);
+  const totalCommission = vehicleList.reduce((sum: number, v: any) => sum + (v.precos?.comissaoEstimada || 0), 0);
+  const soldCount = vehicleList.filter((v: any) => v.pipeline?.status === 'vendido').length;
+
+  const statusCounts: Record<string, number> = {};
+  vehicleList.forEach((v: any) => {
+    const s = v.pipeline?.status || 'disponivel';
+    statusCounts[s] = (statusCounts[s] || 0) + 1;
   });
 
-  if (isLoading) {
-    return (
-      <div className="p-8">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-1/4"></div>
-          <div className="grid grid-cols-4 gap-4">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-24 bg-gray-200 rounded-xl"></div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="p-8">
-        <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg">
-          Erro ao carregar dashboard. Verifique sua conexão.
-        </div>
-      </div>
-    );
-  }
-
-  const d = data?.data;
+  const leadStatusCounts: Record<string, number> = {};
+  leadList.forEach((l: any) => {
+    const s = l.status || 'novo';
+    leadStatusCounts[s] = (leadStatusCounts[s] || 0) + 1;
+  });
 
   return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Dashboard</h1>
-
-      {/* KPIs principais */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <KPICard
-          title="Total de Veículos"
-          value={String(d?.veiculos.total || 0)}
-          icon="🚗"
-          color="blue"
-        />
-        <KPICard
-          title="Valor em Carteira"
-          value={formatCurrency(d?.veiculos.valorTotal || 0)}
-          icon="💰"
-          color="green"
-        />
-        <KPICard
-          title="Comissão Estimada"
-          value={formatCurrency(d?.veiculos.comissaoTotal || 0)}
-          icon="💵"
-          color="purple"
-        />
-        <KPICard
-          title="Total de Leads"
-          value={String(d?.leads.total || 0)}
-          icon="👥"
-          color="orange"
-        />
+    <div className="p-6 space-y-6 animate-fade-in">
+      {/* Welcome */}
+      <div>
+        <h2 className="text-lg font-semibold text-foreground">
+          Olá, {user?.name?.split(' ')[0] || 'Usuário'} 👋
+        </h2>
+        <p className="text-[13px] text-muted-foreground">Aqui está o resumo do seu negócio</p>
       </div>
 
-      {/* Pipeline por status */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl shadow-sm border p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Pipeline de Veículos</h2>
+      {/* KPIs */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard title="Total Veículos" value={String(totalVehicles)} icon={Car} />
+        <StatCard title="Total Leads" value={String(totalLeads)} icon={Users} />
+        <StatCard title="Valor em Carteira" value={formatCurrency(totalValue)} icon={DollarSign} />
+        <StatCard title="Comissão Estimada" value={formatCurrency(totalCommission)} icon={TrendingUp} subtitle={`${soldCount} vendido(s)`} />
+      </div>
+
+      {/* Pipeline & Leads summary */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="bg-card border border-border rounded-lg p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold text-foreground">Pipeline de Veículos</h3>
+            <Link to="/pipeline" className="text-[12px] text-primary hover:underline font-medium">Ver pipeline →</Link>
+          </div>
           <div className="space-y-3">
-            {Object.entries(d?.veiculos.porStatus || {}).map(([status, stats]) => (
-              <div key={status} className="flex items-center justify-between">
+            {Object.entries(PIPELINE_STATUS).map(([key, val]) => (
+              <div key={key} className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-gray-700">
-                    {STATUS_LABELS[status] || status}
-                  </span>
+                  <StatusBadge status={key} label={val.label} />
                 </div>
-                <div className="flex items-center gap-4">
-                  <span className="text-sm text-gray-500">{stats.count} veíc.</span>
-                  <span className="text-sm font-medium text-gray-900">
-                    {formatCurrency(stats.valorTotal || 0)}
-                  </span>
-                </div>
-              </div>
-            ))}
-            {Object.keys(d?.veiculos.porStatus || {}).length === 0 && (
-              <p className="text-gray-400 text-sm">Nenhum veículo cadastrado ainda.</p>
-            )}
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-sm border p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Status dos Leads</h2>
-          <div className="space-y-3">
-            {Object.entries(d?.leads.porStatus || {}).map(([status, count]) => (
-              <div key={status} className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700 capitalize">
-                  {status.replace('_', ' ')}
+                <span className="text-sm font-medium text-foreground tabular-nums">
+                  {statusCounts[key] || 0}
                 </span>
-                <span className="text-sm font-medium text-gray-900">{count}</span>
               </div>
             ))}
-            {Object.keys(d?.leads.porStatus || {}).length === 0 && (
-              <p className="text-gray-400 text-sm">Nenhum lead cadastrado ainda.</p>
-            )}
+          </div>
+        </div>
+
+        <div className="bg-card border border-border rounded-lg p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold text-foreground">Status dos Leads</h3>
+            <Link to="/leads" className="text-[12px] text-primary hover:underline font-medium">Ver leads →</Link>
+          </div>
+          <div className="space-y-3">
+            {Object.entries(LEAD_STATUS).map(([key, val]) => (
+              <div key={key} className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <StatusBadge status={key} label={val.label} />
+                </div>
+                <span className="text-sm font-medium text-foreground tabular-nums">
+                  {leadStatusCounts[key] || 0}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
       </div>
-    </div>
-  );
-}
 
-function KPICard({
-  title,
-  value,
-  icon,
-  color,
-}: {
-  title: string;
-  value: string;
-  icon: string;
-  color: 'blue' | 'green' | 'purple' | 'orange';
-}) {
-  const colors = {
-    blue: 'bg-blue-50 border-blue-100',
-    green: 'bg-green-50 border-green-100',
-    purple: 'bg-purple-50 border-purple-100',
-    orange: 'bg-orange-50 border-orange-100',
-  };
-
-  return (
-    <div className={`${colors[color]} border rounded-xl p-5`}>
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-2xl">{icon}</span>
+      {/* Recent leads table */}
+      <div className="bg-card border border-border rounded-lg">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+          <h3 className="text-sm font-semibold text-foreground">Leads Recentes</h3>
+          <Link to="/leads" className="text-[12px] text-primary hover:underline font-medium">Ver todos →</Link>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="text-left px-5 py-3 text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Nome</th>
+                <th className="text-left px-5 py-3 text-[11px] font-medium text-muted-foreground uppercase tracking-wider">WhatsApp</th>
+                <th className="text-left px-5 py-3 text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Canal</th>
+                <th className="text-left px-5 py-3 text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {leadList.slice(0, 5).map((lead: any) => (
+                <tr key={lead._id} className="hover:bg-muted/50 transition-colors">
+                  <td className="px-5 py-3 text-[13px] font-medium text-foreground">{lead.nome}</td>
+                  <td className="px-5 py-3 text-[13px] text-muted-foreground">{lead.whatsapp}</td>
+                  <td className="px-5 py-3 text-[13px] text-muted-foreground capitalize">{lead.canal}</td>
+                  <td className="px-5 py-3">
+                    <StatusBadge status={lead.status} label={LEAD_STATUS[lead.status]?.label || lead.status} />
+                  </td>
+                </tr>
+              ))}
+              {leadList.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="px-5 py-8 text-center text-[13px] text-muted-foreground">
+                    Nenhum lead cadastrado ainda
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
-      <p className="text-2xl font-bold text-gray-900">{value}</p>
-      <p className="text-sm text-gray-600 mt-1">{title}</p>
     </div>
   );
 }

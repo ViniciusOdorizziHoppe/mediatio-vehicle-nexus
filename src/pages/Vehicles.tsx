@@ -1,174 +1,132 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useVehicles, useDeleteVehicle, type Vehicle } from '@/hooks/useVehicles';
-import { formatCurrency, formatKm, PIPELINE_STATUS, getScoreColor } from '@/lib/utils';
+import { useVehicles } from '@/hooks/use-vehicles';
+import { formatCurrency, formatKm, PIPELINE_STATUS } from '@/lib/utils';
+import { Plus, Search, Car } from 'lucide-react';
+import { StatusBadge } from '@/components/ui/StatusBadge';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { TableSkeleton } from '@/components/ui/PageSkeleton';
 
 export default function Vehicles() {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
-  const [tipo, setTipo] = useState('');
 
-  const filters: Record<string, string> = {};
-  if (search) filters.search = search;
-  if (status) filters.status = status;
-  if (tipo) filters.tipo = tipo;
+  const params: any = {};
+  if (search) params.search = search;
+  if (status) params.status = status;
 
-  const { data, isLoading, error } = useVehicles(filters);
-  const deleteMutation = useDeleteVehicle();
-
-  const handleDelete = async (id: string, codigo: string) => {
-    if (!confirm(`Remover veículo ${codigo}?`)) return;
-    try {
-      await deleteMutation.mutateAsync(id);
-    } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : 'Erro ao remover');
-    }
-  };
+  const { data, isLoading } = useVehicles(params);
+  const vehicles = data || [];
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Veículos</h1>
+    <div className="p-6 space-y-5 animate-fade-in">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold text-foreground">Veículos</h2>
+          <p className="text-[13px] text-muted-foreground">{vehicles.length} veículo(s) cadastrado(s)</p>
+        </div>
         <Link
           to="/vehicles/new"
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+          className="inline-flex items-center gap-1.5 h-9 px-3 bg-primary hover:bg-primary/90 text-primary-foreground text-[13px] font-medium rounded-md transition-colors"
         >
-          + Novo Veículo
+          <Plus className="w-3.5 h-3.5" /> Novo Veículo
         </Link>
       </div>
 
-      {/* Filtros */}
-      <div className="flex gap-3 mb-6">
-        <input
-          type="text"
-          placeholder="Buscar por marca, modelo ou código..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
+      {/* Filters */}
+      <div className="flex gap-3">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder="Buscar marca, modelo..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="w-full h-9 pl-9 pr-3 text-[13px] bg-background border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+          />
+        </div>
         <select
           value={status}
           onChange={e => setStatus(e.target.value)}
-          className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="h-9 px-3 text-[13px] bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
         >
           <option value="">Todos os status</option>
           {Object.entries(PIPELINE_STATUS).map(([key, val]) => (
             <option key={key} value={key}>{val.label}</option>
           ))}
         </select>
-        <select
-          value={tipo}
-          onChange={e => setTipo(e.target.value)}
-          className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="">Todos os tipos</option>
-          <option value="moto">Moto</option>
-          <option value="carro">Carro</option>
-        </select>
       </div>
 
-      {isLoading && (
-        <div className="space-y-3">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-16 bg-gray-100 rounded-lg animate-pulse"></div>
-          ))}
-        </div>
-      )}
-
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg">
-          Erro ao carregar veículos.
-        </div>
-      )}
-
-      {!isLoading && !error && (
-        <>
-          <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b">
-                <tr>
-                  <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">Código</th>
-                  <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">Veículo</th>
-                  <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">Preço</th>
-                  <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">KM</th>
-                  <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">Status</th>
-                  <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">Score</th>
-                  <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {data?.data.map((vehicle: Vehicle) => {
-                  const statusInfo = PIPELINE_STATUS[vehicle.pipeline.status];
-                  return (
-                    <tr key={vehicle._id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 text-sm font-mono text-gray-700">{vehicle.codigo}</td>
-                      <td className="px-4 py-3">
-                        <div className="font-medium text-gray-900">
-                          {vehicle.marca} {vehicle.modelo}
+      {/* Table */}
+      {isLoading ? (
+        <TableSkeleton />
+      ) : vehicles.length === 0 ? (
+        <EmptyState
+          icon={Car}
+          title="Nenhum veículo encontrado"
+          description="Cadastre seu primeiro veículo para começar"
+          action={
+            <Link to="/vehicles/new" className="inline-flex items-center gap-1.5 h-9 px-3 bg-primary hover:bg-primary/90 text-primary-foreground text-[13px] font-medium rounded-md transition-colors">
+              <Plus className="w-3.5 h-3.5" /> Cadastrar veículo
+            </Link>
+          }
+        />
+      ) : (
+        <div className="bg-card border border-border rounded-lg overflow-hidden">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="text-left px-5 py-3 text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Veículo</th>
+                <th className="text-left px-5 py-3 text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Preço</th>
+                <th className="text-left px-5 py-3 text-[11px] font-medium text-muted-foreground uppercase tracking-wider hidden md:table-cell">KM</th>
+                <th className="text-left px-5 py-3 text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Status</th>
+                <th className="text-left px-5 py-3 text-[11px] font-medium text-muted-foreground uppercase tracking-wider hidden lg:table-cell">Score</th>
+                <th className="text-right px-5 py-3 text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Ações</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {vehicles.map((vehicle: any) => {
+                const statusKey = vehicle.pipeline?.status || 'disponivel';
+                const statusInfo = PIPELINE_STATUS[statusKey];
+                const score = vehicle.score?.valor || 0;
+                return (
+                  <tr key={vehicle._id} className="hover:bg-muted/50 transition-colors">
+                    <td className="px-5 py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-md bg-muted flex items-center justify-center shrink-0">
+                          <Car className="w-4 h-4 text-muted-foreground" />
                         </div>
-                        <div className="text-sm text-gray-500">{vehicle.ano} • {vehicle.cor}</div>
-                      </td>
-                      <td className="px-4 py-3 text-sm font-medium text-gray-900">
-                        {formatCurrency(vehicle.precos.venda)}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-600">
-                        {vehicle.km ? formatKm(vehicle.km) : '—'}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${statusInfo?.color}`}>
-                          {statusInfo?.label}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={`text-sm font-bold ${getScoreColor(vehicle.score?.valor || 0)}`}>
-                          {vehicle.score?.valor || 0}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex gap-2">
-                          <Link
-                            to={`/vehicles/${vehicle._id}`}
-                            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                          >
-                            Ver
-                          </Link>
-                          <Link
-                            to={`/vehicles/${vehicle._id}/edit`}
-                            className="text-gray-600 hover:text-gray-800 text-sm font-medium"
-                          >
-                            Editar
-                          </Link>
-                          <button
-                            onClick={() => handleDelete(vehicle._id, vehicle.codigo)}
-                            className="text-red-600 hover:text-red-800 text-sm font-medium"
-                          >
-                            Remover
-                          </button>
+                        <div>
+                          <p className="text-[13px] font-medium text-foreground">{vehicle.marca} {vehicle.modelo}</p>
+                          <p className="text-[11px] text-muted-foreground">{vehicle.ano} · {vehicle.codigo}</p>
                         </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-
-            {(!data?.data || data.data.length === 0) && (
-              <div className="text-center py-12 text-gray-400">
-                <p className="text-4xl mb-3">🚗</p>
-                <p className="font-medium">Nenhum veículo encontrado</p>
-                <Link to="/vehicles/new" className="text-blue-600 hover:underline text-sm mt-2 block">
-                  Cadastrar primeiro veículo
-                </Link>
-              </div>
-            )}
-          </div>
-
-          {data?.meta && (
-            <p className="text-sm text-gray-500 mt-3">
-              {data.meta.total} veículo(s) encontrado(s)
-            </p>
-          )}
-        </>
+                      </div>
+                    </td>
+                    <td className="px-5 py-3 text-[13px] font-medium text-foreground">{formatCurrency(vehicle.precos?.venda || 0)}</td>
+                    <td className="px-5 py-3 text-[13px] text-muted-foreground hidden md:table-cell">{vehicle.km ? formatKm(vehicle.km) : '—'}</td>
+                    <td className="px-5 py-3">
+                      <StatusBadge status={statusKey} label={statusInfo?.label || statusKey} />
+                    </td>
+                    <td className="px-5 py-3 hidden lg:table-cell">
+                      <span className={`text-[13px] font-semibold ${score >= 70 ? 'text-emerald-600' : score >= 40 ? 'text-amber-600' : 'text-muted-foreground'}`}>
+                        {score}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3 text-right">
+                      <Link
+                        to={`/vehicles/${vehicle._id}`}
+                        className="text-[12px] text-primary hover:underline font-medium"
+                      >
+                        Ver detalhes
+                      </Link>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );

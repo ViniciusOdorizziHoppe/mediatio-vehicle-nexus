@@ -1,87 +1,64 @@
-import { useState, useEffect } from "react";
-import { Upload, Sparkles, Download, Copy, Car, Search } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { vehicles } from "@/lib/mock-data";
-import { cn } from "@/lib/utils";
-import { useToast } from "@/hooks/use-toast";
-import { useSearchParams } from "react-router-dom";
+import { useState } from "react";
+import { Upload, Sparkles, Download, Copy } from "lucide-react";
+import { toast } from "sonner";
 
 export default function MorphPhotos() {
-  const [searchParams] = useSearchParams();
-  const [selectedVehicle, setSelectedVehicle] = useState<string | null>(searchParams.get("vehicle"));
-  const [search, setSearch] = useState("");
   const [processing, setProcessing] = useState(false);
   const [enhanced, setEnhanced] = useState(false);
-  const { toast } = useToast();
-
-  useEffect(() => {
-    const v = searchParams.get("vehicle");
-    if (v) setSelectedVehicle(v);
-  }, [searchParams]);
-
-  const filtered = vehicles.filter((v) =>
-    `${v.brand} ${v.model}`.toLowerCase().includes(search.toLowerCase())
-  );
 
   const handleEnhance = () => {
     setProcessing(true);
-    setTimeout(() => { setProcessing(false); setEnhanced(true); toast({ title: "Foto melhorada!", description: "A IA aplicou melhorias na imagem." }); }, 2500);
+    setTimeout(() => {
+      setProcessing(false);
+      setEnhanced(true);
+      toast.success("Foto melhorada com IA!");
+    }, 2500);
   };
 
   return (
-    <div className="flex h-[calc(100vh-64px)] md:h-screen">
-      <div className="hidden md:flex flex-col w-[260px] border-r border-border bg-surface">
-        <div className="p-3 border-b border-border">
-          <h2 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2"><Sparkles className="w-4 h-4 text-primary" /> MORPH Fotos</h2>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar veículo..." className="pl-10 bg-background border-border text-sm" />
-          </div>
-        </div>
-        <div className="flex-1 overflow-y-auto">
-          {filtered.map((v) => (
-            <button key={v.id} onClick={() => { setSelectedVehicle(v.id); setEnhanced(false); }}
-              className={cn("w-full text-left px-3 py-3 border-b border-border flex items-center gap-3 transition-colors",
-                selectedVehicle === v.id ? "bg-primary/10 border-l-2 border-l-primary" : "hover:bg-accent")}>
-              <div className="w-8 h-8 rounded bg-accent flex items-center justify-center shrink-0"><Car className="w-4 h-4 text-muted-foreground" /></div>
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">{v.brand} {v.model}</p>
-                <p className="text-xs text-muted-foreground">{v.year}</p>
-              </div>
-            </button>
-          ))}
-        </div>
+    <div className="p-6 animate-fade-in">
+      <div className="mb-6">
+        <h2 className="text-lg font-semibold text-foreground">MORPH Fotos</h2>
+        <p className="text-[13px] text-muted-foreground">Melhore fotos de veículos com inteligência artificial</p>
       </div>
 
-      <div className="flex-1 p-4 md:p-6 flex flex-col items-center justify-center">
-        {!selectedVehicle ? (
-          <div className="text-center">
-            <Sparkles className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
-            <p className="text-muted-foreground">Selecione um veículo para melhorar fotos com IA</p>
-          </div>
-        ) : (
-          <div className="w-full max-w-xl space-y-6">
-            <div className="border-2 border-dashed border-border rounded-lg p-12 text-center hover:border-primary/30 transition-colors cursor-pointer">
-              <Upload className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-              <p className="text-sm text-muted-foreground">Arraste uma foto ou clique para enviar</p>
-              <p className="text-xs text-muted-foreground/60 mt-1">JPG, PNG até 10MB</p>
-            </div>
-            <Button variant="gold" className="w-full" onClick={handleEnhance} disabled={processing}>
-              {processing ? <span className="animate-pulse-subtle">Processando com IA...</span> : <><Sparkles className="w-4 h-4" /> Melhorar com IA</>}
-            </Button>
-            {enhanced && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-accent rounded-lg aspect-video flex items-center justify-center"><p className="text-xs text-muted-foreground">Antes</p></div>
-                  <div className="bg-accent rounded-lg aspect-video flex items-center justify-center border border-primary/20"><p className="text-xs text-primary">Depois (IA)</p></div>
-                </div>
-                <div className="flex gap-3">
-                  <Button variant="outline" className="flex-1" onClick={() => toast({ title: "Link copiado!" })}><Copy className="w-4 h-4" /> Copiar link</Button>
-                  <Button variant="outline" className="flex-1"><Download className="w-4 h-4" /> Download</Button>
-                </div>
+      <div className="max-w-xl space-y-5">
+        <div className="border-2 border-dashed border-border rounded-lg p-12 text-center hover:border-primary/30 transition-colors cursor-pointer bg-card">
+          <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
+          <p className="text-[13px] text-muted-foreground">Arraste uma foto ou clique para enviar</p>
+          <p className="text-[11px] text-muted-foreground mt-1">JPG, PNG até 10MB</p>
+        </div>
+
+        <button
+          onClick={handleEnhance}
+          disabled={processing}
+          className="w-full h-10 bg-primary hover:bg-primary/90 disabled:opacity-50 text-primary-foreground text-[13px] font-medium rounded-md transition-colors flex items-center justify-center gap-2"
+        >
+          {processing ? (
+            <span className="animate-pulse">Processando com IA...</span>
+          ) : (
+            <><Sparkles className="w-4 h-4" /> Melhorar com IA</>
+          )}
+        </button>
+
+        {enhanced && (
+          <div className="space-y-4 animate-slide-up">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-muted rounded-lg aspect-video flex items-center justify-center">
+                <p className="text-[12px] text-muted-foreground">Antes</p>
               </div>
-            )}
+              <div className="bg-muted rounded-lg aspect-video flex items-center justify-center border border-primary/20">
+                <p className="text-[12px] text-primary">Depois (IA)</p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => toast.success('Link copiado!')} className="flex-1 h-9 bg-muted hover:bg-muted/80 text-foreground text-[12px] font-medium rounded-md transition-colors flex items-center justify-center gap-1.5">
+                <Copy className="w-3.5 h-3.5" /> Copiar link
+              </button>
+              <button className="flex-1 h-9 bg-muted hover:bg-muted/80 text-foreground text-[12px] font-medium rounded-md transition-colors flex items-center justify-center gap-1.5">
+                <Download className="w-3.5 h-3.5" /> Download
+              </button>
+            </div>
           </div>
         )}
       </div>
