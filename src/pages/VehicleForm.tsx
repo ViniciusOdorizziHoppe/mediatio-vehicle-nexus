@@ -1,16 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-<<<<<<< HEAD
+
 import { useCreateVehicle, useUpdateVehicle, useVehicle } from '@/hooks/use-vehicles';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-=======
+
 import { useCreateVehicle, useUpdateVehicle, useVehicle } from '@/hooks/useVehicles';
 import { GlowCard } from '@/components/ui/GlowCard';
 import { motion } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
->>>>>>> d732f04 (Uso do Antigravity)
+
 
 export default function VehicleForm() {
   const { id } = useParams();
@@ -62,7 +62,7 @@ export default function VehicleForm() {
   const inputClass = "w-full h-9 px-3 text-[13px] bg-background border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors";
 
   return (
-<<<<<<< HEAD
+
     <div className="p-6 max-w-2xl animate-fade-in">
       <button onClick={() => navigate('/vehicles')} className="inline-flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-foreground mb-4 transition-colors">
         <ArrowLeft className="w-3.5 h-3.5" /> Voltar para veículos
@@ -108,7 +108,7 @@ export default function VehicleForm() {
             <Field label="Documentação">
               <select value={form.condicoes.documentacao} onChange={e => setForm(f => ({...f, condicoes: {...f.condicoes, documentacao: e.target.value}}))} className={inputClass}>
                 <option value="ok">OK</option><option value="pendente">Pendente</option><option value="irregular">Irregular</option>
-=======
+
     <div className="p-6 md:p-8 max-w-3xl space-y-6">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
         <Link to="/vehicles" className="text-blue-400 hover:text-blue-300 text-sm flex items-center gap-1.5 mb-2 transition-colors">
@@ -219,11 +219,11 @@ export default function VehicleForm() {
                 <option value="ok">OK</option>
                 <option value="pendente">Pendente</option>
                 <option value="irregular">Irregular</option>
->>>>>>> d732f04 (Uso do Antigravity)
+
               </select>
             </Field>
           </div>
-<<<<<<< HEAD
+
         </Section>
 
         <Section title="Proprietário">
@@ -238,7 +238,7 @@ export default function VehicleForm() {
           <textarea rows={3} value={form.anuncio.observacoes} onChange={e => setForm(f => ({...f, anuncio: { observacoes: e.target.value }}))}
             className="w-full px-3 py-2 text-[13px] bg-background border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none" />
         </Section>
-=======
+
         </GlowCard>
 
         {/* Owner */}
@@ -271,18 +271,18 @@ export default function VehicleForm() {
             placeholder="Detalhes adicionais sobre o veículo..."
           />
         </GlowCard>
->>>>>>> d732f04 (Uso do Antigravity)
+
 
         {/* Actions */}
         <div className="flex gap-3">
-<<<<<<< HEAD
+
           <button type="submit" disabled={loading}
             className="h-9 px-4 bg-primary hover:bg-primary/90 disabled:opacity-50 text-primary-foreground text-[13px] font-medium rounded-md transition-colors flex items-center gap-2">
             {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
             {loading ? 'Salvando...' : isEdit ? 'Salvar alterações' : 'Cadastrar veículo'}
           </button>
           <button type="button" onClick={() => navigate('/vehicles')} className="h-9 px-4 bg-muted hover:bg-muted/80 text-foreground text-[13px] font-medium rounded-md transition-colors">
-=======
+
           <button
             type="submit"
             disabled={loading}
@@ -295,7 +295,7 @@ export default function VehicleForm() {
             onClick={() => navigate('/vehicles')}
             className="px-6 py-2.5 rounded-lg bg-slate-800/50 hover:bg-slate-800 text-slate-300 font-medium transition-colors border border-slate-700/50"
           >
->>>>>>> d732f04 (Uso do Antigravity)
+
             Cancelar
           </button>
         </div>

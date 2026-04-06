@@ -1,14 +1,14 @@
-<<<<<<< HEAD
+
 import { useState } from "react";
 import { Send, Search, Bot, User } from "lucide-react";
-=======
+
 import { useState, useEffect, useRef } from "react";
 import { Send, X, Search, Car, Bot, User } from "lucide-react";
 import { vehicles } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 import { useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
->>>>>>> d732f04 (Uso do Antigravity)
+
 
 interface Message {
   id: string;
@@ -23,8 +23,8 @@ const initialMessages: Message[] = [
 export default function NexusChat() {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState("");
-<<<<<<< HEAD
-=======
+
+
   const [searchParams] = useSearchParams();
   const [selectedVehicle, setSelectedVehicle] = useState<string | null>(searchParams.get("vehicle"));
   const [search, setSearch] = useState("");
@@ -43,7 +43,7 @@ export default function NexusChat() {
   const filtered = vehicles.filter((v) =>
     `${v.brand} ${v.model}`.toLowerCase().includes(search.toLowerCase())
   );
->>>>>>> d732f04 (Uso do Antigravity)
+
 
   const sendMessage = () => {
     if (!input.trim()) return;
@@ -57,7 +57,7 @@ export default function NexusChat() {
   };
 
   return (
-<<<<<<< HEAD
+
     <div className="flex flex-col h-[calc(100vh-56px)] animate-fade-in">
       <div className="flex-1 overflow-y-auto p-6 space-y-4">
         {messages.map((msg) => (
@@ -70,7 +70,7 @@ export default function NexusChat() {
               <div className="flex items-center gap-1.5 mb-1">
                 {msg.role === "nexus" ? <Bot className="w-3.5 h-3.5 text-primary" /> : <User className="w-3.5 h-3.5" />}
                 <span className="text-[11px] font-medium opacity-70">{msg.role === "nexus" ? "Nexus" : "Você"}</span>
-=======
+
     <div className="flex h-[calc(100vh-64px)] md:h-screen">
       {/* Vehicle sidebar */}
       <div className="hidden md:flex flex-col w-[280px] border-r border-slate-800/50 bg-slate-950/50">
@@ -103,7 +103,7 @@ export default function NexusChat() {
               <div className="min-w-0">
                 <p className="text-sm font-medium text-slate-200 truncate">{v.brand} {v.model}</p>
                 <p className="text-xs text-slate-500">{v.year} · R$ {v.price.toLocaleString("pt-BR")}</p>
->>>>>>> d732f04 (Uso do Antigravity)
+
               </div>
               {msg.content}
             </div>
@@ -111,7 +111,7 @@ export default function NexusChat() {
         ))}
       </div>
 
-<<<<<<< HEAD
+
       <div className="border-t border-border p-4">
         <div className="flex gap-2 max-w-3xl mx-auto">
           <input
@@ -123,7 +123,7 @@ export default function NexusChat() {
           <button onClick={sendMessage} className="h-10 w-10 bg-primary hover:bg-primary/90 text-primary-foreground rounded-md flex items-center justify-center transition-colors">
             <Send className="w-4 h-4" />
           </button>
-=======
+
       {/* Chat area */}
       <div className="flex-1 flex flex-col bg-slate-950/30">
         {/* Messages */}
@@ -194,7 +194,7 @@ export default function NexusChat() {
               <Send className="w-4 h-4" />
             </button>
           </div>
->>>>>>> d732f04 (Uso do Antigravity)
+
         </div>
       </div>
     </div>

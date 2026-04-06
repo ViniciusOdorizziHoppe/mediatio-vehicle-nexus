@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-<<<<<<< HEAD
+
 import { Loader2 } from 'lucide-react';
-=======
+
 import { motion } from 'framer-motion';
 import { AnimatedBackground } from '@/components/ui/AnimatedBackground';
->>>>>>> d732f04 (Uso do Antigravity)
+
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -23,7 +23,7 @@ export default function Login() {
   };
 
   return (
-<<<<<<< HEAD
+
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50 px-4">
       <div className="w-full max-w-md animate-fade-in">
         <div className="text-center mb-8">
@@ -89,7 +89,7 @@ export default function Login() {
           </Link>
         </p>
       </div>
-=======
+
     <div className="min-h-screen flex items-center justify-center bg-[#020617] relative overflow-hidden">
       <AnimatedBackground />
 
@@ -177,7 +177,7 @@ export default function Login() {
           </p>
         </div>
       </motion.div>
->>>>>>> d732f04 (Uso do Antigravity)
+
     </div>
   );
 }

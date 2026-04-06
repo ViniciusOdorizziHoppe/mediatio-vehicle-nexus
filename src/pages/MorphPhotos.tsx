@@ -1,21 +1,21 @@
-<<<<<<< HEAD
+
 import { useState } from "react";
 import { Upload, Sparkles, Download, Copy } from "lucide-react";
 import { toast } from "sonner";
-=======
+
 import { useState, useEffect } from "react";
 import { Upload, Sparkles, Download, Copy, Car, Search } from "lucide-react";
 import { vehicles } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 import { useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
->>>>>>> d732f04 (Uso do Antigravity)
+
 
 export default function MorphPhotos() {
   const [processing, setProcessing] = useState(false);
   const [enhanced, setEnhanced] = useState(false);
-<<<<<<< HEAD
-=======
+
+
 
   useEffect(() => {
     const v = searchParams.get("vehicle");
@@ -25,22 +25,22 @@ export default function MorphPhotos() {
   const filtered = vehicles.filter((v) =>
     `${v.brand} ${v.model}`.toLowerCase().includes(search.toLowerCase())
   );
->>>>>>> d732f04 (Uso do Antigravity)
+
 
   const handleEnhance = () => {
     setProcessing(true);
     setTimeout(() => {
       setProcessing(false);
       setEnhanced(true);
-<<<<<<< HEAD
+
       toast.success("Foto melhorada com IA!");
-=======
->>>>>>> d732f04 (Uso do Antigravity)
+
+
     }, 2500);
   };
 
   return (
-<<<<<<< HEAD
+
     <div className="p-6 animate-fade-in">
       <div className="mb-6">
         <h2 className="text-lg font-semibold text-foreground">MORPH Fotos</h2>
@@ -85,7 +85,7 @@ export default function MorphPhotos() {
               </button>
             </div>
           </div>
-=======
+
     <div className="flex h-[calc(100vh-64px)] md:h-screen">
       {/* Sidebar */}
       <div className="hidden md:flex flex-col w-[280px] border-r border-slate-800/50 bg-slate-950/50">
@@ -205,7 +205,7 @@ export default function MorphPhotos() {
               </motion.div>
             )}
           </motion.div>
->>>>>>> d732f04 (Uso do Antigravity)
+
         )}
       </div>
     </div>

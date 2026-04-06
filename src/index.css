@@ -6,7 +6,7 @@
 
 @layer base {
   :root {
-<<<<<<< HEAD
+
     --background: 210 20% 98%;
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
@@ -35,7 +35,7 @@
     --sidebar-foreground: 210 40% 98%;
     --sidebar-muted: 217.2 32.6% 17.5%;
     --sidebar-accent: 221.2 83.2% 53.3%;
-=======
+
     --background: 222 84% 5%;
     --foreground: 210 40% 98%;
     --card: 217 33% 10%;
@@ -72,7 +72,7 @@
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 217 33% 14%;
     --sidebar-ring: 221 83% 53%;
->>>>>>> d732f04 (Uso do Antigravity)
+
   }
 }
 
@@ -83,7 +83,7 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-<<<<<<< HEAD
+
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
   }
@@ -132,7 +132,7 @@
     opacity: 0;
   }
   to {
-=======
+
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
@@ -211,12 +211,12 @@
     pointer-events: none;
   }
   .glow-border:hover::before {
->>>>>>> d732f04 (Uso do Antigravity)
+
     opacity: 1;
   }
 }
 
-<<<<<<< HEAD
+
 @keyframes slideUp {
   from {
     opacity: 0;
@@ -255,7 +255,7 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--muted-foreground) / 0.3);
-=======
+
 /* ── Gradient Text ────────────────────────────────── */
 @layer utilities {
   .text-gradient {
@@ -341,5 +341,5 @@
     @apply border-blue-500/50 outline-none ring-2 ring-blue-500/20;
     box-shadow: 0 0 12px rgba(37, 99, 235, 0.1);
   }
->>>>>>> d732f04 (Uso do Antigravity)
+
 }

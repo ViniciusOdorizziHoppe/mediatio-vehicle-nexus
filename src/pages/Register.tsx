@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-<<<<<<< HEAD
+
 import { Loader2 } from 'lucide-react';
-=======
+
 import { motion } from 'framer-motion';
 import { AnimatedBackground } from '@/components/ui/AnimatedBackground';
->>>>>>> d732f04 (Uso do Antigravity)
+
 
 export default function Register() {
   const [name, setName] = useState('');
@@ -24,7 +24,7 @@ export default function Register() {
   };
 
   return (
-<<<<<<< HEAD
+
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50 px-4">
       <div className="w-full max-w-md animate-fade-in">
         <div className="text-center mb-8">
@@ -84,7 +84,7 @@ export default function Register() {
           <Link to="/login" className="text-primary hover:text-primary/80 font-semibold transition-colors">Entrar</Link>
         </p>
       </div>
-=======
+
     <div className="min-h-screen flex items-center justify-center bg-[#020617] relative overflow-hidden">
       <AnimatedBackground />
 
@@ -188,7 +188,7 @@ export default function Register() {
           </p>
         </div>
       </motion.div>
->>>>>>> d732f04 (Uso do Antigravity)
+
     </div>
   );
 }

@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 import { Car, Users, DollarSign, TrendingUp, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { PageSkeleton } from '@/components/ui/PageSkeleton';
@@ -7,7 +7,7 @@ import { useLeads } from '@/hooks/use-leads';
 import { formatCurrency, PIPELINE_STATUS, LEAD_STATUS } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 import { getUser } from '@/lib/auth';
-=======
+
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { formatCurrency } from '@/lib/utils';
@@ -39,7 +39,7 @@ const STATUS_LABELS: Record<string, string> = {
   vendido: 'Vendido',
   arquivado: 'Arquivado',
 };
->>>>>>> d732f04 (Uso do Antigravity)
+
 
 const STATUS_COLORS: Record<string, string> = {
   disponivel: 'bg-green-500',
@@ -71,7 +71,7 @@ export default function Dashboard() {
     statusCounts[s] = (statusCounts[s] || 0) + 1;
   });
 
-<<<<<<< HEAD
+
   const leadStatusCounts: Record<string, number> = {};
   leadList.forEach((l: any) => {
     const s = l.status || 'novo';
@@ -228,7 +228,7 @@ export default function Dashboard() {
             </tbody>
           </table>
         </div>
-=======
+
   if (isLoading) {
     return (
       <div className="p-6 md:p-8">
@@ -360,7 +360,7 @@ export default function Dashboard() {
             )}
           </div>
         </GlowCard>
->>>>>>> d732f04 (Uso do Antigravity)
+
       </div>
     </div>
   );

@@ -1,16 +1,16 @@
-<<<<<<< HEAD
+
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
-=======
+
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { LucideIcon } from 'lucide-react';
->>>>>>> d732f04 (Uso do Antigravity)
+
 
 interface StatCardProps {
   title: string;
   value: string;
-<<<<<<< HEAD
+
   subtitle?: string;
   icon: LucideIcon;
   trend?: { value: string; positive: boolean };
@@ -37,7 +37,7 @@ export function StatCard({ title, value, subtitle, icon: Icon, trend, className 
       <p className="text-[13px] text-muted-foreground mt-0.5">{title}</p>
       {subtitle && <p className="text-[11px] text-muted-foreground mt-1">{subtitle}</p>}
     </div>
-=======
+
   icon: LucideIcon;
   trend?: string;
   trendUp?: boolean;
@@ -104,6 +104,6 @@ export function StatCard({ title, value, icon: Icon, trend, trendUp, gradient, d
         </div>
       </div>
     </motion.div>
->>>>>>> d732f04 (Uso do Antigravity)
+
   );
 }

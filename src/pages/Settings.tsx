@@ -1,5 +1,5 @@
 import { useState } from "react";
-<<<<<<< HEAD
+
 import { Wifi, Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { getUser } from "@/lib/auth";
@@ -8,7 +8,7 @@ export default function Settings() {
   const user = getUser();
 
   const [integrations, setIntegrations] = useState<Array<{ name: string; fields: Array<{ key: string; label: string; placeholder: string }>; status: "idle" | "ok" | "error" }>>([
-=======
+
 import { Check, X, Wifi, Save } from "lucide-react";
 import { GlowCard } from "@/components/ui/GlowCard";
 import { motion } from "framer-motion";
@@ -22,7 +22,7 @@ interface Integration {
 export default function Settings() {
   const [saved, setSaved] = useState('');
   const [integrations, setIntegrations] = useState<Integration[]>([
->>>>>>> d732f04 (Uso do Antigravity)
+
     { name: "Motor Match API", fields: [{ key: "url", label: "URL", placeholder: "https://api.motormatch.com" }], status: "idle" },
     { name: "Nexus / Dify", fields: [{ key: "url", label: "URL", placeholder: "https://dify.example.com" }, { key: "apiKey", label: "API Key", placeholder: "sk-..." }], status: "idle" },
     { name: "MORPH API", fields: [{ key: "url", label: "URL", placeholder: "https://morph.example.com" }], status: "idle" },
@@ -38,7 +38,7 @@ export default function Settings() {
   };
 
   return (
-<<<<<<< HEAD
+
     <div className="p-6 max-w-2xl space-y-6 animate-fade-in">
       <div>
         <h2 className="text-lg font-semibold text-foreground">Configurações</h2>
@@ -108,7 +108,7 @@ export default function Settings() {
                 Testar conexão
               </button>
             </div>
-=======
+
     <div className="p-6 md:p-8 max-w-3xl mx-auto space-y-8">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
         <h1 className="text-2xl font-bold text-slate-100">Configurações</h1>
@@ -208,7 +208,7 @@ export default function Settings() {
                 Testar conexão
               </button>
             </GlowCard>
->>>>>>> d732f04 (Uso do Antigravity)
+
           ))}
         </div>
       </div>

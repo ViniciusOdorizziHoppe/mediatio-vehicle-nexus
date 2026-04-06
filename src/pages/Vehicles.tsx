@@ -1,18 +1,18 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-<<<<<<< HEAD
+
 import { useVehicles } from '@/hooks/use-vehicles';
 import { formatCurrency, formatKm, PIPELINE_STATUS } from '@/lib/utils';
 import { Plus, Search, Car } from 'lucide-react';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { TableSkeleton } from '@/components/ui/PageSkeleton';
-=======
+
 import { useVehicles, useDeleteVehicle, type Vehicle } from '@/hooks/useVehicles';
 import { formatCurrency, formatKm, PIPELINE_STATUS, getScoreColor } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { Plus, Search, Eye, Pencil, Trash2 } from 'lucide-react';
->>>>>>> d732f04 (Uso do Antigravity)
+
 
 export default function Vehicles() {
   const [search, setSearch] = useState('');
@@ -26,7 +26,7 @@ export default function Vehicles() {
   const vehicles = data || [];
 
   return (
-<<<<<<< HEAD
+
     <div className="p-6 space-y-5 animate-fade-in">
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -39,7 +39,7 @@ export default function Vehicles() {
           className="inline-flex items-center gap-1.5 h-9 px-3 bg-primary hover:bg-primary/90 text-primary-foreground text-[13px] font-medium rounded-md transition-colors"
         >
           <Plus className="w-3.5 h-3.5" /> Novo Veículo
-=======
+
     <div className="p-6 md:p-8 space-y-6">
       {/* Header */}
       <motion.div
@@ -54,12 +54,12 @@ export default function Vehicles() {
         <Link to="/vehicles/new" className="btn-brand flex items-center gap-2 text-sm">
           <Plus className="w-4 h-4" />
           Novo Veículo
->>>>>>> d732f04 (Uso do Antigravity)
+
         </Link>
       </motion.div>
 
       {/* Filters */}
-<<<<<<< HEAD
+
       <div className="flex gap-3">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
@@ -69,7 +69,7 @@ export default function Vehicles() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="w-full h-9 pl-9 pr-3 text-[13px] bg-background border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
-=======
+
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -84,24 +84,24 @@ export default function Vehicles() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="input-dark pl-10"
->>>>>>> d732f04 (Uso do Antigravity)
+
           />
         </div>
         <select
           value={status}
           onChange={e => setStatus(e.target.value)}
-<<<<<<< HEAD
+
           className="h-9 px-3 text-[13px] bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
-=======
+
           className="input-dark w-auto min-w-[160px]"
->>>>>>> d732f04 (Uso do Antigravity)
+
         >
           <option value="">Todos os status</option>
           {Object.entries(PIPELINE_STATUS).map(([key, val]) => (
             <option key={key} value={key}>{val.label}</option>
           ))}
         </select>
-<<<<<<< HEAD
+
       </div>
 
       {/* Table */}
@@ -173,7 +173,7 @@ export default function Vehicles() {
             </tbody>
           </table>
         </div>
-=======
+
         <select
           value={tipo}
           onChange={e => setTipo(e.target.value)}
@@ -303,7 +303,7 @@ export default function Vehicles() {
             </p>
           )}
         </motion.div>
->>>>>>> d732f04 (Uso do Antigravity)
+
       )}
     </div>
   );

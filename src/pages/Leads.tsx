@@ -1,16 +1,16 @@
 import { useState } from 'react';
 import { useLeads, useCreateLead, useUpdateLeadStatus } from '@/hooks/use-leads';
 import { LEAD_STATUS } from '@/lib/utils';
-<<<<<<< HEAD
+
 import { Plus, Search, Users, X, Loader2, ExternalLink } from 'lucide-react';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { TableSkeleton } from '@/components/ui/PageSkeleton';
 import { toast } from 'sonner';
-=======
+
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Search, Pencil, Trash2, Users, X } from 'lucide-react';
->>>>>>> d732f04 (Uso do Antigravity)
+
 
 export default function Leads() {
   const [search, setSearch] = useState('');
@@ -38,7 +38,7 @@ export default function Leads() {
   };
 
   return (
-<<<<<<< HEAD
+
     <div className="p-6 space-y-5 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
@@ -50,7 +50,7 @@ export default function Leads() {
           className="inline-flex items-center gap-1.5 h-9 px-3 bg-primary hover:bg-primary/90 text-primary-foreground text-[13px] font-medium rounded-md transition-colors"
         >
           <Plus className="w-3.5 h-3.5" /> Novo Lead
-=======
+
     <div className="p-6 md:p-8 space-y-6">
       {/* Header */}
       <motion.div
@@ -64,12 +64,12 @@ export default function Leads() {
         </div>
         <button onClick={() => setShowForm(true)} className="btn-brand flex items-center gap-2 text-sm">
           <Plus className="w-4 h-4" /> Novo Lead
->>>>>>> d732f04 (Uso do Antigravity)
+
         </button>
       </motion.div>
 
       {/* Filters */}
-<<<<<<< HEAD
+
       <div className="flex gap-3">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
@@ -82,7 +82,7 @@ export default function Leads() {
         <select
           value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
           className="h-9 px-3 text-[13px] bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
-=======
+
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -103,7 +103,7 @@ export default function Leads() {
           value={status}
           onChange={e => setStatus(e.target.value)}
           className="input-dark w-auto min-w-[160px]"
->>>>>>> d732f04 (Uso do Antigravity)
+
         >
           <option value="">Todos os status</option>
           {Object.entries(LEAD_STATUS).map(([key, val]) => (
@@ -112,7 +112,7 @@ export default function Leads() {
         </select>
       </motion.div>
 
-<<<<<<< HEAD
+
       {/* Form Modal */}
       {showForm && (
         <LeadFormModal
@@ -185,7 +185,7 @@ export default function Leads() {
             </tbody>
           </table>
         </div>
-=======
+
       {/* Modal */}
       <AnimatePresence>
         {showForm && (
@@ -295,7 +295,7 @@ export default function Leads() {
             )}
           </div>
         </motion.div>
->>>>>>> d732f04 (Uso do Antigravity)
+
       )}
     </div>
   );
@@ -319,7 +319,7 @@ function LeadFormModal({ onClose, onSave, loading }: {
   };
 
   return (
-<<<<<<< HEAD
+
     <div className="fixed inset-0 bg-foreground/20 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
       <div className="bg-card border border-border rounded-lg shadow-elevated w-full max-w-lg mx-4 animate-slide-up">
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">
@@ -345,7 +345,7 @@ function LeadFormModal({ onClose, onSave, loading }: {
               <label className="block text-[12px] font-medium text-foreground mb-1">Canal</label>
               <select value={form.canal} onChange={e => setForm(f => ({...f, canal: e.target.value}))}
                 className="w-full h-9 px-3 text-[13px] bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary">
-=======
+
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -388,7 +388,7 @@ function LeadFormModal({ onClose, onSave, loading }: {
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-1">Canal</label>
               <select value={form.canal} onChange={e => setForm(f => ({ ...f, canal: e.target.value as Lead['canal'] }))} className="input-dark">
->>>>>>> d732f04 (Uso do Antigravity)
+
                 <option value="whatsapp">WhatsApp</option>
                 <option value="facebook">Facebook</option>
                 <option value="olx">OLX</option>
@@ -397,7 +397,7 @@ function LeadFormModal({ onClose, onSave, loading }: {
               </select>
             </div>
             <div>
-<<<<<<< HEAD
+
               <label className="block text-[12px] font-medium text-foreground mb-1">Cidade</label>
               <input value={form.cidade} onChange={e => setForm(f => ({...f, cidade: e.target.value}))}
                 className="w-full h-9 px-3 text-[13px] bg-background border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
@@ -407,7 +407,7 @@ function LeadFormModal({ onClose, onSave, loading }: {
               <input value={form.interesse.descricao} onChange={e => setForm(f => ({...f, interesse: { descricao: e.target.value }}))}
                 placeholder="Procura moto até R$ 10.000..."
                 className="w-full h-9 px-3 text-[13px] bg-background border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
-=======
+
               <label className="block text-sm font-medium text-slate-300 mb-1">Status</label>
               <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value as Lead['status'] }))} className="input-dark">
                 {Object.entries(LEAD_STATUS).map(([key, val]) => (
@@ -426,11 +426,11 @@ function LeadFormModal({ onClose, onSave, loading }: {
             <div className="col-span-2">
               <label className="block text-sm font-medium text-slate-300 mb-1">Notas</label>
               <textarea rows={3} value={form.notas} onChange={e => setForm(f => ({ ...f, notas: e.target.value }))} className="input-dark resize-none" />
->>>>>>> d732f04 (Uso do Antigravity)
+
             </div>
           </div>
           <div className="flex gap-3 pt-2">
-<<<<<<< HEAD
+
             <button type="submit" disabled={loading}
               className="flex-1 h-9 bg-primary hover:bg-primary/90 disabled:opacity-50 text-primary-foreground text-[13px] font-medium rounded-md transition-colors flex items-center justify-center gap-2">
               {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
@@ -438,12 +438,12 @@ function LeadFormModal({ onClose, onSave, loading }: {
             </button>
             <button type="button" onClick={onClose}
               className="flex-1 h-9 bg-muted hover:bg-muted/80 text-foreground text-[13px] font-medium rounded-md transition-colors">
-=======
+
             <button type="submit" disabled={loading} className="btn-brand flex-1 disabled:opacity-50">
               {loading ? 'Salvando...' : 'Salvar'}
             </button>
             <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-lg bg-slate-800/50 hover:bg-slate-800 text-slate-300 font-medium transition-colors border border-slate-700/50">
->>>>>>> d732f04 (Uso do Antigravity)
+
               Cancelar
             </button>
           </div>

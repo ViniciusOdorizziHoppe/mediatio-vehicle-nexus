@@ -1,19 +1,19 @@
 import { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-<<<<<<< HEAD
+
 import { useVehicle, useGenerateAd } from '@/hooks/use-vehicles';
 import { formatCurrency, formatKm, PIPELINE_STATUS } from '@/lib/utils';
 import { ArrowLeft, Copy, Check, Sparkles, Loader2 } from 'lucide-react';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { PageSkeleton } from '@/components/ui/PageSkeleton';
 import { toast } from 'sonner';
-=======
+
 import { useVehicle, useGenerateAd, useDeleteVehicle } from '@/hooks/useVehicles';
 import { formatCurrency, formatKm, PIPELINE_STATUS, getScoreColor } from '@/lib/utils';
 import { GlowCard } from '@/components/ui/GlowCard';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Pencil, Trash2, Sparkles, Copy, Check } from 'lucide-react';
->>>>>>> d732f04 (Uso do Antigravity)
+
 
 export default function VehicleDetail() {
   const { id } = useParams<{ id: string }>();
@@ -46,7 +46,7 @@ export default function VehicleDetail() {
     </div>
   );
 
-<<<<<<< HEAD
+
   const statusKey = vehicle.pipeline?.status || 'disponivel';
   const statusInfo = PIPELINE_STATUS[statusKey];
   const score = vehicle.score?.valor || 0;
@@ -64,7 +64,7 @@ export default function VehicleDetail() {
         </div>
         <div className="flex gap-2">
           <StatusBadge status={statusKey} label={statusInfo?.label || statusKey} />
-=======
+
   if (isLoading) {
     return (
       <div className="p-6 md:p-8">
@@ -125,18 +125,18 @@ export default function VehicleDetail() {
           >
             <Trash2 className="w-4 h-4" /> Remover
           </button>
->>>>>>> d732f04 (Uso do Antigravity)
+
         </div>
       </motion.div>
 
-<<<<<<< HEAD
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 space-y-4">
           {/* Vehicle info */}
           <InfoSection title="Dados do Veículo">
             <div className="grid grid-cols-2 gap-y-3 gap-x-6">
               <InfoRow label="Tipo" value={vehicle.tipo === 'moto' ? 'Moto' : 'Carro'} />
-=======
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main info */}
         <div className="lg:col-span-2 space-y-6">
@@ -144,13 +144,13 @@ export default function VehicleDetail() {
             <h2 className="font-semibold text-slate-100 mb-4">Dados do Veículo</h2>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <InfoRow label="Tipo" value={vehicle.tipo === 'moto' ? '🏍️ Moto' : '🚗 Carro'} />
->>>>>>> d732f04 (Uso do Antigravity)
+
               <InfoRow label="Marca" value={vehicle.marca} />
               <InfoRow label="Modelo" value={vehicle.modelo} />
               <InfoRow label="Ano" value={String(vehicle.ano)} />
               <InfoRow label="Cor" value={vehicle.cor || '—'} />
               <InfoRow label="KM" value={vehicle.km ? formatKm(vehicle.km) : '—'} />
-<<<<<<< HEAD
+
             </div>
           </InfoSection>
 
@@ -163,7 +163,7 @@ export default function VehicleDetail() {
               {vehicle.precos?.comissaoEstimada ? <InfoRow label="Comissão" value={<span className="text-emerald-600 font-medium">{formatCurrency(vehicle.precos.comissaoEstimada)}</span>} /> : null}
             </div>
           </InfoSection>
-=======
+
               <InfoRow label="Status" value={
                 <span className={`inline-flex px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${statusInfo?.color}`}>
                   {statusInfo?.label}
@@ -188,11 +188,11 @@ export default function VehicleDetail() {
               )}
             </div>
           </GlowCard>
->>>>>>> d732f04 (Uso do Antigravity)
+
 
           {/* Owner */}
           {vehicle.proprietario?.nome && (
-<<<<<<< HEAD
+
             <InfoSection title="Proprietário">
               <div className="grid grid-cols-2 gap-y-3 gap-x-6">
                 <InfoRow label="Nome" value={vehicle.proprietario.nome} />
@@ -210,7 +210,7 @@ export default function VehicleDetail() {
                 className="inline-flex items-center gap-1.5 h-8 px-3 bg-primary hover:bg-primary/90 disabled:opacity-50 text-primary-foreground text-[12px] font-medium rounded-md transition-colors">
                 {generateAd.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
                 {generateAd.isPending ? 'Gerando...' : 'Gerar Texto'}
-=======
+
             <GlowCard delay={0.3}>
               <h2 className="font-semibold text-slate-100 mb-4">Proprietário / Vendedor</h2>
               <div className="grid grid-cols-2 gap-4 text-sm">
@@ -248,15 +248,15 @@ export default function VehicleDetail() {
                     <Sparkles className="w-4 h-4" /> Gerar Texto
                   </>
                 )}
->>>>>>> d732f04 (Uso do Antigravity)
+
               </button>
             </div>
             {adText && (
-<<<<<<< HEAD
+
               <div className="space-y-3">
                 <AdBlock label="WhatsApp" text={adText.whatsapp} copied={copied === 'whatsapp'} onCopy={() => handleCopy(adText.whatsapp, 'whatsapp')} />
                 <AdBlock label="Facebook" text={adText.facebook} copied={copied === 'facebook'} onCopy={() => handleCopy(adText.facebook, 'facebook')} />
-=======
+
               <div className="space-y-4">
                 {(['whatsapp', 'facebook'] as const).map((platform) => (
                   <div key={platform}>
@@ -276,13 +276,13 @@ export default function VehicleDetail() {
                     </pre>
                   </div>
                 ))}
->>>>>>> d732f04 (Uso do Antigravity)
+
               </div>
             )}
           </GlowCard>
         </div>
 
-<<<<<<< HEAD
+
         {/* Right sidebar */}
         <div className="space-y-4">
           <div className={`rounded-lg border p-5 text-center ${score >= 70 ? 'bg-emerald-50 border-emerald-200' : score >= 40 ? 'bg-amber-50 border-amber-200' : 'bg-muted border-border'}`}>
@@ -299,7 +299,7 @@ export default function VehicleDetail() {
                   <div key={i} className="flex items-center justify-between text-[12px]">
                     <span className="text-foreground">{item.atingido ? '✓' : '✗'} {item.nome}</span>
                     <span className="text-muted-foreground font-medium">{item.pontos}/{item.maximo}</span>
-=======
+
         {/* Score sidebar */}
         <div className="space-y-6">
           <GlowCard delay={0.2} className="text-center">
@@ -343,14 +343,14 @@ export default function VehicleDetail() {
                       <span className="text-slate-300">{item.nome}</span>
                     </div>
                     <span className="font-medium text-slate-400">{item.pontos}/{item.maximo}</span>
->>>>>>> d732f04 (Uso do Antigravity)
+
                   </div>
                 ))}
               </div>
             </GlowCard>
           )}
 
-<<<<<<< HEAD
+
           <div className="bg-card border border-border rounded-lg p-5">
             <h4 className="text-[12px] font-semibold text-foreground mb-3">Condições</h4>
             <div className="space-y-2 text-[12px]">
@@ -362,7 +362,7 @@ export default function VehicleDetail() {
               </div>
               <div className="flex items-center gap-2 text-foreground">
                 Doc: {vehicle.condicoes?.documentacao || '—'}
-=======
+
           <GlowCard delay={0.4}>
             <h3 className="font-semibold text-slate-100 mb-3 text-sm">Condições</h3>
             <div className="space-y-2.5 text-sm">
@@ -373,7 +373,7 @@ export default function VehicleDetail() {
               <div className="flex items-center gap-2.5">
                 <span className={`w-2 h-2 rounded-full ${vehicle.condicoes?.aceitaFinanciamento ? 'bg-green-400' : 'bg-slate-600'}`} />
                 <span className="text-slate-300">Aceita financiamento</span>
->>>>>>> d732f04 (Uso do Antigravity)
+
               </div>
             </div>
           </GlowCard>
@@ -395,7 +395,7 @@ function InfoSection({ title, children }: { title: string; children: React.React
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div>
-<<<<<<< HEAD
+
       <p className="text-[11px] text-muted-foreground">{label}</p>
       <p className="text-[13px] font-medium text-foreground">{value}</p>
     </div>
@@ -412,10 +412,10 @@ function AdBlock({ label, text, copied, onCopy }: { label: string; text: string;
         </button>
       </div>
       <pre className="bg-muted rounded-md p-3 text-[12px] whitespace-pre-wrap font-sans text-foreground">{text}</pre>
-=======
+
       <p className="text-slate-500 text-xs mb-0.5">{label}</p>
       <p className="font-medium text-slate-200">{value}</p>
->>>>>>> d732f04 (Uso do Antigravity)
+
     </div>
   );
 }

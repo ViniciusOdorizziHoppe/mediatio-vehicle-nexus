@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 import { useVehicles, useUpdateVehicleStatus } from '@/hooks/use-vehicles';
 import { formatCurrency, PIPELINE_STATUS } from '@/lib/utils';
 import { Link } from 'react-router-dom';
@@ -12,7 +12,7 @@ const COLUMNS = [
   { key: 'proposta', label: 'Proposta', dotColor: 'bg-amber-500' },
   { key: 'vendido', label: 'Vendido', dotColor: 'bg-violet-500' },
   { key: 'arquivado', label: 'Arquivado', dotColor: 'bg-slate-400' },
-=======
+
 import { useVehicles, useUpdateVehicleStatus, type Vehicle } from '@/hooks/useVehicles';
 import { formatCurrency, getScoreColor } from '@/lib/utils';
 import { Link } from 'react-router-dom';
@@ -25,7 +25,7 @@ const COLUMNS = [
   { key: 'proposta', label: 'Proposta', gradient: 'from-yellow-500 to-amber-500' },
   { key: 'vendido', label: 'Vendido', gradient: 'from-purple-500 to-violet-500' },
   { key: 'arquivado', label: 'Arquivado', gradient: 'from-slate-500 to-slate-600' },
->>>>>>> d732f04 (Uso do Antigravity)
+
 ] as const;
 
 export default function Pipeline() {
@@ -46,7 +46,7 @@ export default function Pipeline() {
     }
   };
 
-<<<<<<< HEAD
+
   if (isLoading) return <PageSkeleton />;
 
   return (
@@ -61,7 +61,7 @@ export default function Pipeline() {
           className="inline-flex items-center gap-1.5 h-9 px-3 bg-primary hover:bg-primary/90 text-primary-foreground text-[13px] font-medium rounded-md transition-colors"
         >
           <Plus className="w-3.5 h-3.5" /> Novo Veículo
-=======
+
   if (isLoading) {
     return (
       <div className="p-6 md:p-8">
@@ -90,11 +90,11 @@ export default function Pipeline() {
         </div>
         <Link to="/vehicles/new" className="btn-brand flex items-center gap-2 text-sm">
           <Plus className="w-4 h-4" /> Novo Veículo
->>>>>>> d732f04 (Uso do Antigravity)
+
         </Link>
       </motion.div>
 
-<<<<<<< HEAD
+
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4 overflow-x-auto">
         {COLUMNS.map(col => {
           const colVehicles = getByStatus(col.key);
@@ -130,7 +130,7 @@ export default function Pipeline() {
                       </select>
                     </div>
                   </div>
-=======
+
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 overflow-x-auto">
         {COLUMNS.map((col, colIdx) => {
           const colVehicles = getByStatus(col.key);
@@ -170,29 +170,29 @@ export default function Pipeline() {
                       onMove={handleMove}
                     />
                   </motion.div>
->>>>>>> d732f04 (Uso do Antigravity)
+
                 ))}
                 {colVehicles.length === 0 && (
                   <p className="text-center text-[11px] text-muted-foreground py-8">Nenhum veículo</p>
                 )}
               </div>
-<<<<<<< HEAD
+
             </div>
-=======
+
 
               {colVehicles.length === 0 && (
                 <p className="text-center text-slate-600 text-xs mt-8 px-3">Nenhum veículo</p>
               )}
             </motion.div>
->>>>>>> d732f04 (Uso do Antigravity)
+
           );
         })}
       </div>
     </div>
   );
 }
-<<<<<<< HEAD
-=======
+
+
 
 function VehicleCard({
   vehicle,
@@ -249,4 +249,4 @@ function VehicleCard({
     </div>
   );
 }
->>>>>>> d732f04 (Uso do Antigravity)
+

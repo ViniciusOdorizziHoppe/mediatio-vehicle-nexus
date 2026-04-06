@@ -2,17 +2,17 @@ import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { formatCurrency } from '@/lib/utils';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-<<<<<<< HEAD
+
 import { PageSkeleton } from '@/components/ui/PageSkeleton';
 
 const COLORS = ['hsl(221, 83%, 53%)', 'hsl(142, 71%, 45%)', 'hsl(38, 92%, 50%)', 'hsl(270, 60%, 55%)', 'hsl(215, 16%, 47%)'];
-=======
+
 import { GlowCard } from '@/components/ui/GlowCard';
 import { motion } from 'framer-motion';
 
 const COLORS = ['#2563eb', '#22c55e', '#f59e0b', '#7c3aed', '#06b6d4'];
 
->>>>>>> d732f04 (Uso do Antigravity)
+
 const MONTH_NAMES = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
 export default function Analytics() {
@@ -56,7 +56,7 @@ export default function Analytics() {
   };
 
   return (
-<<<<<<< HEAD
+
     <div className="p-6 space-y-6 animate-fade-in">
       <div>
         <h2 className="text-lg font-semibold text-foreground">Analytics</h2>
@@ -80,7 +80,7 @@ export default function Analytics() {
             </ResponsiveContainer>
           ) : (
             <div className="flex items-center justify-center h-48 text-[13px] text-muted-foreground">Nenhum dado disponível</div>
-=======
+
     <div className="p-6 md:p-8 space-y-6">
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -122,11 +122,11 @@ export default function Analytics() {
             <div className="flex items-center justify-center h-48 text-slate-500">
               <p>Nenhum dado disponível</p>
             </div>
->>>>>>> d732f04 (Uso do Antigravity)
+
           )}
         </GlowCard>
 
-<<<<<<< HEAD
+
         {/* Comissões */}
         <div className="bg-card border border-border rounded-lg p-5">
           <h3 className="text-sm font-semibold text-foreground mb-4">Comissões por Mês</h3>
@@ -142,7 +142,7 @@ export default function Analytics() {
             </ResponsiveContainer>
           ) : (
             <div className="flex items-center justify-center h-48 text-[13px] text-muted-foreground">Nenhuma venda registrada</div>
-=======
+
         {/* Monthly Commissions */}
         <GlowCard delay={0.2}>
           <h2 className="text-lg font-semibold text-slate-100 mb-4">Comissões por Mês</h2>
@@ -169,23 +169,23 @@ export default function Analytics() {
             <div className="flex items-center justify-center h-48 text-slate-500">
               <p>Nenhuma venda registrada ainda</p>
             </div>
->>>>>>> d732f04 (Uso do Antigravity)
+
           )}
         </GlowCard>
 
-<<<<<<< HEAD
+
         {/* Valor por status */}
         <div className="bg-card border border-border rounded-lg p-5 lg:col-span-2">
           <h3 className="text-sm font-semibold text-foreground mb-4">Valor em Carteira por Status</h3>
-=======
+
         {/* Value by Status */}
         <GlowCard delay={0.3} className="lg:col-span-2">
           <h2 className="text-lg font-semibold text-slate-100 mb-4">Valor em Carteira por Status</h2>
->>>>>>> d732f04 (Uso do Antigravity)
+
           {pipelineData.length > 0 ? (
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={pipelineData} layout="vertical">
-<<<<<<< HEAD
+
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(214, 32%, 91%)" />
                 <XAxis type="number" tickFormatter={(v: number) => `R$${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 11, fill: 'hsl(215, 16%, 47%)' }} />
                 <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: 'hsl(215, 16%, 47%)' }} width={100} />
@@ -195,7 +195,7 @@ export default function Analytics() {
             </ResponsiveContainer>
           ) : (
             <div className="flex items-center justify-center h-32 text-[13px] text-muted-foreground">Nenhum dado</div>
-=======
+
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.06)" />
                 <XAxis type="number" tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 12, fill: '#64748b' }} axisLine={{ stroke: '#1e293b' }} tickLine={false} />
                 <YAxis type="category" dataKey="name" tick={{ fontSize: 12, fill: '#94a3b8' }} width={100} axisLine={{ stroke: '#1e293b' }} tickLine={false} />
@@ -216,7 +216,7 @@ export default function Analytics() {
             <div className="flex items-center justify-center h-32 text-slate-500">
               <p>Nenhum dado disponível</p>
             </div>
->>>>>>> d732f04 (Uso do Antigravity)
+
           )}
         </GlowCard>
       </div>
