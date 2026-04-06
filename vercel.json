@@ -3,14 +3,6 @@
     {
       "source": "/api/:path*",
       "destination": "https://extensive-avril-morpheus-ffc73d22.koyeb.app/api/:path*"
-    },
-    {
-      "source": "/health",
-      "destination": "https://extensive-avril-morpheus-ffc73d22.koyeb.app/health"
-    },
-    {
-      "source": "/((?!api|health|assets|_next|favicon\\.ico|robots\\.txt).*)",
-      "destination": "/index.html"
     }
   ]
 }
