@@ -6,10 +6,10 @@ import { getUser } from "@/lib/auth";
 export default function Settings() {
   const user = getUser();
 
-  const [integrations, setIntegrations] = useState([
-    { name: "Motor Match API", fields: [{ key: "url", label: "URL", placeholder: "https://api.motormatch.com" }], status: "idle" as const },
-    { name: "Nexus / Dify", fields: [{ key: "url", label: "URL", placeholder: "https://dify.example.com" }, { key: "apiKey", label: "API Key", placeholder: "sk-..." }], status: "idle" as const },
-    { name: "MORPH API", fields: [{ key: "url", label: "URL", placeholder: "https://morph.example.com" }], status: "idle" as const },
+  const [integrations, setIntegrations] = useState<Array<{ name: string; fields: Array<{ key: string; label: string; placeholder: string }>; status: "idle" | "ok" | "error" }>>([
+    { name: "Motor Match API", fields: [{ key: "url", label: "URL", placeholder: "https://api.motormatch.com" }], status: "idle" },
+    { name: "Nexus / Dify", fields: [{ key: "url", label: "URL", placeholder: "https://dify.example.com" }, { key: "apiKey", label: "API Key", placeholder: "sk-..." }], status: "idle" },
+    { name: "MORPH API", fields: [{ key: "url", label: "URL", placeholder: "https://morph.example.com" }], status: "idle" },
   ]);
 
   const testConnection = (index: number) => {
