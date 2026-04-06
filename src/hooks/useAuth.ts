@@ -1,60 +1,59 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import api from '@/lib/api';
 import { setAuth, clearAuth, getUser, getToken, type User } from '@/lib/auth';
 
 interface AuthResponse {
   success: boolean;
   data: {
+    token: string;
     user: User;
-    accessToken: string;
-    refreshToken: string;
   };
 }
 
 export function useAuth() {
-  const [user, setUser] = useState<User | null>(getUser());
+  const [user, setUser]       = useState<User | null>(getUser());
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError]     = useState<string | null>(null);
 
-  const login = async (email: string, password: string) => {
+  const login = useCallback(async (email: string, password: string) => {
     setLoading(true);
     setError(null);
     try {
       const res = await api.post<AuthResponse>('/auth/login', { email, password });
-      setAuth(res.data.accessToken, res.data.user);
+      setAuth(res.data.token, res.data.user);
       setUser(res.data.user);
-      return res.data;
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Erro ao fazer login';
+      return res.data.user;
+    } catch (err: any) {
+      const msg = err.message || 'Erro ao fazer login';
       setError(msg);
-      throw err;
+      throw new Error(msg);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const register = async (name: string, email: string, password: string) => {
+  const register = useCallback(async (name: string, email: string, password: string) => {
     setLoading(true);
     setError(null);
     try {
       const res = await api.post<AuthResponse>('/auth/register', { name, email, password });
-      setAuth(res.data.accessToken, res.data.user);
+      setAuth(res.data.token, res.data.user);
       setUser(res.data.user);
-      return res.data;
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Erro ao registrar';
+      return res.data.user;
+    } catch (err: any) {
+      const msg = err.message || 'Erro ao criar conta';
       setError(msg);
-      throw err;
+      throw new Error(msg);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     clearAuth();
     setUser(null);
     window.location.href = '/login';
-  };
+  }, []);
 
   return {
     user,
@@ -66,3 +65,5 @@ export function useAuth() {
     logout,
   };
 }
+
+export default useAuth;

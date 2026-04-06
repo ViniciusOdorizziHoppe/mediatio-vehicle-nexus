@@ -1,4 +1,8 @@
-import api from './api';
+/**
+ * auth.ts — Mediatio
+ * Exporta tudo que useAuth.ts precisa:
+ * setAuth, clearAuth, getUser, getToken, User
+ */
 
 const TOKEN_KEY = 'mediatio_token';
 const USER_KEY  = 'mediatio_user';
@@ -11,35 +15,28 @@ export interface User {
   phone?: string;
 }
 
-interface AuthResponse {
-  success: boolean;
-  data: {
-    token: string;
-    user: User;
-  };
+// ── Salvar autenticação ────────────────────────────────────
+export function setAuth(token: string, user: User): void {
+  localStorage.setItem(TOKEN_KEY, token);
+  localStorage.setItem(USER_KEY, JSON.stringify(user));
 }
 
-// ── Login ──────────────────────────────────────────────────
-export async function login(email: string, password: string): Promise<User> {
-  const res = await api.post<AuthResponse>('/auth/login', { email, password });
-  localStorage.setItem(TOKEN_KEY, res.data.token);
-  localStorage.setItem(USER_KEY, JSON.stringify(res.data.user));
-  return res.data.user;
-}
-
-// ── Register ───────────────────────────────────────────────
-export async function register(name: string, email: string, password: string): Promise<User> {
-  const res = await api.post<AuthResponse>('/auth/register', { name, email, password });
-  localStorage.setItem(TOKEN_KEY, res.data.token);
-  localStorage.setItem(USER_KEY, JSON.stringify(res.data.user));
-  return res.data.user;
-}
-
-// ── Logout ─────────────────────────────────────────────────
-export function logout(): void {
+// ── Limpar autenticação ────────────────────────────────────
+export function clearAuth(): void {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(USER_KEY);
-  window.location.href = '/login';
+}
+
+// ── Getters ────────────────────────────────────────────────
+export function getToken(): string | null {
+  return localStorage.getItem(TOKEN_KEY);
+}
+
+export function getUser(): User | null {
+  const raw = localStorage.getItem(USER_KEY);
+  if (!raw) return null;
+  try { return JSON.parse(raw) as User; }
+  catch { return null; }
 }
 
 // ── Estado ─────────────────────────────────────────────────
@@ -47,13 +44,12 @@ export function isAuthenticated(): boolean {
   return !!localStorage.getItem(TOKEN_KEY);
 }
 
-export function getToken(): string | null {
-  return localStorage.getItem(TOKEN_KEY);
+// ── Atalhos (compatibilidade) ──────────────────────────────
+export function getCurrentUser(): User | null {
+  return getUser();
 }
 
-export function getCurrentUser(): User | null {
-  const raw = localStorage.getItem(USER_KEY);
-  if (!raw) return null;
-  try { return JSON.parse(raw); }
-  catch { return null; }
+export function logout(): void {
+  clearAuth();
+  window.location.href = '/login';
 }
