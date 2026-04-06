@@ -1,5 +1,5 @@
 import { useLocation } from "react-router-dom";
-import { Bell, Search } from "lucide-react";
+import { Bell, Search, Command } from "lucide-react";
 import { getUser } from "@/lib/auth";
 
 const pageTitles: Record<string, string> = {
@@ -26,24 +26,26 @@ export function TopNavbar() {
     : "U";
 
   return (
-    <header className="h-14 border-b border-border bg-card flex items-center justify-between px-6 shrink-0">
-      <h1 className="text-[15px] font-semibold text-foreground">{title}</h1>
+    <header className="h-16 border-b border-border bg-white flex items-center justify-between px-6 shrink-0">
+      <div>
+        <h1 className="text-xl font-semibold text-foreground">{title}</h1>
+      </div>
 
-      <div className="flex items-center gap-3">
-        <div className="hidden sm:flex items-center gap-2 bg-muted rounded-md px-3 py-1.5">
-          <Search className="w-3.5 h-3.5 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="Buscar..."
-            className="bg-transparent text-[13px] text-foreground placeholder:text-muted-foreground outline-none w-40"
-          />
-        </div>
-
-        <button className="relative p-2 rounded-md hover:bg-muted transition-colors">
-          <Bell className="w-4 h-4 text-muted-foreground" />
+      <div className="flex items-center gap-4">
+        <button className="hidden md:flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground bg-accent rounded-lg hover:bg-muted transition-colors min-w-64">
+          <Search className="w-4 h-4" />
+          <span>Buscar...</span>
+          <kbd className="ml-auto pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border border-border bg-muted px-1.5 font-mono text-xs text-muted-foreground">
+            <Command className="w-3 h-3" />K
+          </kbd>
         </button>
 
-        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-semibold">
+        <button className="relative p-2.5 rounded-lg hover:bg-accent transition-colors">
+          <Bell className="w-5 h-5 text-muted-foreground" />
+          <span className="absolute top-2 right-2 w-2 h-2 bg-destructive rounded-full border-2 border-white"></span>
+        </button>
+
+        <div className="w-9 h-9 rounded-full gradient-primary flex items-center justify-center text-white text-sm font-semibold">
           {initials}
         </div>
       </div>

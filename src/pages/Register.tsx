@@ -19,63 +19,63 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4">
-      <div className="w-full max-w-sm animate-fade-in">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50 px-4">
+      <div className="w-full max-w-md animate-fade-in">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-primary text-primary-foreground font-bold text-lg mb-4">
-            M
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl gradient-primary shadow-lg shadow-primary/20 mb-6">
+            <span className="text-white font-bold text-2xl">M</span>
           </div>
-          <h1 className="text-xl font-semibold text-foreground">Criar conta</h1>
-          <p className="text-[13px] text-muted-foreground mt-1">Comece a usar o Mediatio gratuitamente</p>
+          <h1 className="text-3xl font-bold text-foreground mb-2">Criar sua conta</h1>
+          <p className="text-sm text-muted-foreground">Comece a usar o Mediatio gratuitamente</p>
         </div>
 
-        <div className="bg-card border border-border rounded-lg p-6">
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="bg-white rounded-2xl shadow-elevated border border-border p-8">
+          <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
-              <div className="bg-destructive/10 border border-destructive/20 text-destructive px-3 py-2 rounded-md text-[13px]">
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
                 {error}
               </div>
             )}
 
             <div>
-              <label className="block text-[13px] font-medium text-foreground mb-1.5">Nome completo</label>
+              <label className="block text-sm font-medium text-foreground mb-2">Nome completo</label>
               <input
                 required value={name} onChange={e => setName(e.target.value)}
-                className="w-full h-9 px-3 text-[13px] bg-background border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+                className="w-full h-11 px-4 text-sm bg-white border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                 placeholder="Seu nome"
               />
             </div>
 
             <div>
-              <label className="block text-[13px] font-medium text-foreground mb-1.5">Email</label>
+              <label className="block text-sm font-medium text-foreground mb-2">Email</label>
               <input
                 type="email" required value={email} onChange={e => setEmail(e.target.value)}
-                className="w-full h-9 px-3 text-[13px] bg-background border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+                className="w-full h-11 px-4 text-sm bg-white border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                 placeholder="seu@email.com"
               />
             </div>
 
             <div>
-              <label className="block text-[13px] font-medium text-foreground mb-1.5">Senha</label>
+              <label className="block text-sm font-medium text-foreground mb-2">Senha</label>
               <input
                 type="password" required minLength={6} value={password} onChange={e => setPassword(e.target.value)}
-                className="w-full h-9 px-3 text-[13px] bg-background border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+                className="w-full h-11 px-4 text-sm bg-white border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                 placeholder="Mínimo 6 caracteres"
               />
             </div>
 
             <button
               type="submit" disabled={loading}
-              className="w-full h-9 bg-primary hover:bg-primary/90 disabled:opacity-50 text-primary-foreground text-[13px] font-medium rounded-md transition-colors flex items-center justify-center gap-2"
+              className="w-full h-11 gradient-primary hover:opacity-90 disabled:opacity-50 text-white text-sm font-semibold rounded-lg shadow-soft transition-all flex items-center justify-center gap-2"
             >
-              {loading ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Criando...</> : 'Criar conta'}
+              {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Criando...</> : 'Criar conta'}
             </button>
           </form>
         </div>
 
-        <p className="text-center text-[13px] text-muted-foreground mt-4">
-          Já tem conta?{' '}
-          <Link to="/login" className="text-primary hover:underline font-medium">Entrar</Link>
+        <p className="text-center text-sm text-muted-foreground mt-6">
+          Já tem uma conta?{' '}
+          <Link to="/login" className="text-primary hover:text-primary/80 font-semibold transition-colors">Entrar</Link>
         </p>
       </div>
     </div>

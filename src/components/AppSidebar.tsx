@@ -1,8 +1,7 @@
-import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Car, Users, MessageSquare, BarChart3, Settings,
-  ChevronLeft, ChevronRight, LogOut, Zap, Plug,
+  LogOut, Zap, Plug,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getUser, logout } from "@/lib/auth";
@@ -19,7 +18,6 @@ const navItems = [
 ];
 
 export function AppSidebar() {
-  const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const user = getUser();
@@ -34,28 +32,21 @@ export function AppSidebar() {
     : "U";
 
   return (
-    <aside
-      className={cn(
-        "hidden md:flex flex-col bg-sidebar text-sidebar-foreground h-screen sticky top-0 transition-all duration-200 border-r border-white/[0.06]",
-        collapsed ? "w-[68px]" : "w-[240px]"
-      )}
-    >
+    <aside className="hidden md:flex flex-col w-64 bg-white border-r border-border h-screen sticky top-0">
       {/* Logo */}
-      <div className={cn("flex items-center h-14 border-b border-white/[0.06]", collapsed ? "justify-center px-2" : "px-5")}>
-        <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-xs shrink-0">
+      <div className="flex items-center h-16 px-6 border-b border-border">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center text-white font-bold text-sm">
             M
           </div>
-          {!collapsed && (
-            <span className="font-semibold text-[15px] tracking-tight text-white">
-              Mediatio
-            </span>
-          )}
+          <span className="font-semibold text-lg text-foreground">
+            Mediatio
+          </span>
         </div>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 py-3 px-2 space-y-0.5 overflow-y-auto">
+      <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
         {navItems.map((item) => {
           const active =
             location.pathname === item.url ||
@@ -65,51 +56,38 @@ export function AppSidebar() {
               key={item.url}
               to={item.url}
               className={cn(
-                "flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] font-medium transition-colors duration-150 group",
+                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group",
                 active
-                  ? "bg-white/[0.1] text-white"
-                  : "text-white/60 hover:bg-white/[0.06] hover:text-white/90"
+                  ? "bg-primary text-primary-foreground shadow-soft"
+                  : "text-muted-foreground hover:bg-accent hover:text-foreground"
               )}
             >
-              <item.icon className={cn("w-[18px] h-[18px] shrink-0", active ? "text-primary" : "text-white/50 group-hover:text-white/70")} />
-              {!collapsed && <span>{item.title}</span>}
+              <item.icon className={cn("w-5 h-5", active ? "text-white" : "text-muted-foreground group-hover:text-foreground")} />
+              <span>{item.title}</span>
             </Link>
           );
         })}
       </nav>
 
       {/* User */}
-      <div className="border-t border-white/[0.06] px-2 py-3 space-y-1">
-        <div className={cn("flex items-center gap-2.5 px-3 py-2", collapsed && "justify-center px-0")}>
-          <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xs font-semibold shrink-0">
+      <div className="border-t border-border p-4 space-y-2">
+        <div className="flex items-center gap-3 px-2 py-2">
+          <div className="w-9 h-9 rounded-full gradient-primary flex items-center justify-center text-white text-sm font-semibold">
             {initials}
           </div>
-          {!collapsed && (
-            <div className="flex-1 min-w-0">
-              <p className="text-[13px] font-medium text-white truncate">{user?.name || "Usuário"}</p>
-              <p className="text-[11px] text-white/40 truncate">{user?.email || ""}</p>
-            </div>
-          )}
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-foreground truncate">{user?.name || "Usuário"}</p>
+            <p className="text-xs text-muted-foreground truncate">{user?.email || ""}</p>
+          </div>
         </div>
         <button
           onClick={handleLogout}
-          className={cn(
-            "flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] text-white/50 hover:bg-white/[0.06] hover:text-white/80 transition-colors w-full",
-            collapsed && "justify-center"
-          )}
+          className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-accent hover:text-foreground transition-colors w-full"
         >
-          <LogOut className="w-4 h-4 shrink-0" />
-          {!collapsed && <span>Sair</span>}
+          <LogOut className="w-4 h-4" />
+          <span>Sair</span>
         </button>
       </div>
-
-      {/* Collapse toggle */}
-      <button
-        onClick={() => setCollapsed(!collapsed)}
-        className="flex items-center justify-center h-9 border-t border-white/[0.06] text-white/30 hover:text-white/60 transition-colors"
-      >
-        {collapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
-      </button>
     </aside>
   );
 }
