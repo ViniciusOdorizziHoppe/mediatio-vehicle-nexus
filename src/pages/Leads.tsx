@@ -1,134 +1,306 @@
-import { useState } from "react";
-import { Plus, X, Users, Loader2, ExternalLink } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils";
-import { useToast } from "@/hooks/use-toast";
-import { useLeads, useCreateLead, useUpdateLeadStatus } from "@/hooks/use-leads";
-import { Skeleton } from "@/components/ui/skeleton";
-
-const statusColors: Record<string, string> = {
-  "Novo": "bg-success/10 text-success",
-  "Em contato": "bg-blue-500/10 text-blue-400",
-  "Interessado": "bg-warning/10 text-warning",
-  "Proposta enviada": "bg-primary/10 text-primary",
-  "Fechado": "bg-success/10 text-success",
-  "Perdido": "bg-destructive/10 text-destructive",
-};
+import { useState } from 'react';
+import { useLeads, useCreateLead, useUpdateLead, useDeleteLead, type Lead } from '@/hooks/useLeads';
+import { LEAD_STATUS } from '@/lib/utils';
 
 export default function Leads() {
-  const [panelOpen, setPanelOpen] = useState(false);
-  const [newLead, setNewLead] = useState({ nome: "", whatsapp: "", interesse: "", notas: "" });
-  const { toast } = useToast();
-  const { data: leads = [], isLoading } = useLeads();
-  const createLead = useCreateLead();
+  const [search, setSearch] = useState('');
+  const [status, setStatus] = useState('');
+  const [showForm, setShowForm] = useState(false);
+  const [editingLead, setEditingLead] = useState<Lead | null>(null);
 
-  const handleAdd = async () => {
+  const filters: Record<string, string> = {};
+  if (search) filters.search = search;
+  if (status) filters.status = status;
+
+  const { data, isLoading } = useLeads(filters);
+  const createMutation = useCreateLead();
+  const updateMutation = useUpdateLead();
+  const deleteMutation = useDeleteLead();
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Remover este lead?')) return;
+    await deleteMutation.mutateAsync(id);
+  };
+
+  const handleEdit = (lead: Lead) => {
+    setEditingLead(lead);
+    setShowForm(true);
+  };
+
+  const handleCloseForm = () => {
+    setShowForm(false);
+    setEditingLead(null);
+  };
+
+  return (
+    <div className="p-8">
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">Leads (CRM)</h1>
+        <button
+          onClick={() => setShowForm(true)}
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+        >
+          + Novo Lead
+        </button>
+      </div>
+
+      {/* Filtros */}
+      <div className="flex gap-3 mb-6">
+        <input
+          type="text"
+          placeholder="Buscar por nome ou WhatsApp..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <select
+          value={status}
+          onChange={e => setStatus(e.target.value)}
+          className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">Todos os status</option>
+          {Object.entries(LEAD_STATUS).map(([key, val]) => (
+            <option key={key} value={key}>{val.label}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Modal de formulário */}
+      {showForm && (
+        <LeadForm
+          lead={editingLead}
+          onSave={async (data) => {
+            if (editingLead) {
+              await updateMutation.mutateAsync({ id: editingLead._id, data });
+            } else {
+              await createMutation.mutateAsync(data);
+            }
+            handleCloseForm();
+          }}
+          onClose={handleCloseForm}
+          loading={createMutation.isPending || updateMutation.isPending}
+        />
+      )}
+
+      {isLoading ? (
+        <div className="space-y-3">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="h-16 bg-gray-100 rounded-lg animate-pulse"></div>
+          ))}
+        </div>
+      ) : (
+        <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b">
+              <tr>
+                <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">Nome</th>
+                <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">WhatsApp</th>
+                <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">Canal</th>
+                <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">Status</th>
+                <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">Interesse</th>
+                <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">Ações</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {data?.data.map((lead: Lead) => {
+                const statusInfo = LEAD_STATUS[lead.status];
+                return (
+                  <tr key={lead._id} className="hover:bg-gray-50">
+                    <td className="px-4 py-3 font-medium text-gray-900">{lead.nome}</td>
+                    <td className="px-4 py-3 text-sm text-gray-600">
+                      <a
+                        href={`https://wa.me/55${lead.whatsapp.replace(/\D/g, '')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-green-600 hover:underline"
+                      >
+                        {lead.whatsapp}
+                      </a>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-600 capitalize">{lead.canal}</td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${statusInfo?.color}`}>
+                        {statusInfo?.label}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-600">
+                      {lead.interesse?.vehicleId
+                        ? `${lead.interesse.vehicleId.marca} ${lead.interesse.vehicleId.modelo}`
+                        : lead.interesse?.descricao || '—'}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleEdit(lead)}
+                          className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                        >
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => handleDelete(lead._id)}
+                          className="text-red-600 hover:text-red-800 text-sm font-medium"
+                        >
+                          Remover
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+
+          {(!data?.data || data.data.length === 0) && (
+            <div className="text-center py-12 text-gray-400">
+              <p className="text-4xl mb-3">👥</p>
+              <p className="font-medium">Nenhum lead encontrado</p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function LeadForm({
+  lead,
+  onSave,
+  onClose,
+  loading,
+}: {
+  lead: Lead | null;
+  onSave: (data: Partial<Lead>) => Promise<void>;
+  onClose: () => void;
+  loading: boolean;
+}) {
+  const [form, setForm] = useState({
+    nome: lead?.nome || '',
+    whatsapp: lead?.whatsapp || '',
+    canal: lead?.canal || 'whatsapp',
+    status: lead?.status || 'novo',
+    cidade: lead?.cidade || '',
+    notas: lead?.notas || '',
+    interesse: { descricao: lead?.interesse?.descricao || '' },
+  });
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
     try {
-      await createLead.mutateAsync(newLead);
-      toast({ title: "Lead adicionado!", description: "O lead foi salvo com sucesso." });
-      setPanelOpen(false);
-      setNewLead({ nome: "", whatsapp: "", interesse: "", notas: "" });
-    } catch (err: any) {
-      toast({ title: "Erro", description: err.message || "Erro ao salvar lead.", variant: "destructive" });
+      await onSave(form as Partial<Lead>);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Erro ao salvar');
     }
   };
 
   return (
-    <div className="p-4 md:p-6 space-y-6 relative">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold text-foreground">Leads</h1>
-        <Button variant="gold" onClick={() => setPanelOpen(true)}>
-          <Plus className="w-4 h-4" /> Adicionar Lead
-        </Button>
-      </div>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-lg mx-4">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">
+          {lead ? 'Editar Lead' : 'Novo Lead'}
+        </h2>
 
-      <div className="border border-border rounded-lg overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border bg-surface">
-                <th className="text-left p-3 text-muted-foreground font-medium">Nome</th>
-                <th className="text-left p-3 text-muted-foreground font-medium">WhatsApp</th>
-                <th className="text-left p-3 text-muted-foreground font-medium">Interesse</th>
-                <th className="text-left p-3 text-muted-foreground font-medium">Data</th>
-                <th className="text-left p-3 text-muted-foreground font-medium">Status</th>
-                <th className="text-left p-3 text-muted-foreground font-medium">Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
-                Array.from({ length: 4 }).map((_, i) => (
-                  <tr key={i} className="border-b border-border">
-                    {Array.from({ length: 6 }).map((_, j) => (
-                      <td key={j} className="p-3"><Skeleton className="h-4 w-20" /></td>
-                    ))}
-                  </tr>
-                ))
-              ) : leads.map((lead: any) => (
-                <tr key={lead.id} className="border-b border-border gold-border-left hover:bg-accent/50 transition-colors">
-                  <td className="p-3 text-foreground font-medium">{lead.name}</td>
-                  <td className="p-3">
-                    <a href={`https://wa.me/55${lead.whatsapp?.replace(/\D/g, "")}`} target="_blank" rel="noreferrer"
-                      className="text-muted-foreground font-mono text-xs hover:text-primary flex items-center gap-1">
-                      {lead.whatsapp} <ExternalLink className="w-3 h-3" />
-                    </a>
-                  </td>
-                  <td className="p-3 text-muted-foreground text-xs">{lead.vehicleInterest}</td>
-                  <td className="p-3 text-muted-foreground text-xs">{lead.date}</td>
-                  <td className="p-3">
-                    <span className={cn("text-xs px-2 py-1 rounded-full", statusColors[lead.status] || "bg-muted text-muted-foreground")}>
-                      {lead.status}
-                    </span>
-                  </td>
-                  <td className="p-3">
-                    <a href={`https://wa.me/55${lead.whatsapp?.replace(/\D/g, "")}`} target="_blank" rel="noreferrer">
-                      <Button variant="outline" size="sm">Contatar</Button>
-                    </a>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {panelOpen && (
-        <>
-          <div className="fixed inset-0 bg-background/60 z-40" onClick={() => setPanelOpen(false)} />
-          <div className="fixed right-0 top-0 h-full w-full max-w-md bg-surface border-l border-border z-50 slide-in-right p-6 space-y-4 overflow-y-auto">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-foreground">Novo Lead</h2>
-              <button onClick={() => setPanelOpen(false)} className="text-muted-foreground hover:text-foreground">
-                <X className="w-5 h-5" />
-              </button>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded text-sm">
+              {error}
             </div>
-            <div className="space-y-4">
-              <div><Label className="text-muted-foreground">Nome</Label><Input className="mt-1.5 bg-background" placeholder="João Mendes" value={newLead.nome} onChange={e => setNewLead(p => ({ ...p, nome: e.target.value }))} /></div>
-              <div><Label className="text-muted-foreground">WhatsApp</Label><Input className="mt-1.5 bg-background" placeholder="(47) 99876-5432" value={newLead.whatsapp} onChange={e => setNewLead(p => ({ ...p, whatsapp: e.target.value }))} /></div>
-              <div><Label className="text-muted-foreground">Veículo de interesse</Label><Input className="mt-1.5 bg-background" placeholder="Honda CG 160 2022" value={newLead.interesse} onChange={e => setNewLead(p => ({ ...p, interesse: e.target.value }))} /></div>
-              <div>
-                <Label className="text-muted-foreground">Notas</Label>
-                <textarea className="w-full mt-1.5 rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground min-h-[80px] resize-none" placeholder="Observações..." value={newLead.notas} onChange={e => setNewLead(p => ({ ...p, notas: e.target.value }))} />
-              </div>
-              <Button variant="gold" className="w-full" onClick={handleAdd} disabled={createLead.isPending}>
-                {createLead.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Salvar Lead"}
-              </Button>
+          )}
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Nome *</label>
+              <input
+                required
+                value={form.nome}
+                onChange={e => setForm(f => ({ ...f, nome: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">WhatsApp *</label>
+              <input
+                required
+                value={form.whatsapp}
+                onChange={e => setForm(f => ({ ...f, whatsapp: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="47999990000"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Canal</label>
+              <select
+                value={form.canal}
+                onChange={e => setForm(f => ({ ...f, canal: e.target.value as Lead['canal'] }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="whatsapp">WhatsApp</option>
+                <option value="facebook">Facebook</option>
+                <option value="olx">OLX</option>
+                <option value="site">Site</option>
+                <option value="indicacao">Indicação</option>
+                <option value="outro">Outro</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+              <select
+                value={form.status}
+                onChange={e => setForm(f => ({ ...f, status: e.target.value as Lead['status'] }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {Object.entries(LEAD_STATUS).map(([key, val]) => (
+                  <option key={key} value={key}>{val.label}</option>
+                ))}
+              </select>
+            </div>
+            <div className="col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Cidade</label>
+              <input
+                value={form.cidade}
+                onChange={e => setForm(f => ({ ...f, cidade: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div className="col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Interesse</label>
+              <input
+                value={form.interesse.descricao}
+                onChange={e => setForm(f => ({ ...f, interesse: { descricao: e.target.value } }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Procura moto até R$ 10.000..."
+              />
+            </div>
+            <div className="col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Notas</label>
+              <textarea
+                rows={3}
+                value={form.notas}
+                onChange={e => setForm(f => ({ ...f, notas: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
             </div>
           </div>
-        </>
-      )}
 
-      {!isLoading && leads.length === 0 && (
-        <div className="border border-dashed border-border rounded-lg p-12 text-center">
-          <Users className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
-          <p className="text-muted-foreground">Nenhum lead cadastrado</p>
-          <Button variant="gold" className="mt-4" onClick={() => setPanelOpen(true)}>
-            <Plus className="w-4 h-4" /> Adicionar Lead
-          </Button>
-        </div>
-      )}
+          <div className="flex gap-3 pt-2">
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium rounded-lg"
+            >
+              {loading ? 'Salvando...' : 'Salvar'}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg"
+            >
+              Cancelar
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

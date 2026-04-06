@@ -1,92 +1,174 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Plus, Car, Filter, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
-import { useVehicles } from "@/hooks/use-vehicles";
-import { Skeleton } from "@/components/ui/skeleton";
-
-const statusColors: Record<string, string> = {
-  "Disponível": "bg-success/10 text-success",
-  "Contato Ativo": "bg-blue-500/10 text-blue-400",
-  "Proposta": "bg-warning/10 text-warning",
-  "Vendido": "bg-primary/10 text-primary",
-  "Arquivado": "bg-muted text-muted-foreground",
-};
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useVehicles, useDeleteVehicle, type Vehicle } from '@/hooks/useVehicles';
+import { formatCurrency, formatKm, PIPELINE_STATUS, getScoreColor } from '@/lib/utils';
 
 export default function Vehicles() {
-  const [search, setSearch] = useState("");
-  const { data: vehicles = [], isLoading } = useVehicles({ search: search || undefined });
-  const navigate = useNavigate();
+  const [search, setSearch] = useState('');
+  const [status, setStatus] = useState('');
+  const [tipo, setTipo] = useState('');
+
+  const filters: Record<string, string> = {};
+  if (search) filters.search = search;
+  if (status) filters.status = status;
+  if (tipo) filters.tipo = tipo;
+
+  const { data, isLoading, error } = useVehicles(filters);
+  const deleteMutation = useDeleteVehicle();
+
+  const handleDelete = async (id: string, codigo: string) => {
+    if (!confirm(`Remover veículo ${codigo}?`)) return;
+    try {
+      await deleteMutation.mutateAsync(id);
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : 'Erro ao remover');
+    }
+  };
 
   return (
-    <div className="p-4 md:p-6 space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold text-foreground">Veículos</h1>
-        <Button variant="gold" asChild>
-          <Link to="/vehicles/new"><Plus className="w-4 h-4" /> Novo Veículo</Link>
-        </Button>
+    <div className="p-8">
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">Veículos</h1>
+        <Link
+          to="/vehicles/new"
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+        >
+          + Novo Veículo
+        </Link>
       </div>
 
-      <div className="flex gap-3 flex-wrap">
-        <Input placeholder="Buscar por marca ou modelo..." className="w-64 bg-surface border-border"
-          value={search} onChange={e => setSearch(e.target.value)} />
-        <Button variant="outline" size="sm"><Filter className="w-4 h-4 mr-1" /> Filtros</Button>
+      {/* Filtros */}
+      <div className="flex gap-3 mb-6">
+        <input
+          type="text"
+          placeholder="Buscar por marca, modelo ou código..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <select
+          value={status}
+          onChange={e => setStatus(e.target.value)}
+          className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">Todos os status</option>
+          {Object.entries(PIPELINE_STATUS).map(([key, val]) => (
+            <option key={key} value={key}>{val.label}</option>
+          ))}
+        </select>
+        <select
+          value={tipo}
+          onChange={e => setTipo(e.target.value)}
+          className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">Todos os tipos</option>
+          <option value="moto">Moto</option>
+          <option value="carro">Carro</option>
+        </select>
       </div>
 
-      <div className="border border-border rounded-lg overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border bg-surface">
-                <th className="text-left p-3 text-muted-foreground font-medium">Foto</th>
-                <th className="text-left p-3 text-muted-foreground font-medium">Veículo</th>
-                <th className="text-left p-3 text-muted-foreground font-medium">Preço</th>
-                <th className="text-left p-3 text-muted-foreground font-medium">Proprietário</th>
-                <th className="text-left p-3 text-muted-foreground font-medium">Status</th>
-                <th className="text-left p-3 text-muted-foreground font-medium">Dias</th>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
-                Array.from({ length: 5 }).map((_, i) => (
-                  <tr key={i} className="border-b border-border">
-                    <td className="p-3"><Skeleton className="w-10 h-10 rounded" /></td>
-                    <td className="p-3"><Skeleton className="h-4 w-32" /></td>
-                    <td className="p-3"><Skeleton className="h-4 w-20" /></td>
-                    <td className="p-3"><Skeleton className="h-4 w-24" /></td>
-                    <td className="p-3"><Skeleton className="h-4 w-16" /></td>
-                    <td className="p-3"><Skeleton className="h-4 w-8" /></td>
-                  </tr>
-                ))
-              ) : vehicles.map((v: any) => (
-                <tr key={v.id} onClick={() => navigate(`/vehicles/${v.id}`)}
-                  className="border-b border-border gold-border-left hover:bg-accent/50 transition-colors cursor-pointer">
-                  <td className="p-3">
-                    <div className="w-10 h-10 rounded bg-accent flex items-center justify-center">
-                      {v.photo ? <img src={v.photo} alt="" className="w-10 h-10 rounded object-cover" /> : <Car className="w-5 h-5 text-muted-foreground" />}
-                    </div>
-                  </td>
-                  <td className="p-3 text-foreground font-medium">{v.brand} {v.model} {v.year}</td>
-                  <td className="p-3 text-primary font-semibold">R$ {v.price.toLocaleString("pt-BR")}</td>
-                  <td className="p-3 text-muted-foreground">{v.owner}</td>
-                  <td className="p-3">
-                    <span className={cn("text-xs px-2 py-1 rounded-full", statusColors[v.status] || "bg-muted text-muted-foreground")}>{v.status}</span>
-                  </td>
-                  <td className="p-3 text-muted-foreground">{v.daysInPipeline}d</td>
+      {isLoading && (
+        <div className="space-y-3">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="h-16 bg-gray-100 rounded-lg animate-pulse"></div>
+          ))}
+        </div>
+      )}
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg">
+          Erro ao carregar veículos.
+        </div>
+      )}
+
+      {!isLoading && !error && (
+        <>
+          <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b">
+                <tr>
+                  <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">Código</th>
+                  <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">Veículo</th>
+                  <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">Preço</th>
+                  <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">KM</th>
+                  <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">Status</th>
+                  <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">Score</th>
+                  <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">Ações</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {data?.data.map((vehicle: Vehicle) => {
+                  const statusInfo = PIPELINE_STATUS[vehicle.pipeline.status];
+                  return (
+                    <tr key={vehicle._id} className="hover:bg-gray-50">
+                      <td className="px-4 py-3 text-sm font-mono text-gray-700">{vehicle.codigo}</td>
+                      <td className="px-4 py-3">
+                        <div className="font-medium text-gray-900">
+                          {vehicle.marca} {vehicle.modelo}
+                        </div>
+                        <div className="text-sm text-gray-500">{vehicle.ano} • {vehicle.cor}</div>
+                      </td>
+                      <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                        {formatCurrency(vehicle.precos.venda)}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-600">
+                        {vehicle.km ? formatKm(vehicle.km) : '—'}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${statusInfo?.color}`}>
+                          {statusInfo?.label}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`text-sm font-bold ${getScoreColor(vehicle.score?.valor || 0)}`}>
+                          {vehicle.score?.valor || 0}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex gap-2">
+                          <Link
+                            to={`/vehicles/${vehicle._id}`}
+                            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                          >
+                            Ver
+                          </Link>
+                          <Link
+                            to={`/vehicles/${vehicle._id}/edit`}
+                            className="text-gray-600 hover:text-gray-800 text-sm font-medium"
+                          >
+                            Editar
+                          </Link>
+                          <button
+                            onClick={() => handleDelete(vehicle._id, vehicle.codigo)}
+                            className="text-red-600 hover:text-red-800 text-sm font-medium"
+                          >
+                            Remover
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
 
-      {!isLoading && vehicles.length === 0 && (
-        <div className="border border-dashed border-border rounded-lg p-12 text-center">
-          <Car className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
-          <p className="text-muted-foreground">Nenhum veículo encontrado</p>
-        </div>
+            {(!data?.data || data.data.length === 0) && (
+              <div className="text-center py-12 text-gray-400">
+                <p className="text-4xl mb-3">🚗</p>
+                <p className="font-medium">Nenhum veículo encontrado</p>
+                <Link to="/vehicles/new" className="text-blue-600 hover:underline text-sm mt-2 block">
+                  Cadastrar primeiro veículo
+                </Link>
+              </div>
+            )}
+          </div>
+
+          {data?.meta && (
+            <p className="text-sm text-gray-500 mt-3">
+              {data.meta.total} veículo(s) encontrado(s)
+            </p>
+          )}
+        </>
       )}
     </div>
   );
