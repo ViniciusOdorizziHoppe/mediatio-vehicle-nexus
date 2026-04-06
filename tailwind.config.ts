@@ -14,7 +14,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ["DM Sans", "sans-serif"],
+        sans: ["Inter", "system-ui", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -70,11 +70,37 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        // Mediatio brand
+        mediatio: {
+          blue: "#2563eb",
+          purple: "#7c3aed",
+          cyan: "#06b6d4",
+          green: "#22c55e",
+          dark: "#020617",
+          card: "#0f172a",
+          text: "#f8fafc",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      backgroundImage: {
+        "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
+        "gradient-brand": "linear-gradient(135deg, #2563eb 0%, #7c3aed 50%, #06b6d4 100%)",
+        "gradient-brand-reverse": "linear-gradient(135deg, #06b6d4 0%, #7c3aed 50%, #2563eb 100%)",
+        "gradient-glow": "linear-gradient(135deg, rgba(37,99,235,0.15) 0%, rgba(124,58,237,0.15) 50%, rgba(6,182,212,0.15) 100%)",
+        "gradient-card": "linear-gradient(145deg, rgba(15,23,42,0.8) 0%, rgba(15,23,42,0.4) 100%)",
+        "gradient-success": "linear-gradient(135deg, #22c55e 0%, #06b6d4 100%)",
+      },
+      boxShadow: {
+        "glow-blue": "0 0 20px rgba(37,99,235,0.3), 0 0 60px rgba(37,99,235,0.1)",
+        "glow-purple": "0 0 20px rgba(124,58,237,0.3), 0 0 60px rgba(124,58,237,0.1)",
+        "glow-cyan": "0 0 20px rgba(6,182,212,0.3), 0 0 60px rgba(6,182,212,0.1)",
+        "glow-green": "0 0 20px rgba(34,197,94,0.3), 0 0 60px rgba(34,197,94,0.1)",
+        "glow-brand": "0 0 30px rgba(37,99,235,0.2), 0 0 60px rgba(124,58,237,0.1)",
+        "card-hover": "0 8px 32px rgba(0,0,0,0.3), 0 0 1px rgba(148,163,184,0.1)",
       },
       keyframes: {
         "accordion-down": {
@@ -85,10 +111,50 @@ export default {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        "gradient-shift": {
+          "0%, 100%": { backgroundPosition: "0% 50%" },
+          "50%": { backgroundPosition: "100% 50%" },
+        },
+        "glow-pulse": {
+          "0%, 100%": { opacity: "0.4" },
+          "50%": { opacity: "0.8" },
+        },
+        float: {
+          "0%, 100%": { transform: "translateY(0px)" },
+          "50%": { transform: "translateY(-20px)" },
+        },
+        shimmer: {
+          "0%": { backgroundPosition: "-200% 0" },
+          "100%": { backgroundPosition: "200% 0" },
+        },
+        "fade-in": {
+          from: { opacity: "0", transform: "translateY(10px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        "slide-up": {
+          from: { opacity: "0", transform: "translateY(20px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        "pulse-subtle": {
+          "0%, 100%": { opacity: "1" },
+          "50%": { opacity: "0.7" },
+        },
+        "spin-slow": {
+          from: { transform: "rotate(0deg)" },
+          to: { transform: "rotate(360deg)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "gradient-shift": "gradient-shift 8s ease infinite",
+        "glow-pulse": "glow-pulse 3s ease-in-out infinite",
+        float: "float 6s ease-in-out infinite",
+        shimmer: "shimmer 2s linear infinite",
+        "fade-in": "fade-in 0.5s ease-out forwards",
+        "slide-up": "slide-up 0.6s ease-out forwards",
+        "pulse-subtle": "pulse-subtle 2s ease-in-out infinite",
+        "spin-slow": "spin-slow 20s linear infinite",
       },
     },
   },

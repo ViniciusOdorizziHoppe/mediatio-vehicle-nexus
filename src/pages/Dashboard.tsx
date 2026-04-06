@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { Car, Users, DollarSign, TrendingUp, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { PageSkeleton } from '@/components/ui/PageSkeleton';
@@ -6,6 +7,47 @@ import { useLeads } from '@/hooks/use-leads';
 import { formatCurrency, PIPELINE_STATUS, LEAD_STATUS } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 import { getUser } from '@/lib/auth';
+=======
+import { useQuery } from '@tanstack/react-query';
+import api from '@/lib/api';
+import { formatCurrency } from '@/lib/utils';
+import { Car, DollarSign, TrendingUp, Users } from 'lucide-react';
+import { StatCard } from '@/components/ui/StatCard';
+import { GlowCard } from '@/components/ui/GlowCard';
+import { motion } from 'framer-motion';
+
+interface DashboardData {
+  success: boolean;
+  data: {
+    veiculos: {
+      total: number;
+      valorTotal: number;
+      comissaoTotal: number;
+      porStatus: Record<string, { count: number; valorTotal: number; comissaoTotal: number }>;
+    };
+    leads: {
+      total: number;
+      porStatus: Record<string, number>;
+    };
+  };
+}
+
+const STATUS_LABELS: Record<string, string> = {
+  disponivel: 'Disponível',
+  contato_ativo: 'Contato Ativo',
+  proposta: 'Proposta',
+  vendido: 'Vendido',
+  arquivado: 'Arquivado',
+};
+>>>>>>> d732f04 (Uso do Antigravity)
+
+const STATUS_COLORS: Record<string, string> = {
+  disponivel: 'bg-green-500',
+  contato_ativo: 'bg-blue-500',
+  proposta: 'bg-yellow-500',
+  vendido: 'bg-purple-500',
+  arquivado: 'bg-slate-500',
+};
 
 export default function Dashboard() {
   const { data: vehicles, isLoading: loadingV } = useVehicles();
@@ -29,6 +71,7 @@ export default function Dashboard() {
     statusCounts[s] = (statusCounts[s] || 0) + 1;
   });
 
+<<<<<<< HEAD
   const leadStatusCounts: Record<string, number> = {};
   leadList.forEach((l: any) => {
     const s = l.status || 'novo';
@@ -185,6 +228,139 @@ export default function Dashboard() {
             </tbody>
           </table>
         </div>
+=======
+  if (isLoading) {
+    return (
+      <div className="p-6 md:p-8">
+        <div className="animate-pulse space-y-6">
+          <div className="h-8 bg-slate-800 rounded-lg w-1/4" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="h-32 bg-slate-800/50 rounded-xl" />
+            ))}
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="h-64 bg-slate-800/50 rounded-xl" />
+            <div className="h-64 bg-slate-800/50 rounded-xl" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 md:p-8">
+        <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-xl">
+          Erro ao carregar dashboard. Verifique sua conexão.
+        </div>
+      </div>
+    );
+  }
+
+  const d = data?.data;
+
+  return (
+    <div className="p-6 md:p-8 space-y-8">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+      >
+        <h1 className="text-2xl font-bold text-slate-100">Dashboard</h1>
+        <p className="text-sm text-slate-400 mt-1">Visão geral do seu negócio</p>
+      </motion.div>
+
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard
+          title="Total de Veículos"
+          value={String(d?.veiculos.total || 0)}
+          icon={Car}
+          gradient="blue"
+          delay={0.1}
+        />
+        <StatCard
+          title="Valor em Carteira"
+          value={formatCurrency(d?.veiculos.valorTotal || 0)}
+          icon={DollarSign}
+          gradient="green"
+          delay={0.2}
+        />
+        <StatCard
+          title="Comissão Estimada"
+          value={formatCurrency(d?.veiculos.comissaoTotal || 0)}
+          icon={TrendingUp}
+          gradient="purple"
+          delay={0.3}
+        />
+        <StatCard
+          title="Total de Leads"
+          value={String(d?.leads.total || 0)}
+          icon={Users}
+          gradient="cyan"
+          delay={0.4}
+        />
+      </div>
+
+      {/* Pipeline & Leads */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <GlowCard delay={0.5}>
+          <h2 className="text-lg font-semibold text-slate-100 mb-5">Pipeline de Veículos</h2>
+          <div className="space-y-4">
+            {Object.entries(d?.veiculos.porStatus || {}).map(([status, stats]) => {
+              const total = d?.veiculos.total || 1;
+              const pct = Math.round((stats.count / total) * 100);
+              return (
+                <div key={status}>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-sm font-medium text-slate-300">
+                      {STATUS_LABELS[status] || status}
+                    </span>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs text-slate-500">{stats.count} veíc.</span>
+                      <span className="text-sm font-semibold text-slate-200">
+                        {formatCurrency(stats.valorTotal || 0)}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${pct}%` }}
+                      transition={{ duration: 0.8, delay: 0.6 }}
+                      className={`h-full rounded-full ${STATUS_COLORS[status] || 'bg-slate-500'}`}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+            {Object.keys(d?.veiculos.porStatus || {}).length === 0 && (
+              <p className="text-slate-500 text-sm">Nenhum veículo cadastrado ainda.</p>
+            )}
+          </div>
+        </GlowCard>
+
+        <GlowCard delay={0.6}>
+          <h2 className="text-lg font-semibold text-slate-100 mb-5">Status dos Leads</h2>
+          <div className="space-y-4">
+            {Object.entries(d?.leads.porStatus || {}).map(([status, count]) => (
+              <div key={status} className="flex items-center justify-between py-2 border-b border-slate-800/50 last:border-0">
+                <span className="text-sm font-medium text-slate-300 capitalize">
+                  {status.replace('_', ' ')}
+                </span>
+                <span className="text-sm font-bold text-slate-200 bg-slate-800/50 px-3 py-1 rounded-full">
+                  {count}
+                </span>
+              </div>
+            ))}
+            {Object.keys(d?.leads.porStatus || {}).length === 0 && (
+              <p className="text-slate-500 text-sm">Nenhum lead cadastrado ainda.</p>
+            )}
+          </div>
+        </GlowCard>
+>>>>>>> d732f04 (Uso do Antigravity)
       </div>
     </div>
   );

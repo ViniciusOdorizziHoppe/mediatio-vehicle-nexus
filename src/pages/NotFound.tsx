@@ -1,5 +1,6 @@
-import { useLocation } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
 import { useEffect } from "react";
+import { AnimatedBackground } from "@/components/ui/AnimatedBackground";
 
 const NotFound = () => {
   const location = useLocation();
@@ -9,13 +10,17 @@ const NotFound = () => {
   }, [location.pathname]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">404</h1>
-        <p className="mb-4 text-xl text-muted-foreground">Oops! Page not found</p>
-        <a href="/" className="text-primary underline hover:text-primary/90">
-          Return to Home
-        </a>
+    <div className="flex min-h-screen items-center justify-center bg-[#020617] relative overflow-hidden">
+      <AnimatedBackground />
+      <div className="text-center relative z-10">
+        <h1 className="mb-4 text-8xl font-bold text-gradient">404</h1>
+        <p className="mb-6 text-xl text-slate-400">Página não encontrada</p>
+        <Link
+          to="/"
+          className="btn-brand inline-flex items-center gap-2"
+        >
+          Voltar ao início
+        </Link>
       </div>
     </div>
   );
