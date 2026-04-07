@@ -1,14 +1,9 @@
-
-import { useState } from "react";
-import { Send, Search, Bot, User } from "lucide-react";
-
 import { useState, useEffect, useRef } from "react";
 import { Send, X, Search, Car, Bot, User } from "lucide-react";
-import { vehicles } from "@/lib/mock-data";
+import { useVehicles } from "@/hooks/useVehicles";
 import { cn } from "@/lib/utils";
 import { useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-
 
 interface Message {
   id: string;
@@ -21,10 +16,11 @@ const initialMessages: Message[] = [
 ];
 
 export default function NexusChat() {
+  const { data: vehiclesData, isLoading } = useVehicles();
+  const vehicles = Array.isArray(vehiclesData) ? vehiclesData : vehiclesData?.data || [];
+  
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState("");
-
-
   const [searchParams] = useSearchParams();
   const [selectedVehicle, setSelectedVehicle] = useState<string | null>(searchParams.get("vehicle"));
   const [search, setSearch] = useState("");
@@ -39,11 +35,10 @@ export default function NexusChat() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const selected = vehicles.find((v) => v.id === selectedVehicle);
-  const filtered = vehicles.filter((v) =>
-    `${v.brand} ${v.model}`.toLowerCase().includes(search.toLowerCase())
+  const selected = vehicles.find((v: any) => v._id === selectedVehicle);
+  const filtered = vehicles.filter((v: any) =>
+    `${v.marca} ${v.modelo}`.toLowerCase().includes(search.toLowerCase())
   );
-
 
   const sendMessage = () => {
     if (!input.trim()) return;
@@ -57,21 +52,7 @@ export default function NexusChat() {
   };
 
   return (
-
-    <div className="flex flex-col h-[calc(100vh-56px)] animate-fade-in">
-      <div className="flex-1 overflow-y-auto p-6 space-y-4">
-        {messages.map((msg) => (
-          <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-            <div className={`max-w-[70%] rounded-lg px-4 py-3 text-[13px] ${
-              msg.role === "user"
-                ? "bg-primary text-primary-foreground"
-                : "bg-card border border-border text-foreground"
-            }`}>
-              <div className="flex items-center gap-1.5 mb-1">
-                {msg.role === "nexus" ? <Bot className="w-3.5 h-3.5 text-primary" /> : <User className="w-3.5 h-3.5" />}
-                <span className="text-[11px] font-medium opacity-70">{msg.role === "nexus" ? "Nexus" : "Você"}</span>
-
-    <div className="flex h-[calc(100vh-64px)] md:h-screen">
+    <div className="flex h-[calc(100vh-64px)] md:h-[calc(100vh-73px)]">
       {/* Vehicle sidebar */}
       <div className="hidden md:flex flex-col w-[280px] border-r border-slate-800/50 bg-slate-950/50">
         <div className="p-3 border-b border-slate-800/50">
@@ -85,14 +66,14 @@ export default function NexusChat() {
             />
           </div>
         </div>
-        <div className="flex-1 overflow-y-auto">
-          {filtered.map((v) => (
+        <div className="flex-1 overflow-y-auto custom-scrollbar">
+          {filtered.map((v: any) => (
             <button
-              key={v.id}
-              onClick={() => setSelectedVehicle(v.id)}
+              key={v._id}
+              onClick={() => setSelectedVehicle(v._id)}
               className={cn(
                 "w-full text-left px-4 py-3 border-b border-slate-800/30 flex items-center gap-3 transition-all duration-200",
-                selectedVehicle === v.id
+                selectedVehicle === v._id
                   ? "bg-blue-500/10 border-l-2 border-l-blue-500"
                   : "hover:bg-slate-800/30"
               )}
@@ -101,28 +82,13 @@ export default function NexusChat() {
                 <Car className="w-4 h-4 text-slate-400" />
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-medium text-slate-200 truncate">{v.brand} {v.model}</p>
-                <p className="text-xs text-slate-500">{v.year} · R$ {v.price.toLocaleString("pt-BR")}</p>
-
+                <p className="text-sm font-medium text-slate-200 truncate">{v.marca} {v.modelo}</p>
+                <p className="text-xs text-slate-500">{v.ano} · R$ {v.precos?.venda?.toLocaleString("pt-BR") || 0}</p>
               </div>
-              {msg.content}
-            </div>
-          </div>
-        ))}
+            </button>
+          ))}
+        </div>
       </div>
-
-
-      <div className="border-t border-border p-4">
-        <div className="flex gap-2 max-w-3xl mx-auto">
-          <input
-            value={input} onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-            placeholder="Pergunte ao Nexus..."
-            className="flex-1 h-10 px-4 text-[13px] bg-background border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
-          />
-          <button onClick={sendMessage} className="h-10 w-10 bg-primary hover:bg-primary/90 text-primary-foreground rounded-md flex items-center justify-center transition-colors">
-            <Send className="w-4 h-4" />
-          </button>
 
       {/* Chat area */}
       <div className="flex-1 flex flex-col bg-slate-950/30">
@@ -169,7 +135,7 @@ export default function NexusChat() {
             <div className="flex items-center gap-2 mb-3">
               <span className="text-xs bg-blue-500/10 text-blue-400 px-3 py-1.5 rounded-full flex items-center gap-1.5 border border-blue-500/20">
                 <Car className="w-3 h-3" />
-                Contexto: {selected.brand} {selected.model} {selected.year}
+                Contexto: {selected.marca} {selected.modelo} {selected.ano}
               </span>
               <button
                 onClick={() => setSelectedVehicle(null)}
@@ -194,7 +160,6 @@ export default function NexusChat() {
               <Send className="w-4 h-4" />
             </button>
           </div>
-
         </div>
       </div>
     </div>

@@ -1,92 +1,41 @@
-
-import { useState } from "react";
-import { Upload, Sparkles, Download, Copy } from "lucide-react";
-import { toast } from "sonner";
-
 import { useState, useEffect } from "react";
 import { Upload, Sparkles, Download, Copy, Car, Search } from "lucide-react";
-import { vehicles } from "@/lib/mock-data";
+import { useVehicles } from "@/hooks/useVehicles";
 import { cn } from "@/lib/utils";
 import { useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-
+import { toast } from "sonner";
 
 export default function MorphPhotos() {
+  const { data: vehiclesData } = useVehicles();
+  const vehicles = Array.isArray(vehiclesData) ? vehiclesData : vehiclesData?.data || [];
+
   const [processing, setProcessing] = useState(false);
   const [enhanced, setEnhanced] = useState(false);
-
-
+  const [searchParams] = useSearchParams();
+  const [search, setSearch] = useState("");
+  const [selectedVehicle, setSelectedVehicle] = useState<string | null>(null);
 
   useEffect(() => {
     const v = searchParams.get("vehicle");
     if (v) setSelectedVehicle(v);
   }, [searchParams]);
 
-  const filtered = vehicles.filter((v) =>
-    `${v.brand} ${v.model}`.toLowerCase().includes(search.toLowerCase())
+  const filtered = vehicles.filter((v: any) =>
+    `${v.marca} ${v.modelo}`.toLowerCase().includes(search.toLowerCase())
   );
-
 
   const handleEnhance = () => {
     setProcessing(true);
     setTimeout(() => {
       setProcessing(false);
       setEnhanced(true);
-
       toast.success("Foto melhorada com IA!");
-
-
     }, 2500);
   };
 
   return (
-
-    <div className="p-6 animate-fade-in">
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold text-foreground">MORPH Fotos</h2>
-        <p className="text-[13px] text-muted-foreground">Melhore fotos de veículos com inteligência artificial</p>
-      </div>
-
-      <div className="max-w-xl space-y-5">
-        <div className="border-2 border-dashed border-border rounded-lg p-12 text-center hover:border-primary/30 transition-colors cursor-pointer bg-card">
-          <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
-          <p className="text-[13px] text-muted-foreground">Arraste uma foto ou clique para enviar</p>
-          <p className="text-[11px] text-muted-foreground mt-1">JPG, PNG até 10MB</p>
-        </div>
-
-        <button
-          onClick={handleEnhance}
-          disabled={processing}
-          className="w-full h-10 bg-primary hover:bg-primary/90 disabled:opacity-50 text-primary-foreground text-[13px] font-medium rounded-md transition-colors flex items-center justify-center gap-2"
-        >
-          {processing ? (
-            <span className="animate-pulse">Processando com IA...</span>
-          ) : (
-            <><Sparkles className="w-4 h-4" /> Melhorar com IA</>
-          )}
-        </button>
-
-        {enhanced && (
-          <div className="space-y-4 animate-slide-up">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-muted rounded-lg aspect-video flex items-center justify-center">
-                <p className="text-[12px] text-muted-foreground">Antes</p>
-              </div>
-              <div className="bg-muted rounded-lg aspect-video flex items-center justify-center border border-primary/20">
-                <p className="text-[12px] text-primary">Depois (IA)</p>
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <button onClick={() => toast.success('Link copiado!')} className="flex-1 h-9 bg-muted hover:bg-muted/80 text-foreground text-[12px] font-medium rounded-md transition-colors flex items-center justify-center gap-1.5">
-                <Copy className="w-3.5 h-3.5" /> Copiar link
-              </button>
-              <button className="flex-1 h-9 bg-muted hover:bg-muted/80 text-foreground text-[12px] font-medium rounded-md transition-colors flex items-center justify-center gap-1.5">
-                <Download className="w-3.5 h-3.5" /> Download
-              </button>
-            </div>
-          </div>
-
-    <div className="flex h-[calc(100vh-64px)] md:h-screen">
+    <div className="flex h-[calc(100vh-64px)] md:h-[calc(100vh-73px)]">
       {/* Sidebar */}
       <div className="hidden md:flex flex-col w-[280px] border-r border-slate-800/50 bg-slate-950/50">
         <div className="p-3 border-b border-slate-800/50">
@@ -104,14 +53,14 @@ export default function MorphPhotos() {
             />
           </div>
         </div>
-        <div className="flex-1 overflow-y-auto">
-          {filtered.map((v) => (
+        <div className="flex-1 overflow-y-auto custom-scrollbar">
+          {filtered.map((v: any) => (
             <button
-              key={v.id}
-              onClick={() => { setSelectedVehicle(v.id); setEnhanced(false); }}
+              key={v._id}
+              onClick={() => { setSelectedVehicle(v._id); setEnhanced(false); }}
               className={cn(
                 "w-full text-left px-4 py-3 border-b border-slate-800/30 flex items-center gap-3 transition-all duration-200",
-                selectedVehicle === v.id
+                selectedVehicle === v._id
                   ? "bg-purple-500/10 border-l-2 border-l-purple-500"
                   : "hover:bg-slate-800/30"
               )}
@@ -120,8 +69,8 @@ export default function MorphPhotos() {
                 <Car className="w-4 h-4 text-slate-400" />
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-medium text-slate-200 truncate">{v.brand} {v.model}</p>
-                <p className="text-xs text-slate-500">{v.year}</p>
+                <p className="text-sm font-medium text-slate-200 truncate">{v.marca} {v.modelo}</p>
+                <p className="text-xs text-slate-500">{v.ano}</p>
               </div>
             </button>
           ))}
@@ -195,7 +144,7 @@ export default function MorphPhotos() {
                   </div>
                 </div>
                 <div className="flex gap-3">
-                  <button className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg bg-slate-800/50 hover:bg-slate-800 text-slate-300 text-sm font-medium transition-colors border border-slate-700/50">
+                  <button onClick={() => toast.success('Link copiado!')} className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg bg-slate-800/50 hover:bg-slate-800 text-slate-300 text-sm font-medium transition-colors border border-slate-700/50">
                     <Copy className="w-4 h-4" /> Copiar link
                   </button>
                   <button className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg bg-slate-800/50 hover:bg-slate-800 text-slate-300 text-sm font-medium transition-colors border border-slate-700/50">
@@ -205,7 +154,6 @@ export default function MorphPhotos() {
               </motion.div>
             )}
           </motion.div>
-
         )}
       </div>
     </div>

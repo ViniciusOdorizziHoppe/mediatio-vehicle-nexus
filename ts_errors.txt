@@ -1,0 +1,146 @@
+﻿src/components/ui/StatCard.tsx(41,3): error TS1005: ')' expected.
+src/components/ui/StatCard.tsx(42,9): error TS1109: Expression expected.
+src/components/ui/StatCard.tsx(43,11): error TS1109: Expression expected.
+src/components/ui/StatCard.tsx(45,9): error TS1109: Expression expected.
+src/pages/Analytics.tsx(60,6): error TS17008: JSX element 'div' has no corresponding closing tag.
+src/pages/Analytics.tsx(66,8): error TS17008: JSX element 'div' has no corresponding closing tag.
+src/pages/Analytics.tsx(68,10): error TS17008: JSX element 'div' has no corresponding closing tag.
+src/pages/Analytics.tsx(82,13): error TS2657: JSX expressions must have one parent element.
+src/pages/Analytics.tsx(146,9): error TS1005: ')' expected.
+src/pages/Analytics.tsx(197,13): error TS2657: JSX expressions must have one parent element.
+src/pages/Analytics.tsx(213,15): error TS1005: ')' expected.
+src/pages/Analytics.tsx(213,17): error TS17002: Expected corresponding JSX closing tag for 'GlowCard'.
+src/pages/Analytics.tsx(214,15): error TS17002: Expected corresponding JSX closing tag for 'div'.
+src/pages/Analytics.tsx(220,12): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/pages/Analytics.tsx(221,11): error TS17002: Expected corresponding JSX closing tag for 'div'.
+src/pages/Analytics.tsx(224,4): error TS1005: '}' expected.
+src/pages/Analytics.tsx(225,1): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/pages/Analytics.tsx(226,1): error TS1005: '</' expected.
+src/pages/Leads.tsx(42,6): error TS17008: JSX element 'div' has no corresponding closing tag.
+src/pages/Leads.tsx(43,8): error TS17008: JSX element 'div' has no corresponding closing tag.
+src/pages/Leads.tsx(48,10): error TS17008: JSX element 'button' has no corresponding closing tag.
+src/pages/Leads.tsx(54,6): error TS17008: JSX element 'div' has no corresponding closing tag.
+src/pages/Leads.tsx(86,7): error TS1003: Identifier expected.
+src/pages/Leads.tsx(189,7): error TS1005: ')' expected.
+src/pages/Leads.tsx(302,1): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/pages/Leads.tsx(305,10): error TS1005: '}' expected.
+src/pages/Leads.tsx(305,16): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/pages/Leads.tsx(306,24): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/pages/Leads.tsx(306,34): error TS17008: JSX element 'void' has no corresponding closing tag.
+src/pages/Leads.tsx(308,1): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/pages/Leads.tsx(309,3): error TS1109: Expression expected.
+src/pages/Leads.tsx(310,9): error TS1005: '}' expected.
+src/pages/Leads.tsx(311,39): error TS1005: '}' expected.
+src/pages/Leads.tsx(311,44): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/pages/Leads.tsx(312,3): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/pages/Leads.tsx(315,52): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/pages/Leads.tsx(316,23): error TS1005: '}' expected.
+src/pages/Leads.tsx(318,29): error TS1005: '}' expected.
+src/pages/Leads.tsx(318,31): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/pages/Leads.tsx(318,83): error TS1005: '}' expected.
+src/pages/Leads.tsx(318,85): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/pages/Leads.tsx(319,3): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/pages/Leads.tsx(323,6): error TS17008: JSX element 'div' has no corresponding closing tag.
+src/pages/Leads.tsx(324,8): error TS17008: JSX element 'div' has no corresponding closing tag.
+src/pages/Leads.tsx(331,10): error TS17008: JSX element 'form' has no corresponding closing tag.
+src/pages/Leads.tsx(333,12): error TS17008: JSX element 'div' has no corresponding closing tag.
+src/pages/Leads.tsx(344,14): error TS17008: JSX element 'div' has no corresponding closing tag.
+src/pages/Leads.tsx(346,16): error TS17008: JSX element 'select' has no corresponding closing tag.
+src/pages/Leads.tsx(439,14): error TS17008: JSX element 'button' has no corresponding closing tag.
+src/pages/Leads.tsx(454,1): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/pages/Leads.tsx(455,1): error TS1005: '</' expected.
+src/pages/Login.tsx(27,6): error TS17008: JSX element 'div' has no corresponding closing tag.
+src/pages/Login.tsx(183,1): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/pages/Login.tsx(184,1): error TS1005: '</' expected.
+src/pages/MorphPhotos.tsx(44,6): error TS17008: JSX element 'div' has no corresponding closing tag.
+src/pages/MorphPhotos.tsx(50,8): error TS17008: JSX element 'div' has no corresponding closing tag.
+src/pages/MorphPhotos.tsx(70,11): error TS2657: JSX expressions must have one parent element.
+src/pages/MorphPhotos.tsx(212,4): error TS1005: '}' expected.
+src/pages/MorphPhotos.tsx(213,1): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/pages/MorphPhotos.tsx(214,1): error TS1005: '</' expected.
+src/pages/NexusChat.tsx(61,6): error TS17008: JSX element 'div' has no corresponding closing tag.
+src/pages/NexusChat.tsx(62,8): error TS17008: JSX element 'div' has no corresponding closing tag.
+src/pages/NexusChat.tsx(64,12): error TS17008: JSX element 'div' has no corresponding closing tag.
+src/pages/NexusChat.tsx(65,14): error TS17008: JSX element 'div' has no corresponding closing tag.
+src/pages/NexusChat.tsx(70,16): error TS17008: JSX element 'div' has no corresponding closing tag.
+src/pages/NexusChat.tsx(74,6): error TS17008: JSX element 'div' has no corresponding closing tag.
+src/pages/NexusChat.tsx(109,15): error TS17002: Expected corresponding JSX closing tag for 'button'.
+src/pages/NexusChat.tsx(110,11): error TS1005: ')' expected.
+src/pages/NexusChat.tsx(111,11): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/pages/NexusChat.tsx(115,8): error TS17008: JSX element 'div' has no corresponding closing tag.
+src/pages/NexusChat.tsx(202,1): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/pages/NexusChat.tsx(203,1): error TS1005: '</' expected.
+src/pages/Register.tsx(28,6): error TS17008: JSX element 'div' has no corresponding closing tag.
+src/pages/Register.tsx(194,1): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/pages/Register.tsx(195,1): error TS1005: '</' expected.
+src/pages/Settings.tsx(12,1): error TS1137: Expression or comma expected.
+src/pages/Settings.tsx(42,6): error TS17008: JSX element 'div' has no corresponding closing tag.
+src/pages/Settings.tsx(89,8): error TS17008: JSX element 'section' has no corresponding closing tag.
+src/pages/Settings.tsx(91,10): error TS17008: JSX element 'div' has no corresponding closing tag.
+src/pages/Settings.tsx(93,13): error TS2657: JSX expressions must have one parent element.
+src/pages/Settings.tsx(216,4): error TS1005: ')' expected.
+src/pages/Settings.tsx(217,1): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/pages/Settings.tsx(218,1): error TS1005: '</' expected.
+src/pages/VehicleDetail.tsx(55,6): error TS17008: JSX element 'div' has no corresponding closing tag.
+src/pages/VehicleDetail.tsx(60,8): error TS17008: JSX element 'div' has no corresponding closing tag.
+src/pages/VehicleDetail.tsx(65,10): error TS17008: JSX element 'div' has no corresponding closing tag.
+src/pages/VehicleDetail.tsx(69,5): error TS1109: Expression expected.
+src/pages/VehicleDetail.tsx(83,3): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/pages/VehicleDetail.tsx(86,5): error TS1109: Expression expected.
+src/pages/VehicleDetail.tsx(93,3): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/pages/VehicleDetail.tsx(99,6): error TS17008: JSX element 'div' has no corresponding closing tag.
+src/pages/VehicleDetail.tsx(133,8): error TS17008: JSX element 'div' has no corresponding closing tag.
+src/pages/VehicleDetail.tsx(134,10): error TS17008: JSX element 'div' has no corresponding closing tag.
+src/pages/VehicleDetail.tsx(136,12): error TS17008: JSX element 'InfoSection' has no corresponding closing tag.
+src/pages/VehicleDetail.tsx(137,14): error TS17008: JSX element 'div' has no corresponding closing tag.
+src/pages/VehicleDetail.tsx(155,13): error TS17002: Expected corresponding JSX closing tag for 'GlowCard'.
+src/pages/VehicleDetail.tsx(174,13): error TS17002: Expected corresponding JSX closing tag for 'div'.
+src/pages/VehicleDetail.tsx(206,12): error TS17008: JSX element 'div' has no corresponding closing tag.
+src/pages/VehicleDetail.tsx(207,14): error TS17008: JSX element 'div' has no corresponding closing tag.
+src/pages/VehicleDetail.tsx(209,16): error TS17008: JSX element 'button' has no corresponding closing tag.
+src/pages/VehicleDetail.tsx(233,12): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/pages/VehicleDetail.tsx(281,14): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/pages/VehicleDetail.tsx(282,13): error TS17002: Expected corresponding JSX closing tag for 'div'.
+src/pages/VehicleDetail.tsx(283,9): error TS1005: ')' expected.
+src/pages/VehicleDetail.tsx(283,11): error TS17002: Expected corresponding JSX closing tag for 'GlowCard'.
+src/pages/VehicleDetail.tsx(287,10): error TS17008: JSX element 'div' has no corresponding closing tag.
+src/pages/VehicleDetail.tsx(295,14): error TS17008: JSX element 'div' has no corresponding closing tag.
+src/pages/VehicleDetail.tsx(297,16): error TS17008: JSX element 'div' has no corresponding closing tag.
+src/pages/VehicleDetail.tsx(299,20): error TS17008: JSX element 'div' has no corresponding closing tag.
+src/pages/VehicleDetail.tsx(304,10): error TS17008: JSX element 'div' has no corresponding closing tag.
+src/pages/VehicleDetail.tsx(384,1): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/pages/VehicleDetail.tsx(386,50): error TS1005: '}' expected.
+src/pages/VehicleDetail.tsx(386,86): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/pages/VehicleDetail.tsx(387,3): error TS1109: Expression expected.
+src/pages/VehicleDetail.tsx(393,1): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/pages/VehicleDetail.tsx(395,43): error TS1005: '}' expected.
+src/pages/VehicleDetail.tsx(395,76): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/pages/VehicleDetail.tsx(396,3): error TS1109: Expression expected.
+src/pages/VehicleDetail.tsx(403,1): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/pages/VehicleDetail.tsx(405,58): error TS1005: '}' expected.
+src/pages/VehicleDetail.tsx(405,111): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+src/pages/VehicleDetail.tsx(405,118): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/pages/VehicleDetail.tsx(406,3): error TS1109: Expression expected.
+src/pages/VehicleDetail.tsx(421,1): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/pages/VehicleDetail.tsx(422,1): error TS1005: '</' expected.
+src/pages/VehicleForm.tsx(66,6): error TS17008: JSX element 'div' has no corresponding closing tag.
+src/pages/VehicleForm.tsx(73,8): error TS17008: JSX element 'form' has no corresponding closing tag.
+src/pages/VehicleForm.tsx(98,10): error TS17008: JSX element 'Section' has no corresponding closing tag.
+src/pages/VehicleForm.tsx(99,12): error TS17008: JSX element 'div' has no corresponding closing tag.
+src/pages/VehicleForm.tsx(108,14): error TS17008: JSX element 'Field' has no corresponding closing tag.
+src/pages/VehicleForm.tsx(224,15): error TS17002: Expected corresponding JSX closing tag for 'div'.
+src/pages/VehicleForm.tsx(227,11): error TS17002: Expected corresponding JSX closing tag for 'GlowCard'.
+src/pages/VehicleForm.tsx(242,11): error TS17002: Expected corresponding JSX closing tag for 'form'.
+src/pages/VehicleForm.tsx(284,12): error TS17008: JSX element 'button' has no corresponding closing tag.
+src/pages/VehicleForm.tsx(302,9): error TS17002: Expected corresponding JSX closing tag for 'div'.
+src/pages/VehicleForm.tsx(303,7): error TS17002: Expected corresponding JSX closing tag for 'select'.
+src/pages/VehicleForm.tsx(305,1): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/pages/VehicleForm.tsx(307,46): error TS1005: '}' expected.
+src/pages/VehicleForm.tsx(307,82): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/pages/VehicleForm.tsx(308,3): error TS1109: Expression expected.
+src/pages/VehicleForm.tsx(314,1): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/pages/VehicleForm.tsx(316,60): error TS1005: '}' expected.
+src/pages/VehicleForm.tsx(316,116): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/pages/VehicleForm.tsx(317,3): error TS1109: Expression expected.
+src/pages/VehicleForm.tsx(323,1): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+src/pages/VehicleForm.tsx(324,1): error TS1005: '</' expected.
