@@ -5,7 +5,8 @@ import { setAuth, clearAuth, getUser, getToken, type User } from '@/lib/auth';
 interface AuthResponse {
   success: boolean;
   data: {
-    token: string;
+    token?: string;
+    accessToken?: string;
     user: User;
   };
 }
@@ -20,7 +21,8 @@ export function useAuth() {
     setError(null);
     try {
       const res = await api.post<AuthResponse>('/auth/login', { email, password });
-      setAuth(res.data.token, res.data.user);
+      const token = res.data.accessToken || res.data.token || '';
+      setAuth(token, res.data.user);
       setUser(res.data.user);
       return res.data.user;
     } catch (err: any) {
@@ -37,7 +39,8 @@ export function useAuth() {
     setError(null);
     try {
       const res = await api.post<AuthResponse>('/auth/register', { name, email, password });
-      setAuth(res.data.token, res.data.user);
+      const token = res.data.accessToken || res.data.token || '';
+      setAuth(token, res.data.user);
       setUser(res.data.user);
       return res.data.user;
     } catch (err: any) {

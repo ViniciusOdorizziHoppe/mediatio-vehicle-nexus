@@ -612,4 +612,171 @@ If 404, fix endpoints.
 If CORS, fix backend headers.
 If token missing, fix storage.
 
-Repeat until all endpoints work.
+Repeat until all endpoints work.# Autonomous Continuous Testing Mode
+
+You must operate in continuous autonomous validation mode.
+
+Execution cycle:
+
+1) analyze project
+2) install dependencies
+3) run build
+4) run lint
+5) run runtime API tests
+6) simulate user flow
+7) detect errors
+8) fix code
+9) rebuild
+10) retest
+11) repeat
+
+Do not stop after one fix.
+
+Continue fixing until:
+
+- register works
+- login works
+- dashboard loads
+- vehicles work
+- leads work
+- nexus chat works
+- morph works
+- API responds correctly
+- no TypeScript errors
+- no Vite errors
+- no runtime errors
+- no 401
+- no 404
+- no 405
+- no redirect loops
+- no token issues
+
+Only stop when the entire project is stable.
+
+---
+
+# Runtime Testing Instructions
+
+You must simulate real usage.
+
+Create a test user.
+
+Perform:
+
+POST /auth/register
+POST /auth/login
+GET /vehicles
+GET /leads
+POST /vehicles
+POST /leads
+
+Extract token and reuse.
+
+If any request fails:
+
+fix code
+retry
+repeat
+
+---
+
+# Build Testing
+
+Run:
+
+npm install
+npm run build
+
+If build fails:
+
+fix code
+rebuild
+repeat
+
+---
+
+# Lint Testing
+
+Run:
+
+npm run lint
+
+If lint fails:
+
+fix
+repeat
+
+---
+
+# Real API Testing
+
+Use fetch or curl.
+
+Example:
+
+curl -X POST https://extensive-avril-morph-d5a8aee2.koyeb.app/auth/login
+
+If 405:
+
+check method
+
+If 404:
+
+check endpoint
+
+If 401:
+
+check token
+
+Fix and retry.
+
+---
+
+# User Simulation
+
+Simulate:
+
+register
+login
+create vehicle
+edit vehicle
+create lead
+navigate pages
+reload
+logout
+login again
+
+Fix any issue.
+
+---
+
+# Auto Fix Rules
+
+You are allowed to rewrite any file.
+
+api.ts
+auth.ts
+hooks
+pages
+components
+routing
+package.json
+vite config
+tsconfig
+
+Everything can be corrected.
+
+---
+
+# Stop Condition
+
+Only stop when:
+
+PROJECT FULLY VALIDATED
+ALL TESTS PASSED
+BUILD SUCCESS
+RUNTIME SUCCESS
+API SUCCESS
+READY FOR PRODUCTION
+
+Then output corrected files.

@@ -8,7 +8,7 @@ export function useLeads(params?: { status?: string }) {
       const searchParams = new URLSearchParams();
       if (params?.status) searchParams.set("status", params.status);
       const query = searchParams.toString();
-      const data = await api.get(`/api/leads${query ? `?${query}` : ""}`);
+      const data = await api.get(`/leads${query ? `?${query}` : ""}`);
       const leads = Array.isArray(data) ? data : data.leads || data.data || [];
       return leads.map(normalizeLead);
     },
@@ -18,7 +18,7 @@ export function useLeads(params?: { status?: string }) {
 export function useCreateLead() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (body: any) => api.post("/api/leads", body),
+    mutationFn: (body: any) => api.post("/leads", body),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["leads"] }),
   });
 }
@@ -27,7 +27,7 @@ export function useUpdateLeadStatus() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, status }: { id: string; status: string }) =>
-      api.patch(`/api/leads/${id}/status`, { status }),
+      api.patch(`/leads/${id}/status`, { status }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["leads"] }),
   });
 }
@@ -36,7 +36,7 @@ export function useUpdateLead() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: any }) =>
-      api.put(`/api/leads/${id}`, data),
+      api.patch(`/leads/${id}`, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["leads"] }),
   });
 }
@@ -44,7 +44,7 @@ export function useUpdateLead() {
 export function useDeleteLead() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => api.delete(`/api/leads/${id}`),
+    mutationFn: (id: string) => api.delete(`/leads/${id}`),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["leads"] }),
   });
 }

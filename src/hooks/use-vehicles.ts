@@ -9,7 +9,7 @@ export function useVehicles(params?: { status?: string; search?: string }) {
       if (params?.status) searchParams.set("status", params.status);
       if (params?.search) searchParams.set("search", params.search);
       const query = searchParams.toString();
-      const data = await api.get(`/api/vehicles${query ? `?${query}` : ""}`);
+      const data = await api.get(`/vehicles${query ? `?${query}` : ""}`);
       const vehicles = Array.isArray(data) ? data : data.vehicles || data.data || [];
       return vehicles.map(normalizeVehicle);
     },
@@ -21,7 +21,7 @@ export function useVehicle(id: string | undefined) {
     queryKey: ["vehicle", id],
     queryFn: async () => {
       if (!id) throw new Error("No ID");
-      const data = await api.get(`/api/vehicles/${id}`);
+      const data = await api.get(`/vehicles/${id}`);
       const vehicle = data.vehicle || data;
       return normalizeVehicle(vehicle);
     },
@@ -32,7 +32,7 @@ export function useVehicle(id: string | undefined) {
 export function useCreateVehicle() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (body: any) => api.post("/api/vehicles", body),
+    mutationFn: (body: any) => api.post("/vehicles", body),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["vehicles"] }),
   });
 }
@@ -40,7 +40,7 @@ export function useCreateVehicle() {
 export function useUpdateVehicle() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, ...body }: any) => api.patch(`/api/vehicles/${id}`, body),
+    mutationFn: ({ id, ...body }: any) => api.patch(`/vehicles/${id}`, body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["vehicles"] });
       queryClient.invalidateQueries({ queryKey: ["vehicle"] });
@@ -53,7 +53,7 @@ export function useUpdateVehicleStatus() {
   return useMutation({
     mutationFn: ({ id, status }: { id: string; status: string }) => {
       const backendStatus = vehicleStatusReverseMap[status] || status;
-      return api.patch(`/api/vehicles/${id}/status`, { status: backendStatus });
+      return api.patch(`/vehicles/${id}/status`, { status: backendStatus });
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["vehicles"] }),
   });
@@ -61,6 +61,6 @@ export function useUpdateVehicleStatus() {
 
 export function useGenerateAd() {
   return useMutation({
-    mutationFn: (id: string) => api.post(`/api/vehicles/${id}/generate-ad`, {}),
+    mutationFn: (id: string) => api.post(`/vehicles/${id}/generate-ad`, {}),
   });
 }

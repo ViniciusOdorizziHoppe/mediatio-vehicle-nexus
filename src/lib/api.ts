@@ -26,7 +26,8 @@ async function request<T = any>(endpoint: string, options: RequestOptions = {}):
     ...(body ? { body: JSON.stringify(body) } : {}),
   };
 
-  const url = `${BASE_URL}${endpoint}`;
+  const prefix = endpoint.startsWith('/api') ? '' : '/api';
+  const url = `${BASE_URL}${prefix}${endpoint}`;
 
   const response = await fetch(url, config);
 
