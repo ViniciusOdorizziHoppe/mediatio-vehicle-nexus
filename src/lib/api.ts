@@ -4,12 +4,9 @@
  * Arquitetura de URL:
  * - Em produção (Vercel): VITE_API_URL="" e vercel.json proxy /api/* → Koyeb
  * - Em dev local: VITE_API_URL="http://localhost:3001" (sem /api no final)
- *
- * Todas as funções recebem endpoints SEM /api/ no início.
- * Ex: api.get('/vehicles') → chama /api/vehicles
  */
 
-const BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+const BASE = (import.meta.env.VITE_API_URL || '').trim().replace(/\/$/, '');
 
 const getToken = (): string | null => localStorage.getItem('mediatio_token');
 
@@ -23,12 +20,21 @@ async function request<T = any>(endpoint: string, opts: Opts = {}): Promise<T> {
   const { method = 'GET', body, headers = {} } = opts;
   const token = getToken();
 
-  // Garante que o endpoint começa com /api/
-  const path = endpoint.startsWith('/api/') ? endpoint
-    : endpoint.startsWith('/') ? `/api${endpoint}`
-    : `/api/${endpoint}`;
+  let cleanEndpoint = endpoint.replace(/^\/?api\//, '/');
+  if (!cleanEndpoint.startsWith('/')) {
+    cleanEndpoint = `/${cleanEndpoint}`;
+  }
 
-  const url = `${BASE}${path}`;
+  let url = '';
+  if (BASE) {
+    if (BASE.endsWith('/api')) {
+      url = `${BASE}${cleanEndpoint}`;
+    } else {
+      url = `${BASE}/api${cleanEndpoint}`;
+    }
+  } else {
+    url = `/api${cleanEndpoint}`;
+  }
 
   const config: RequestInit = {
     method,
@@ -68,7 +74,6 @@ export const api = {
     request<T>(endpoint, { method: 'DELETE', headers }),
 };
 
-// ── Status maps ───────────────────────────────────────────────
 export const vehicleStatusMap: Record<string, string> = {
   disponivel: 'Disponível',
   contato_ativo: 'Em negociação',
@@ -90,7 +95,6 @@ export const leadStatusMap: Record<string, string> = {
   perdido: 'Perdido',
 };
 
-// ── Normalize helpers (tolerância a schemas antigos/novos) ────
 export function normalizeVehicle(v: any) {
   if (!v) return v;
   return {

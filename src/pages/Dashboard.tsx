@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 
 import api from '@/lib/api';
 import { getUser } from '@/lib/auth';
-import { formatCurrency, PIPELINE_STATUS, LEAD_STATUS, getScoreColor } from '@/lib/utils';
+import { formatCurrency, getScoreColor } from '@/lib/utils';
 import { useVehicles } from '@/hooks/use-vehicles';
 import { useLeads } from '@/hooks/use-leads';
 import { StatCard } from '@/components/ui/StatCard';
@@ -94,26 +94,26 @@ export default function Dashboard() {
         <StatCard
           title="Veículos Ativos"
           value={String(totalVehicles)}
-          icon={<Car className="w-5 h-5" />}
-          color="blue"
+          icon={Car}
+          gradient="blue"
         />
         <StatCard
           title="Total de Leads"
           value={String(totalLeads)}
-          icon={<Users className="w-5 h-5" />}
-          color="green"
+          icon={Users}
+          gradient="green"
         />
         <StatCard
           title="Comissão do Mês"
           value={formatCurrency(comissaoMes)}
-          icon={<DollarSign className="w-5 h-5" />}
-          color="purple"
+          icon={DollarSign}
+          gradient="purple"
         />
         <StatCard
           title="Taxa de Conversão"
           value={`${taxaConversao}%`}
-          icon={<TrendingUp className="w-5 h-5" />}
-          color="yellow"
+          icon={TrendingUp}
+          gradient="cyan"
         />
       </motion.div>
 
