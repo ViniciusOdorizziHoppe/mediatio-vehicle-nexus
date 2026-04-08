@@ -1,32 +1,34 @@
-/** Mediatio HTTP Client - Production Ready */
+/**
+ * Cliente HTTP — Mediatio
+ *
+ * Arquitetura de URL:
+ * - Em produção (Vercel): VITE_API_URL="" e vercel.json proxy /api/* → Koyeb
+ * - Em dev local: VITE_API_URL="http://localhost:3001" (sem /api no final)
+ *
+ * Todas as funções recebem endpoints SEM /api/ no início.
+ * Ex: api.get('/vehicles') → chama /api/vehicles
+ */
 
-const BASE_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, '');
+const BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 
-if (!BASE_URL) {
-  throw new Error('VITE_API_URL não definido no .env');
-}
+const getToken = (): string | null => localStorage.getItem('mediatio_token');
 
-const getToken = (): string | null => {
-  try {
-    return localStorage.getItem('mediatio_token');
-  } catch {
-    return null;
-  }
-};
-
-interface RequestOptions {
+interface Opts {
   method?: string;
   body?: object;
   headers?: Record<string, string>;
 }
 
-async function request<T = any>(
-  endpoint: string,
-  options: RequestOptions = {}
-): Promise<T> {
-  const { method = 'GET', body, headers = {} } = options;
-
+async function request<T = any>(endpoint: string, opts: Opts = {}): Promise<T> {
+  const { method = 'GET', body, headers = {} } = opts;
   const token = getToken();
+
+  // Garante que o endpoint começa com /api/
+  const path = endpoint.startsWith('/api/') ? endpoint
+    : endpoint.startsWith('/') ? `/api${endpoint}`
+    : `/api/${endpoint}`;
+
+  const url = `${BASE}${path}`;
 
   const config: RequestInit = {
     method,
@@ -38,83 +40,35 @@ async function request<T = any>(
     ...(body ? { body: JSON.stringify(body) } : {}),
   };
 
-  const prefix = endpoint.startsWith('/api') ? '' : '/api';
-  const url = `${BASE_URL}${prefix}${endpoint}`;
-
-  let response: Response;
-
-  try {
-    response = await fetch(url, config);
-  } catch (error) {
-    throw new Error('Erro de conexão com a API');
-  }
+  const response = await fetch(url, config);
 
   if (response.status === 401) {
     localStorage.removeItem('mediatio_token');
+    localStorage.removeItem('mediatio_user');
     window.location.href = '/login';
     throw new Error('Sessão expirada');
   }
 
-  if (response.status === 404) {
-    throw new Error(`Endpoint não encontrado: ${endpoint}`);
-  }
-
-  if (response.status === 405) {
-    throw new Error(`Método não permitido: ${method} ${endpoint}`);
-  }
-
-  let data: any = null;
-
-  try {
-    data = await response.json();
-  } catch {
-    data = null;
-  }
-
   if (!response.ok) {
-    const message =
-      data?.error ||
-      data?.message ||
-      `Erro ${response.status}`;
-
-    throw new Error(message);
+    const err = await response.json().catch(() => ({ error: `HTTP ${response.status}` }));
+    throw new Error((err as any).error || `Erro ${response.status}`);
   }
 
-  return data;
+  return response.json() as Promise<T>;
 }
 
 export const api = {
-  get: <T = any>(endpoint: string, headers?: Record<string, string>) =>
+  get:    <T = any>(endpoint: string, headers?: Record<string, string>) =>
     request<T>(endpoint, { method: 'GET', headers }),
-
-  post: <T = any>(
-    endpoint: string,
-    body: object,
-    headers?: Record<string, string>
-  ) => request<T>(endpoint, { method: 'POST', body, headers }),
-
-  put: <T = any>(
-    endpoint: string,
-    body: object,
-    headers?: Record<string, string>
-  ) => request<T>(endpoint, { method: 'PUT', body, headers }),
-
-  patch: <T = any>(
-    endpoint: string,
-    body: object,
-    headers?: Record<string, string>
-  ) => request<T>(endpoint, { method: 'PATCH', body, headers }),
-
-  delete: <T = any>(
-    endpoint: string,
-    headers?: Record<string, string>
-  ) => request<T>(endpoint, { method: 'DELETE', headers }),
+  post:   <T = any>(endpoint: string, body: object, headers?: Record<string, string>) =>
+    request<T>(endpoint, { method: 'POST', body, headers }),
+  patch:  <T = any>(endpoint: string, body: object, headers?: Record<string, string>) =>
+    request<T>(endpoint, { method: 'PATCH', body, headers }),
+  delete: <T = any>(endpoint: string, headers?: Record<string, string>) =>
+    request<T>(endpoint, { method: 'DELETE', headers }),
 };
 
-/* ===============================
-   STATUS MAPS
-================================= */
-
+// ── Status maps ───────────────────────────────────────────────
 export const vehicleStatusMap: Record<string, string> = {
   disponivel: 'Disponível',
   contato_ativo: 'Em negociação',
@@ -123,10 +77,9 @@ export const vehicleStatusMap: Record<string, string> = {
   arquivado: 'Arquivado',
 };
 
-export const vehicleStatusReverseMap: Record<string, string> =
-  Object.fromEntries(
-    Object.entries(vehicleStatusMap).map(([k, v]) => [v, k])
-  );
+export const vehicleStatusReverseMap: Record<string, string> = Object.fromEntries(
+  Object.entries(vehicleStatusMap).map(([k, v]) => [v, k])
+);
 
 export const leadStatusMap: Record<string, string> = {
   novo: 'Novo',
@@ -137,13 +90,9 @@ export const leadStatusMap: Record<string, string> = {
   perdido: 'Perdido',
 };
 
-/* ===============================
-   NORMALIZERS
-================================= */
-
+// ── Normalize helpers (tolerância a schemas antigos/novos) ────
 export function normalizeVehicle(v: any) {
   if (!v) return v;
-
   return {
     ...v,
     _id: v._id || v.id,
@@ -152,35 +101,29 @@ export function normalizeVehicle(v: any) {
     modelo: v.modelo || v.model || '',
     ano: v.ano || v.year || 0,
     cor: v.cor || v.color || '',
-    km: v.km || v.mileage || 0,
-    tipo: v.tipo || v.type || 'carro',
-
+    km: v.km ?? v.mileage ?? 0,
+    tipo: v.tipo || v.type || 'moto',
     precos: v.precos || {
-      compra: v.preco_compra || v.purchasePrice || 0,
-      venda: v.preco_venda || v.salePrice || v.price || 0,
-      minimo: v.preco_minimo || v.minimumPrice || 0,
-      comissaoEstimada:
-        v.comissao_estimada || v.estimatedCommission || 0,
+      compra: v.preco_compra || 0,
+      venda: v.preco_venda || v.price || 0,
+      minimo: v.preco_minimo || 0,
+      comissaoEstimada: v.comissao_estimada || 0,
     },
-
-    pipeline: v.pipeline || {
-      status: v.status || 'disponivel',
+    pipeline: v.pipeline || { status: v.status || 'disponivel' },
+    score: v.score || { valor: 0, label: 'N/A' },
+    condicoes: v.condicoes || {
+      aceitaTroca: false,
+      aceitaFinanciamento: false,
+      documentacao: 'pendente',
     },
-
-    score: v.score || {
-      valor: 0,
-      label: 'N/A',
-    },
-
-    condicoes: v.condicoes || {},
     proprietario: v.proprietario || {},
     anuncio: v.anuncio || {},
+    fotos: v.fotos || {},
   };
 }
 
 export function normalizeLead(l: any) {
   if (!l) return l;
-
   return {
     ...l,
     _id: l._id || l.id,
@@ -191,6 +134,7 @@ export function normalizeLead(l: any) {
     interesse: l.interesse || {},
     cidade: l.cidade || l.city || '',
     notas: l.notas || l.notes || '',
+    orcamento: l.orcamento || l.budget || 0,
   };
 }
 

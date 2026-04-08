@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { useCreateVehicle, useUpdateVehicle, useVehicle } from '@/hooks/useVehicles';
-import { GlowCard } from '@/components/ui/GlowCard';
 import { motion } from 'framer-motion';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+
+import { useCreateVehicle, useUpdateVehicle, useVehicle } from '@/hooks/use-vehicles';
+import { GlowCard } from '@/components/ui/GlowCard';
 
 export default function VehicleForm() {
   const { id } = useParams();
@@ -14,24 +15,45 @@ export default function VehicleForm() {
   const { data: existingData } = useVehicle(id);
   const createMutation = useCreateVehicle();
   const updateMutation = useUpdateVehicle();
-  const [error, setError] = useState<string | null>(null);
 
   const [form, setForm] = useState({
-    tipo: 'moto', marca: '', modelo: '', ano: new Date().getFullYear(), cor: '', km: '',
-    precos: { compra: '', venda: '', minimo: '', comissaoEstimada: '' },
-    condicoes: { aceitaTroca: false, aceitaFinanciamento: false, documentacao: 'pendente' },
+    tipo: 'moto',
+    marca: '',
+    modelo: '',
+    ano: new Date().getFullYear(),
+    cor: '',
+    km: '',
+    precos: { compra: '', venda: '', minimo: '' },
+    condicoes: { aceitaTroca: false, aceitaFinanciamento: false, documentacao: 'ok' as 'ok' | 'pendente' | 'irregular' },
     proprietario: { nome: '', whatsapp: '', cidade: '' },
     anuncio: { observacoes: '' },
   });
 
   useEffect(() => {
     if (existingData) {
-      const v = existingData;
+      const v = existingData as any;
       setForm({
-        tipo: v.tipo, marca: v.marca, modelo: v.modelo, ano: v.ano, cor: v.cor || '', km: String(v.km || ''),
-        precos: { compra: String(v.precos?.compra || ''), venda: String(v.precos?.venda || ''), minimo: String(v.precos?.minimo || ''), comissaoEstimada: String(v.precos?.comissaoEstimada || '') },
-        condicoes: { aceitaTroca: v.condicoes?.aceitaTroca || false, aceitaFinanciamento: v.condicoes?.aceitaFinanciamento || false, documentacao: v.condicoes?.documentacao || 'pendente' },
-        proprietario: { nome: v.proprietario?.nome || '', whatsapp: v.proprietario?.whatsapp || '', cidade: v.proprietario?.cidade || '' },
+        tipo: v.tipo || 'moto',
+        marca: v.marca || '',
+        modelo: v.modelo || '',
+        ano: v.ano || new Date().getFullYear(),
+        cor: v.cor || '',
+        km: String(v.km || ''),
+        precos: {
+          compra: String(v.precos?.compra || ''),
+          venda: String(v.precos?.venda || ''),
+          minimo: String(v.precos?.minimo || ''),
+        },
+        condicoes: {
+          aceitaTroca: v.condicoes?.aceitaTroca || false,
+          aceitaFinanciamento: v.condicoes?.aceitaFinanciamento || false,
+          documentacao: v.condicoes?.documentacao || 'ok',
+        },
+        proprietario: {
+          nome: v.proprietario?.nome || '',
+          whatsapp: v.proprietario?.whatsapp || '',
+          cidade: v.proprietario?.cidade || '',
+        },
         anuncio: { observacoes: v.anuncio?.observacoes || '' },
       });
     }
@@ -39,188 +61,237 @@ export default function VehicleForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
     const payload = {
-      tipo: form.tipo, marca: form.marca, modelo: form.modelo, ano: Number(form.ano), cor: form.cor,
+      tipo: form.tipo,
+      marca: form.marca,
+      modelo: form.modelo,
+      ano: Number(form.ano),
+      cor: form.cor || undefined,
       km: form.km ? Number(form.km) : undefined,
-      precos: { compra: form.precos.compra ? Number(form.precos.compra) : undefined, venda: Number(form.precos.venda), minimo: form.precos.minimo ? Number(form.precos.minimo) : undefined, comissaoEstimada: form.precos.comissaoEstimada ? Number(form.precos.comissaoEstimada) : undefined },
-      condicoes: form.condicoes, proprietario: form.proprietario, anuncio: form.anuncio,
+      precos: {
+        compra: form.precos.compra ? Number(form.precos.compra) : undefined,
+        venda: Number(form.precos.venda),
+        minimo: form.precos.minimo ? Number(form.precos.minimo) : undefined,
+      },
+      condicoes: form.condicoes,
+      proprietario: form.proprietario,
+      anuncio: form.anuncio,
     };
     try {
-      if (isEdit && id) { await updateMutation.mutateAsync({ id, ...payload }); }
-      else { await createMutation.mutateAsync(payload); }
-      toast.success(isEdit ? 'Veículo atualizado' : 'Veículo cadastrado');
+      if (isEdit && id) {
+        await updateMutation.mutateAsync({ id, ...payload });
+        toast.success('Veículo atualizado com sucesso!');
+      } else {
+        await createMutation.mutateAsync(payload);
+        toast.success('Veículo cadastrado com sucesso!');
+      }
       navigate('/vehicles');
-    } catch (err: any) { 
-      toast.error(err.message || 'Erro ao salvar');
-      setError(err.message || 'Erro ao salvar o veículo. Verifique os campos.');
+    } catch (err: any) {
+      toast.error(err.message || 'Erro ao salvar veículo');
     }
   };
 
-  const loading = createMutation.isPending || updateMutation.isPending;
+  const isPending = createMutation.isPending || updateMutation.isPending;
 
   return (
-    <div className="p-6 md:p-8 max-w-3xl space-y-6">
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-        <Link to="/vehicles" className="text-blue-400 hover:text-blue-300 text-sm flex items-center gap-1.5 mb-2 transition-colors">
-          <ArrowLeft className="w-4 h-4" /> Veículos
+    <div className="p-6 max-w-2xl mx-auto">
+      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+        <Link to="/vehicles" className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors mb-4">
+          <ArrowLeft className="w-4 h-4" />
+          <span className="text-sm">Voltar para Veículos</span>
         </Link>
-        <h1 className="text-2xl font-bold text-slate-100">
-          {isEdit ? 'Editar Veículo' : 'Novo Veículo'}
+        <h1 className="text-2xl font-bold text-white">
+          {isEdit ? 'Editar Veículo' : 'Cadastrar Veículo'}
         </h1>
       </motion.div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {error && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-xl text-sm"
-          >
-            {error}
-          </motion.div>
-        )}
-
-        {/* Vehicle Data */}
-        <GlowCard delay={0.1}>
-          <h2 className="font-semibold text-slate-100 mb-4">Dados do Veículo</h2>
+        <GlowCard>
+          <h2 className="text-lg font-semibold text-white mb-4">Dados do Veículo</h2>
           <div className="grid grid-cols-2 gap-4">
+            {/* Tipo */}
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">Tipo *</label>
-              <select value={form.tipo} onChange={e => setForm(f => ({ ...f, tipo: e.target.value }))} className="input-dark">
+              <label className="block text-sm font-medium text-slate-300 mb-1">Tipo *</label>
+              <select
+                value={form.tipo}
+                onChange={e => setForm(f => ({ ...f, tipo: e.target.value }))}
+                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              >
                 <option value="moto">Moto</option>
                 <option value="carro">Carro</option>
               </select>
             </div>
+
+            {/* Ano */}
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">Marca *</label>
-              <input required value={form.marca} onChange={e => setForm(f => ({ ...f, marca: e.target.value }))} className="input-dark" placeholder="Honda, Yamaha, Toyota..." />
+              <label className="block text-sm font-medium text-slate-300 mb-1">Ano *</label>
+              <input
+                type="number" required value={form.ano}
+                onChange={e => setForm(f => ({ ...f, ano: Number(e.target.value) }))}
+                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                min="1990" max={new Date().getFullYear() + 1}
+              />
             </div>
+
+            {/* Marca */}
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">Modelo *</label>
-              <input required value={form.modelo} onChange={e => setForm(f => ({ ...f, modelo: e.target.value }))} className="input-dark" placeholder="CG 160, Civic..." />
+              <label className="block text-sm font-medium text-slate-300 mb-1">Marca *</label>
+              <input
+                type="text" required value={form.marca} placeholder="Ex: Honda"
+                onChange={e => setForm(f => ({ ...f, marca: e.target.value }))}
+                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
             </div>
+
+            {/* Modelo */}
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">Ano *</label>
-              <input required type="number" value={form.ano} onChange={e => setForm(f => ({ ...f, ano: Number(e.target.value) }))} className="input-dark" />
+              <label className="block text-sm font-medium text-slate-300 mb-1">Modelo *</label>
+              <input
+                type="text" required value={form.modelo} placeholder="Ex: CG 160"
+                onChange={e => setForm(f => ({ ...f, modelo: e.target.value }))}
+                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
             </div>
+
+            {/* Cor */}
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">Cor</label>
-              <input value={form.cor} onChange={e => setForm(f => ({ ...f, cor: e.target.value }))} className="input-dark" placeholder="Vermelha, Prata..." />
+              <label className="block text-sm font-medium text-slate-300 mb-1">Cor</label>
+              <input
+                type="text" value={form.cor} placeholder="Ex: Vermelha"
+                onChange={e => setForm(f => ({ ...f, cor: e.target.value }))}
+                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
             </div>
+
+            {/* KM */}
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">KM</label>
-              <input type="number" value={form.km} onChange={e => setForm(f => ({ ...f, km: e.target.value }))} className="input-dark" placeholder="15000" />
+              <label className="block text-sm font-medium text-slate-300 mb-1">Quilometragem</label>
+              <input
+                type="number" value={form.km} placeholder="Ex: 18000" min="0"
+                onChange={e => setForm(f => ({ ...f, km: e.target.value }))}
+                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
             </div>
           </div>
         </GlowCard>
 
-        {/* Prices */}
-        <GlowCard delay={0.2}>
-          <h2 className="font-semibold text-slate-100 mb-4">Preços</h2>
+        <GlowCard>
+          <h2 className="text-lg font-semibold text-white mb-4">Preços</h2>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">Preço de Compra (R$)</label>
-              <input type="number" value={form.precos.compra} onChange={e => setForm(f => ({ ...f, precos: { ...f.precos, compra: e.target.value } }))} className="input-dark" placeholder="10000" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">Preço de Venda (R$) *</label>
-              <input required type="number" value={form.precos.venda} onChange={e => setForm(f => ({ ...f, precos: { ...f.precos, venda: e.target.value } }))} className="input-dark" placeholder="15000" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">Preço Mínimo (R$)</label>
-              <input type="number" value={form.precos.minimo} onChange={e => setForm(f => ({ ...f, precos: { ...f.precos, minimo: e.target.value } }))} className="input-dark" placeholder="12000" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">Comissão Estimada (R$)</label>
-              <input type="number" value={form.precos.comissaoEstimada} onChange={e => setForm(f => ({ ...f, precos: { ...f.precos, comissaoEstimada: e.target.value } }))} className="input-dark" placeholder="1500" />
-            </div>
-          </div>
-        </GlowCard>
-
-        {/* Conditions */}
-        <GlowCard delay={0.3}>
-          <h2 className="font-semibold text-slate-100 mb-4">Condições</h2>
-          <div className="space-y-3">
-            <label className="flex items-center gap-3 cursor-pointer group">
+              <label className="block text-sm font-medium text-slate-300 mb-1">Preço de Compra (R$)</label>
               <input
-                type="checkbox"
-                checked={form.condicoes.aceitaTroca}
-                onChange={e => setForm(f => ({ ...f, condicoes: { ...f.condicoes, aceitaTroca: e.target.checked } }))}
-                className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-blue-500 focus:ring-blue-500/20 focus:ring-offset-0"
+                type="number" value={form.precos.compra} placeholder="0,00" min="0"
+                onChange={e => setForm(f => ({ ...f, precos: { ...f.precos, compra: e.target.value } }))}
+                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <span className="text-sm text-slate-300 group-hover:text-slate-200 transition-colors">Aceita troca</span>
-            </label>
-            <label className="flex items-center gap-3 cursor-pointer group">
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-1">Preço de Venda (R$) *</label>
               <input
-                type="checkbox"
-                checked={form.condicoes.aceitaFinanciamento}
-                onChange={e => setForm(f => ({ ...f, condicoes: { ...f.condicoes, aceitaFinanciamento: e.target.checked } }))}
-                className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-blue-500 focus:ring-blue-500/20 focus:ring-offset-0"
+                type="number" required value={form.precos.venda} placeholder="0,00" min="0"
+                onChange={e => setForm(f => ({ ...f, precos: { ...f.precos, venda: e.target.value } }))}
+                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <span className="text-sm text-slate-300 group-hover:text-slate-200 transition-colors">Aceita financiamento</span>
-            </label>
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">Documentação</label>
-              <select
-                value={form.condicoes.documentacao}
-                onChange={e => setForm(f => ({ ...f, condicoes: { ...f.condicoes, documentacao: e.target.value } }))}
-                className="input-dark"
-              >
-                <option value="ok">OK</option>
-                <option value="pendente">Pendente</option>
-                <option value="irregular">Irregular</option>
-              </select>
-            </div>
-          </div>
-        </GlowCard>
-
-        {/* Owner */}
-        <GlowCard delay={0.4}>
-          <h2 className="font-semibold text-slate-100 mb-4">Proprietário / Vendedor</h2>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">Nome</label>
-              <input value={form.proprietario.nome} onChange={e => setForm(f => ({ ...f, proprietario: { ...f.proprietario, nome: e.target.value } }))} className="input-dark" placeholder="João Silva" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">WhatsApp</label>
-              <input value={form.proprietario.whatsapp} onChange={e => setForm(f => ({ ...f, proprietario: { ...f.proprietario, whatsapp: e.target.value } }))} className="input-dark" placeholder="47999990000" />
             </div>
             <div className="col-span-2">
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">Cidade</label>
-              <input value={form.proprietario.cidade} onChange={e => setForm(f => ({ ...f, proprietario: { ...f.proprietario, cidade: e.target.value } }))} className="input-dark" placeholder="Ibirama, SC" />
+              <label className="block text-sm font-medium text-slate-300 mb-1">Preço Mínimo (R$)</label>
+              <input
+                type="number" value={form.precos.minimo} placeholder="Menor valor aceito" min="0"
+                onChange={e => setForm(f => ({ ...f, precos: { ...f.precos, minimo: e.target.value } }))}
+                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
             </div>
           </div>
         </GlowCard>
 
-        {/* Notes */}
-        <GlowCard delay={0.5}>
-          <h2 className="font-semibold text-slate-100 mb-4">Observações do Anúncio</h2>
+        <GlowCard>
+          <h2 className="text-lg font-semibold text-white mb-4">Condições</h2>
+          <div className="space-y-3">
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-1">Documentação</label>
+              <select
+                value={form.condicoes.documentacao}
+                onChange={e => setForm(f => ({ ...f, condicoes: { ...f.condicoes, documentacao: e.target.value as any } }))}
+                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="ok">Em dia ✅</option>
+                <option value="pendente">Pendente ⚠️</option>
+                <option value="irregular">Irregular ❌</option>
+              </select>
+            </div>
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox" checked={form.condicoes.aceitaTroca}
+                onChange={e => setForm(f => ({ ...f, condicoes: { ...f.condicoes, aceitaTroca: e.target.checked } }))}
+                className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-blue-500 focus:ring-blue-500"
+              />
+              <span className="text-slate-300 text-sm">Aceita troca</span>
+            </label>
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox" checked={form.condicoes.aceitaFinanciamento}
+                onChange={e => setForm(f => ({ ...f, condicoes: { ...f.condicoes, aceitaFinanciamento: e.target.checked } }))}
+                className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-blue-500 focus:ring-blue-500"
+              />
+              <span className="text-slate-300 text-sm">Aceita financiamento</span>
+            </label>
+          </div>
+        </GlowCard>
+
+        <GlowCard>
+          <h2 className="text-lg font-semibold text-white mb-4">Proprietário</h2>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-1">Nome</label>
+              <input
+                type="text" value={form.proprietario.nome} placeholder="Nome do dono"
+                onChange={e => setForm(f => ({ ...f, proprietario: { ...f.proprietario, nome: e.target.value } }))}
+                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-1">WhatsApp</label>
+              <input
+                type="text" value={form.proprietario.whatsapp} placeholder="47 9 9999-9999"
+                onChange={e => setForm(f => ({ ...f, proprietario: { ...f.proprietario, whatsapp: e.target.value } }))}
+                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div className="col-span-2">
+              <label className="block text-sm font-medium text-slate-300 mb-1">Cidade</label>
+              <input
+                type="text" value={form.proprietario.cidade} placeholder="Ex: Ibirama - SC"
+                onChange={e => setForm(f => ({ ...f, proprietario: { ...f.proprietario, cidade: e.target.value } }))}
+                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+        </GlowCard>
+
+        <GlowCard>
+          <h2 className="text-lg font-semibold text-white mb-4">Observações</h2>
           <textarea
-            rows={4}
-            value={form.anuncio.observacoes}
+            rows={3} value={form.anuncio.observacoes} placeholder="Detalhes adicionais, histórico, acessórios..."
             onChange={e => setForm(f => ({ ...f, anuncio: { observacoes: e.target.value } }))}
-            className="input-dark resize-none"
-            placeholder="Detalhes adicionais sobre o veículo..."
+            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
           />
         </GlowCard>
 
-        {/* Actions */}
-        <div className="flex gap-3">
-          <button
-            type="submit"
-            disabled={loading}
-            className="btn-brand disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? 'Salvando...' : isEdit ? 'Salvar alterações' : 'Cadastrar veículo'}
-          </button>
-          <button
-            type="button"
-            onClick={() => navigate('/vehicles')}
-            className="px-6 py-2.5 rounded-lg bg-slate-800/50 hover:bg-slate-800 text-slate-300 font-medium transition-colors border border-slate-700/50"
+        <div className="flex gap-4 pb-8">
+          <Link
+            to="/vehicles"
+            className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg border border-slate-600 text-slate-300 hover:border-slate-500 hover:text-white transition-colors"
           >
             Cancelar
+          </Link>
+          <button
+            type="submit" disabled={isPending}
+            className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium transition-colors"
+          >
+            {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+            {isEdit ? 'Salvar Alterações' : 'Cadastrar Veículo'}
           </button>
         </div>
       </form>

@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { Layout } from "@/components/Layout";
+import Layout from "@/components/layout/Layout";
 import { isAuthenticated } from "@/lib/auth";
 import Dashboard from "./pages/Dashboard";
 import Vehicles from "./pages/Vehicles";
@@ -19,7 +19,11 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: { retry: 1, staleTime: 30_000, refetchOnWindowFocus: false },
+  },
+});
 
 function ProtectedRoute({ children }: { children: React.ReactElement }) {
   if (!isAuthenticated()) return <Navigate to="/login" replace />;
@@ -39,6 +43,7 @@ const App = () => (
             <Route path="/vehicles" element={<Vehicles />} />
             <Route path="/vehicles/new" element={<VehicleForm />} />
             <Route path="/vehicles/:id" element={<VehicleDetail />} />
+            <Route path="/vehicles/:id/edit" element={<VehicleForm />} />
             <Route path="/nexus" element={<NexusChat />} />
             <Route path="/morph" element={<MorphPhotos />} />
             <Route path="/analytics" element={<Analytics />} />

@@ -1,20 +1,40 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, normalizeLead } from "@/lib/api";
 
-export function useLeads(params?: { status?: string }) {
+export interface Lead {
+  _id: string;
+  nome: string;
+  whatsapp: string;
+  interesse?: {
+    descricao?: string;
+    vehicleId?: { _id: string; codigo: string; marca: string; modelo: string; ano: number };
+  };
+  canal: 'whatsapp' | 'facebook' | 'olx' | 'site' | 'indicacao' | 'outro';
+  status: 'novo' | 'contatado' | 'interessado' | 'proposta_enviada' | 'fechado' | 'perdido';
+  orcamento?: number;
+  cidade?: string;
+  notas?: string;
+  ultimoContato?: string;
+  createdAt: string;
+}
+
+// ── Listar leads ─────────────────────────────────────────────
+export function useLeads(params?: { status?: string; vehicleId?: string }) {
   return useQuery({
     queryKey: ["leads", params],
     queryFn: async () => {
       const searchParams = new URLSearchParams();
       if (params?.status) searchParams.set("status", params.status);
+      if (params?.vehicleId) searchParams.set("vehicleId", params.vehicleId);
       const query = searchParams.toString();
       const data = await api.get(`/leads${query ? `?${query}` : ""}`);
-      const leads = Array.isArray(data) ? data : data.leads || data.data || [];
+      const leads = Array.isArray(data) ? data : (data as any).data || [];
       return leads.map(normalizeLead);
     },
   });
 }
 
+// ── Criar lead ───────────────────────────────────────────────
 export function useCreateLead() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -23,6 +43,16 @@ export function useCreateLead() {
   });
 }
 
+// ── Atualizar lead ───────────────────────────────────────────
+export function useUpdateLead() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...body }: any) => api.patch(`/leads/${id}`, body),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["leads"] }),
+  });
+}
+
+// ── Atualizar status ─────────────────────────────────────────
 export function useUpdateLeadStatus() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -32,15 +62,7 @@ export function useUpdateLeadStatus() {
   });
 }
 
-export function useUpdateLead() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) =>
-      api.patch(`/leads/${id}`, data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["leads"] }),
-  });
-}
-
+// ── Deletar lead ─────────────────────────────────────────────
 export function useDeleteLead() {
   const queryClient = useQueryClient();
   return useMutation({
