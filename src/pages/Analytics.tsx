@@ -1,10 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { formatCurrency } from '@/lib/utils';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import { PageSkeleton } from '@/components/ui/PageSkeleton';
 import { GlowCard } from '@/components/ui/GlowCard';
 import { motion } from 'framer-motion';
+import { Bot, Zap, Calendar, Users } from 'lucide-react';
 
 const COLORS = ['#2563eb', '#22c55e', '#f59e0b', '#7c3aed', '#06b6d4'];
 const MONTH_NAMES = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
@@ -49,17 +50,73 @@ export default function Analytics() {
     labelStyle: { color: '#f8fafc', fontWeight: 600 },
   };
 
+  const botPerformanceData = [
+    { day: 'Seg', leads: 4, agendamentos: 1 },
+    { day: 'Ter', leads: 7, agendamentos: 2 },
+    { day: 'Qua', leads: 5, agendamentos: 1 },
+    { day: 'Qui', leads: 10, agendamentos: 4 },
+    { day: 'Sex', leads: 8, agendamentos: 3 },
+    { day: 'Sab', leads: 12, agendamentos: 5 },
+    { day: 'Dom', leads: 6, agendamentos: 2 },
+  ];
+
   return (
-    <div className="p-6 md:p-8 space-y-6">
+    <div className="p-6 md:p-8 space-y-8">
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col md:flex-row md:items-center justify-between gap-4"
       >
-        <h1 className="text-2xl font-bold text-slate-100">Analytics</h1>
-        <p className="text-sm text-slate-400 mt-1">Métricas e performance do seu negócio</p>
+        <div>
+          <h1 className="text-2xl font-bold text-slate-100">Analytics</h1>
+          <p className="text-sm text-slate-400 mt-1">Métricas e performance do seu negócio</p>
+        </div>
+        <div className="flex items-center gap-2 bg-slate-800/50 p-1 rounded-lg border border-slate-700/50">
+          <div className="px-3 py-1.5 rounded-md bg-primary text-xs font-medium text-white shadow-sm">Últimos 7 dias</div>
+          <div className="px-3 py-1.5 rounded-md text-xs font-medium text-slate-400 hover:text-slate-200 transition-colors cursor-pointer">30 dias</div>
+        </div>
       </motion.div>
 
+      {/* IA Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          { label: 'Leads Captados (IA)', value: '42', icon: Users, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+          { label: 'Qualificados pela IA', value: '38', icon: Zap, color: 'text-yellow-500', bg: 'bg-yellow-500/10' },
+          { label: 'Agendamentos Bot', value: '18', icon: Calendar, color: 'text-purple-500', bg: 'bg-purple-500/10' },
+          { label: 'Taxa de Conversão IA', value: '42%', icon: Bot, color: 'text-green-500', bg: 'bg-green-500/10' },
+        ].map((stat, i) => (
+          <GlowCard key={i} delay={i * 0.1} className="!p-4">
+            <div className="flex items-center gap-4">
+              <div className={`p-2 rounded-lg ${stat.bg} ${stat.color}`}>
+                <stat.icon className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-xs font-medium text-slate-400">{stat.label}</p>
+                <p className="text-xl font-bold text-slate-100">{stat.value}</p>
+              </div>
+            </div>
+          </GlowCard>
+        ))}
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <GlowCard delay={0.1} className="lg:col-span-2">
+          <h2 className="text-lg font-semibold text-slate-100 mb-6 flex items-center gap-2">
+            <Bot className="w-5 h-5 text-primary" />
+            Performance dos Bots (Últimos 7 dias)
+          </h2>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={botPerformanceData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.06)" vertical={false} />
+              <XAxis dataKey="day" tick={{ fontSize: 12, fill: '#64748b' }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 12, fill: '#64748b' }} axisLine={false} tickLine={false} />
+              <Tooltip {...tooltipStyle} />
+              <Line type="monotone" dataKey="leads" stroke="#3b82f6" strokeWidth={3} dot={{ fill: '#3b82f6', r: 4 }} activeDot={{ r: 6, strokeWidth: 0 }} />
+              <Line type="monotone" dataKey="agendamentos" stroke="#a855f7" strokeWidth={3} dot={{ fill: '#a855f7', r: 4 }} activeDot={{ r: 6, strokeWidth: 0 }} />
+            </LineChart>
+          </ResponsiveContainer>
+        </GlowCard>
+
         <GlowCard delay={0.1}>
           <h2 className="text-lg font-semibold text-slate-100 mb-4">Distribuição do Pipeline</h2>
           {pipelineData.length > 0 ? (
