@@ -2,7 +2,7 @@ import { Outlet } from 'react-router-dom';
 import { Link, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import { AnimatedBackground } from '@/components/ui/AnimatedBackground';
-import { LayoutDashboard, Car, Users, Columns3, BarChart3, CalendarDays } from 'lucide-react';
+import { LayoutDashboard, Car, Users, Columns3, BarChart3, CalendarDays, MessageSquareText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const tabs = [
@@ -11,6 +11,7 @@ const tabs = [
   { title: 'Pipeline', url: '/pipeline', icon: Columns3 },
   { title: 'Leads', url: '/leads', icon: Users },
   { title: 'Agenda', url: '/schedule', icon: CalendarDays },
+  { title: 'Nexus AI', url: '/nexus-chat', icon: MessageSquareText },
   { title: 'Analytics', url: '/analytics', icon: BarChart3 },
 ];
 

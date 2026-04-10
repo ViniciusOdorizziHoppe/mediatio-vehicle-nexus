@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Send, Search, Bot, User, MessageSquare, History, Zap } from "lucide-react";
+import { Send, Search, Bot, User, MessageSquare, History, Zap, MessageSquareText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -65,8 +65,8 @@ export default function NexusChat() {
         <div className="p-4 border-b border-slate-800/50 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-bold text-slate-100 flex items-center gap-2">
-              <MessageSquare className="w-5 h-5 text-primary" />
-              Conversas do Bot
+              <MessageSquareText className="w-5 h-5 text-primary" />
+              Nexus AI
             </h2>
             <Badge className="bg-primary/10 text-primary border-primary/20">Z-API Ativa</Badge>
           </div>

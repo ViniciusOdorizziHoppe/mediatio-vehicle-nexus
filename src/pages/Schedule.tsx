@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Calendar as CalendarIcon, Clock, User, Phone, Car, MapPin, MoreVertical, Plus, CheckCircle2, Clock3 } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, User, Phone, Car, MapPin, MoreVertical, Plus, CheckCircle2, Clock3, Zap } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
