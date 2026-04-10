@@ -45,7 +45,7 @@ const App = () => (
             <Route path="/vehicles/new" element={<VehicleForm />} />
             <Route path="/vehicles/:id" element={<VehicleDetail />} />
             <Route path="/vehicles/:id/edit" element={<VehicleForm />} />
-            <Route path="/nexus" element={<NexusChat />} />
+            <Route path="/nexus-chat" element={<NexusChat />} />
             <Route path="/schedule" element={<Schedule />} />
             <Route path="/morph" element={<MorphPhotos />} />
             <Route path="/analytics" element={<Analytics />} />
