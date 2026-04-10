@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, Car, Users, Columns3, BarChart3,
-  ChevronLeft, ChevronRight, LogOut,
+  ChevronLeft, ChevronRight, LogOut, CalendarDays,
 } from 'lucide-react';
 
 const navItems = [
@@ -12,6 +12,7 @@ const navItems = [
   { path: '/vehicles', label: 'Veículos', icon: Car },
   { path: '/pipeline', label: 'Pipeline', icon: Columns3 },
   { path: '/leads', label: 'Leads (CRM)', icon: Users },
+  { path: '/schedule', label: 'Agenda', icon: CalendarDays },
   { path: '/analytics', label: 'Analytics', icon: BarChart3 },
 ];
 

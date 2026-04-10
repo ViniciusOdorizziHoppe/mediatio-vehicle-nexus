@@ -1,6 +1,7 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, cn } from '@/lib/utils';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import { PageSkeleton } from '@/components/ui/PageSkeleton';
 import { GlowCard } from '@/components/ui/GlowCard';
@@ -11,14 +12,16 @@ const COLORS = ['#2563eb', '#22c55e', '#f59e0b', '#7c3aed', '#06b6d4'];
 const MONTH_NAMES = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
 export default function Analytics() {
+  const [period, setPeriod] = useState<'7' | '30'>('7');
+
   const { data: pipeline, isLoading: l1 } = useQuery({
-    queryKey: ['analytics-pipeline'],
-    queryFn: () => api.get('/analytics/pipeline'),
+    queryKey: ['analytics-pipeline', period],
+    queryFn: () => api.get(`/analytics/pipeline?period=${period}`),
   });
 
   const { data: comissoes, isLoading: l2 } = useQuery({
-    queryKey: ['analytics-comissoes'],
-    queryFn: () => api.get('/analytics/comissoes'),
+    queryKey: ['analytics-comissoes', period],
+    queryFn: () => api.get(`/analytics/comissoes?period=${period}`),
   });
 
   if (l1 || l2) return <PageSkeleton />;
@@ -72,8 +75,24 @@ export default function Analytics() {
           <p className="text-sm text-slate-400 mt-1">Métricas e performance do seu negócio</p>
         </div>
         <div className="flex items-center gap-2 bg-slate-800/50 p-1 rounded-lg border border-slate-700/50">
-          <div className="px-3 py-1.5 rounded-md bg-primary text-xs font-medium text-white shadow-sm">Últimos 7 dias</div>
-          <div className="px-3 py-1.5 rounded-md text-xs font-medium text-slate-400 hover:text-slate-200 transition-colors cursor-pointer">30 dias</div>
+          <button 
+            onClick={() => setPeriod('7')}
+            className={cn(
+              "px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200",
+              period === '7' ? "bg-primary text-white shadow-sm" : "text-slate-400 hover:text-slate-200"
+            )}
+          >
+            Últimos 7 dias
+          </button>
+          <button 
+            onClick={() => setPeriod('30')}
+            className={cn(
+              "px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200",
+              period === '30' ? "bg-primary text-white shadow-sm" : "text-slate-400 hover:text-slate-200"
+            )}
+          >
+            30 dias
+          </button>
         </div>
       </motion.div>
 
