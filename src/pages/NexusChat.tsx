@@ -202,4 +202,5 @@ function Badge({ children, className }: { children: React.ReactNode, className?:
     <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full border", className)}>
       {children}
     </span>
+  );
 }
