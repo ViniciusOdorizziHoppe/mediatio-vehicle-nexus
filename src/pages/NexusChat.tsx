@@ -3,9 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { PageSkeleton } from '@/components/ui/PageSkeleton';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bot, User, Send, Search, MessageSquare, Zap, Clock, ChevronRight, MessageSquareText } from 'lucide-react';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { Bot, User, Search, MessageSquare, MessageSquareText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface Message {
@@ -26,6 +24,19 @@ interface Lead {
   updatedAt: string;
 }
 
+// Função utilitária para formatar data sem dependências externas
+const formatTime = (dateString: string) => {
+  try {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('pt-BR', {
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(date);
+  } catch (e) {
+    return '--:--';
+  }
+};
+
 export default function NexusChat() {
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
@@ -33,7 +44,7 @@ export default function NexusChat() {
   const { data: leadsResponse, isLoading } = useQuery({
     queryKey: ['leads-chat'],
     queryFn: () => api.get('/leads?limit=100&sort=-updatedAt'),
-    refetchInterval: 10000, // Atualiza a cada 10 segundos para ver novas mensagens
+    refetchInterval: 10000,
   });
 
   const leads = (leadsResponse?.data?.data || []) as Lead[];
@@ -94,7 +105,7 @@ export default function NexusChat() {
                 <div className="flex justify-between items-start mb-1">
                   <span className="font-semibold text-slate-100 truncate pr-2">{lead.nome}</span>
                   <span className="text-[10px] text-slate-500 whitespace-nowrap">
-                    {format(new Date(lead.updatedAt), 'HH:mm', { locale: ptBR })}
+                    {formatTime(lead.updatedAt)}
                   </span>
                 </div>
                 <p className="text-xs text-slate-400 truncate mb-2 italic opacity-80">
@@ -174,7 +185,7 @@ export default function NexusChat() {
                       </div>
                       <span className="text-[10px] text-slate-500 mt-1.5 flex items-center gap-1 px-1">
                         {msg.role === 'assistant' && <Bot className="w-3 h-3 text-primary/60" />}
-                        {format(new Date(msg.timestamp || Date.now()), 'HH:mm', { locale: ptBR })}
+                        {formatTime(msg.timestamp || '')}
                       </span>
                     </motion.div>
                   ))
