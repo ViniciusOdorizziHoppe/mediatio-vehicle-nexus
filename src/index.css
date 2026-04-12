@@ -201,6 +201,14 @@
     background: #06b6d4;
     animation: float 12s infinite;
   }
+
+  .clip-path-triangle-right {
+    clip-path: polygon(0 0, 0% 100%, 100% 0);
+  }
+
+  .clip-path-triangle-left {
+    clip-path: polygon(100% 0, 100% 100%, 0 0);
+  }
 }
 
 /* ───────────────────────────────────────────── */
