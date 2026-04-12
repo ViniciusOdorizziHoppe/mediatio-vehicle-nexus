@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useVehicle, useGenerateAd, useDeleteVehicle } from '@/hooks/useVehicles';
-import { formatCurrency, formatKm, PIPELINE_STATUS, getScoreColor } from '@/lib/utils';
+import { formatCurrency, formatKm, PIPELINE_STATUS, getScoreColor, cn } from '@/lib/utils';
 import { GlowCard } from '@/components/ui/GlowCard';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Pencil, Trash2, Sparkles, Copy, Check } from 'lucide-react';
