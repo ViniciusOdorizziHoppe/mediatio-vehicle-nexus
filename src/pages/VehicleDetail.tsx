@@ -71,8 +71,8 @@ export default function VehicleDetail() {
     );
   }
 
-  const statusInfo = PIPELINE_STATUS[vehicle.pipeline.status];
-  const score = vehicle.score?.valor || 0;
+  const statusInfo = vehicle?.pipeline?.status ? PIPELINE_STATUS[vehicle.pipeline.status] : null;
+  const score = vehicle?.score?.valor || 0;
 
   return (
     <div className="p-6 md:p-8 max-w-5xl space-y-6">
@@ -87,9 +87,9 @@ export default function VehicleDetail() {
             <ArrowLeft className="w-4 h-4" /> Veículos
           </Link>
           <h1 className="text-2xl font-bold text-slate-100">
-            {vehicle.marca} {vehicle.modelo} {vehicle.ano}
+            {vehicle?.marca} {vehicle?.modelo} {vehicle?.ano}
           </h1>
-          <p className="text-slate-500 font-mono text-sm mt-0.5">{vehicle.codigo}</p>
+          <p className="text-slate-500 font-mono text-sm mt-0.5">{vehicle?.codigo}</p>
         </div>
         <div className="flex gap-2">
           <Link
@@ -113,29 +113,32 @@ export default function VehicleDetail() {
           <GlowCard delay={0.1}>
             <h2 className="font-semibold text-slate-100 mb-4">Dados do Veículo</h2>
             <div className="grid grid-cols-2 gap-4 text-sm">
-              <InfoRow label="Tipo" value={vehicle.tipo === 'moto' ? '🏍️ Moto' : '🚗 Carro'} />
-              <InfoRow label="Marca" value={vehicle.marca} />
-              <InfoRow label="Modelo" value={vehicle.modelo} />
-              <InfoRow label="Ano" value={String(vehicle.ano)} />
-              <InfoRow label="Cor" value={vehicle.cor || '—'} />
-              <InfoRow label="KM" value={vehicle.km ? formatKm(vehicle.km) : '—'} />
+              <InfoRow label="Tipo" value={vehicle?.tipo === 'moto' ? '🏍️ Moto' : '🚗 Carro'} />
+              <InfoRow label="Marca" value={vehicle?.marca || '—'} />
+              <InfoRow label="Modelo" value={vehicle?.modelo || '—'} />
+              <InfoRow label="Ano" value={vehicle?.ano ? String(vehicle.ano) : '—'} />
+              <InfoRow label="Cor" value={vehicle?.cor || '—'} />
+              <InfoRow label="KM" value={vehicle?.km ? formatKm(vehicle.km) : '—'} />
               <InfoRow label="Status" value={
-                <span className={`inline-flex px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${statusInfo?.color}`}>
-                  {statusInfo?.label}
+                <span className={cn(
+                  "inline-flex px-2.5 py-0.5 rounded-full text-[11px] font-semibold",
+                  statusInfo?.color || "bg-slate-500/15 text-slate-400"
+                )}>
+                  {statusInfo?.label || 'Indefinido'}
                 </span>
               } />
-              <InfoRow label="Documentação" value={vehicle.condicoes?.documentacao || '—'} />
+              <InfoRow label="Documentação" value={vehicle?.condicoes?.documentacao || '—'} />
             </div>
           </GlowCard>
 
           <GlowCard delay={0.2}>
             <h2 className="font-semibold text-slate-100 mb-4">Preços</h2>
             <div className="grid grid-cols-2 gap-4 text-sm">
-              <InfoRow label="Preço de Venda" value={<span className="font-bold text-blue-400">{formatCurrency(vehicle.precos.venda)}</span>} />
-              {vehicle.precos.compra && <InfoRow label="Preço de Compra" value={formatCurrency(vehicle.precos.compra)} />}
-              {vehicle.precos.minimo && <InfoRow label="Preço Mínimo" value={formatCurrency(vehicle.precos.minimo)} />}
-              {vehicle.precos.comissaoEstimada && <InfoRow label="Comissão Estimada" value={<span className="font-medium text-green-400">{formatCurrency(vehicle.precos.comissaoEstimada)}</span>} />}
-              {vehicle.precos.fipeReferencia && (
+              <InfoRow label="Preço de Venda" value={<span className="font-bold text-blue-400">{vehicle?.precos?.venda ? formatCurrency(vehicle.precos.venda) : '—'}</span>} />
+              {vehicle?.precos?.compra && <InfoRow label="Preço de Compra" value={formatCurrency(vehicle.precos.compra)} />}
+              {vehicle?.precos?.minimo && <InfoRow label="Preço Mínimo" value={formatCurrency(vehicle.precos.minimo)} />}
+              {vehicle?.precos?.comissaoEstimada && <InfoRow label="Comissão Estimada" value={<span className="font-medium text-green-400">{formatCurrency(vehicle.precos.comissaoEstimada)}</span>} />}
+              {vehicle?.precos?.fipeReferencia && (
                 <>
                   <InfoRow label="FIPE" value={formatCurrency(vehicle.precos.fipeReferencia)} />
                   <InfoRow label="Ref. FIPE" value={vehicle.precos.fipeMesReferencia || '—'} />
@@ -145,7 +148,7 @@ export default function VehicleDetail() {
           </GlowCard>
 
           {/* Owner */}
-          {vehicle.proprietario?.nome && (
+          {vehicle?.proprietario?.nome && (
             <GlowCard delay={0.3}>
               <h2 className="font-semibold text-slate-100 mb-4">Proprietário / Vendedor</h2>
               <div className="grid grid-cols-2 gap-4 text-sm">
@@ -239,10 +242,10 @@ export default function VehicleDetail() {
                 {score}
               </span>
             </div>
-            <p className="text-sm text-slate-400">{vehicle.score?.label || 'Score'}</p>
+            <p className="text-sm text-slate-400">{vehicle?.score?.label || 'Score'}</p>
           </GlowCard>
 
-          {vehicle.score?.breakdown && vehicle.score.breakdown.length > 0 && (
+          {vehicle?.score?.breakdown && vehicle.score.breakdown.length > 0 && (
             <GlowCard delay={0.3}>
               <h3 className="font-semibold text-slate-100 mb-3 text-sm">Breakdown do Score</h3>
               <div className="space-y-2">
