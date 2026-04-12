@@ -32,9 +32,7 @@ export default function Sidebar() {
     >
       {/* Logo */}
       <div className="flex items-center gap-3 px-4 h-16 border-b border-slate-800/50">
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-glow-blue">
-          M
-        </div>
+        <img src="/mediatio-logo.png" alt="Mediatio Logo" className="w-9 h-9 object-contain shrink-0" />
         {!collapsed && (
           <span className="text-lg font-bold text-gradient tracking-tight">Mediatio</span>
         )}
