@@ -10,8 +10,9 @@ import { toast } from 'sonner';
 export default function VehicleDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { data: vehicle, isLoading } = useVehicle(id);
-  const generateAd = useGenerateAd();
+  const { data: response, isLoading } = useVehicle(id!);
+  const vehicle = response?.data;
+  const generateAd = useGenerateAd(id!);
   const deleteVehicle = useDeleteVehicle();
 
   const [adText, setAdText] = useState<{ whatsapp: string; facebook: string } | null>(null);
@@ -19,7 +20,7 @@ export default function VehicleDetail() {
 
   const handleGenerateAd = async () => {
     try {
-      const res = await generateAd.mutateAsync(id!);
+      const res = await generateAd.mutateAsync();
       setAdText((res as any).data);
       toast.success('Anúncio gerado!');
     } catch { toast.error('Erro ao gerar anúncio'); }
