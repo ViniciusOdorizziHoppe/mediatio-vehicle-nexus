@@ -1,4 +1,0 @@
-
-> mediatio-vehicle-nexus@2.0.0 lint
-> eslint .
-

@@ -23,3 +23,11 @@ dist-ssr
 *.sln
 *.sw?
 .env
+.env.local
+.env.*.local
+
+# Ad-hoc debug / build artifacts
+ts_errors.txt
+build_log.txt
+lint_log.txt
+gemini-test.md

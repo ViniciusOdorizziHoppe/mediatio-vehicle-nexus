@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { PageSkeleton } from '@/components/ui/PageSkeleton';
@@ -47,7 +47,10 @@ export default function NexusChat() {
     refetchInterval: 10000,
   });
 
-  const leads = (leadsResponse?.data?.data || []) as Lead[];
+  const leads = useMemo(
+    () => (leadsResponse?.data?.data || []) as Lead[],
+    [leadsResponse]
+  );
   const filteredLeads = leads.filter(l => 
     l.nome.toLowerCase().includes(search.toLowerCase()) || 
     l.whatsapp.includes(search)
