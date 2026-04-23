@@ -56,7 +56,8 @@ export default function Schedule() {
       }
       
       const res = await api.get(url);
-      return res.data.data as Appointment[];
+      // `api.get` já devolve o corpo parseado; a lista fica em `.data`.
+      return (res?.data || []) as Appointment[];
     }
   });
 

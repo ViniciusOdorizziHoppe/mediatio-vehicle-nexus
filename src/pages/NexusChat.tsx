@@ -47,8 +47,9 @@ export default function NexusChat() {
     refetchInterval: 10000,
   });
 
+  // `api.get` já retorna o corpo parseado ({ success, data, meta }); os leads ficam em `.data`.
   const leads = useMemo(
-    () => (leadsResponse?.data?.data || []) as Lead[],
+    () => (leadsResponse?.data || []) as Lead[],
     [leadsResponse]
   );
   const filteredLeads = leads.filter(l => 
