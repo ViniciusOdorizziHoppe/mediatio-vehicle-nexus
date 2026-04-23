@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useVehicle, useGenerateAd, useDeleteVehicle, useUpdateVehicle } from '@/hooks/useVehicles';
 import { formatCurrency, formatKm, PIPELINE_STATUS, getScoreColor, cn } from '@/lib/utils';
@@ -19,6 +19,12 @@ export default function VehicleDetail() {
   const [adText, setAdText] = useState<{ whatsapp: string; facebook: string } | null>(null);
   const [copied, setCopied] = useState('');
   const [newPhotoUrl, setNewPhotoUrl] = useState('');
+
+  // Guard síncrono para evitar duplo disparo: `updateVehicle.isPending` só vira
+  // true depois que o React commita o estado da mutação — se o usuário apertar
+  // Enter duas vezes em < 1 frame, os dois handlers leem isPending=false e
+  // ambos disparam um PATCH. O ref é setado imperativamente antes do await.
+  const photoMutationInFlight = useRef(false);
 
   const handleGenerateAd = async () => {
     try {
@@ -60,7 +66,7 @@ export default function VehicleDetail() {
   // estado obsoleto e pode sobrescrever a primeira no servidor. Bloqueamos no
   // nível de handler — só uma mutação por vez.
   const handleAddPhotoUrl = async () => {
-    if (updateVehicle.isPending) return;
+    if (photoMutationInFlight.current || updateVehicle.isPending) return;
     const url = newPhotoUrl.trim();
     if (!url) return;
     if (!/^https?:\/\//.test(url) && !url.startsWith('data:image/')) {
@@ -71,6 +77,7 @@ export default function VehicleDetail() {
       toast.error('Essa foto já está atribuída a esse veículo');
       return;
     }
+    photoMutationInFlight.current = true;
     try {
       const originais = [...currentPhotos, { url, publicId: '' }];
       await savePhotos({
@@ -81,11 +88,13 @@ export default function VehicleDetail() {
       toast.success('Foto adicionada');
     } catch {
       toast.error('Erro ao adicionar foto');
+    } finally {
+      photoMutationInFlight.current = false;
     }
   };
 
   const handleUploadFile = async (file: File) => {
-    if (updateVehicle.isPending) return;
+    if (photoMutationInFlight.current || updateVehicle.isPending) return;
     if (!file.type.startsWith('image/')) {
       toast.error('Só imagens são suportadas');
       return;
@@ -110,6 +119,7 @@ export default function VehicleDetail() {
       toast.error('Essa foto já está atribuída a esse veículo');
       return;
     }
+    photoMutationInFlight.current = true;
     try {
       const originais = [...currentPhotos, { url: dataUrl, publicId: '' }];
       await savePhotos({
@@ -119,11 +129,14 @@ export default function VehicleDetail() {
       toast.success('Foto adicionada');
     } catch {
       toast.error('Erro ao adicionar foto');
+    } finally {
+      photoMutationInFlight.current = false;
     }
   };
 
   const handleRemovePhoto = async (url: string) => {
-    if (updateVehicle.isPending) return;
+    if (photoMutationInFlight.current || updateVehicle.isPending) return;
+    photoMutationInFlight.current = true;
     try {
       const originais = currentPhotos.filter((p: any) => p.url !== url);
       const nextPrincipal = principalUrl === url ? (originais[0]?.url || '') : principalUrl;
@@ -131,16 +144,21 @@ export default function VehicleDetail() {
       toast.success('Foto removida');
     } catch {
       toast.error('Erro ao remover foto');
+    } finally {
+      photoMutationInFlight.current = false;
     }
   };
 
   const handleSetPrincipal = async (url: string) => {
-    if (updateVehicle.isPending) return;
+    if (photoMutationInFlight.current || updateVehicle.isPending) return;
+    photoMutationInFlight.current = true;
     try {
       await savePhotos({ principal: url, originais: currentPhotos });
       toast.success('Foto principal atualizada');
     } catch {
       toast.error('Erro ao atualizar foto principal');
+    } finally {
+      photoMutationInFlight.current = false;
     }
   };
 
@@ -277,7 +295,7 @@ export default function VehicleDetail() {
                 value={newPhotoUrl}
                 onChange={(e) => setNewPhotoUrl(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !updateVehicle.isPending) {
+                  if (e.key === 'Enter' && !photoMutationInFlight.current && !updateVehicle.isPending) {
                     e.preventDefault();
                     handleAddPhotoUrl();
                   }
