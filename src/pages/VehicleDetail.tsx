@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useVehicle, useGenerateAd, useDeleteVehicle, useUpdateVehicle } from '@/hooks/useVehicles';
 import { formatCurrency, formatKm, PIPELINE_STATUS, getScoreColor, cn } from '@/lib/utils';
@@ -19,6 +19,12 @@ export default function VehicleDetail() {
   const [adText, setAdText] = useState<{ whatsapp: string; facebook: string } | null>(null);
   const [copied, setCopied] = useState('');
   const [newPhotoUrl, setNewPhotoUrl] = useState('');
+
+  // Guard síncrono para evitar duplo disparo: `updateVehicle.isPending` só vira
+  // true depois que o React commita o estado da mutação — se o usuário apertar
+  // Enter duas vezes em < 1 frame, os dois handlers leem isPending=false e
+  // ambos disparam um PATCH. O ref é setado imperativamente antes do await.
+  const photoMutationInFlight = useRef(false);
 
   const handleGenerateAd = async () => {
     try {
@@ -55,13 +61,23 @@ export default function VehicleDetail() {
     await updateVehicle.mutateAsync({ id: id!, data: { fotos: next } as any });
   };
 
+  // Todas as mutações de foto compartilham o mesmo snapshot de currentPhotos
+  // (da última render). Se duas dispararem em paralelo, a segunda parte de um
+  // estado obsoleto e pode sobrescrever a primeira no servidor. Bloqueamos no
+  // nível de handler — só uma mutação por vez.
   const handleAddPhotoUrl = async () => {
+    if (photoMutationInFlight.current || updateVehicle.isPending) return;
     const url = newPhotoUrl.trim();
     if (!url) return;
     if (!/^https?:\/\//.test(url) && !url.startsWith('data:image/')) {
       toast.error('Cole uma URL http(s) de imagem ou um data URL');
       return;
     }
+    if (currentPhotos.some((p: any) => p.url === url)) {
+      toast.error('Essa foto já está atribuída a esse veículo');
+      return;
+    }
+    photoMutationInFlight.current = true;
     try {
       const originais = [...currentPhotos, { url, publicId: '' }];
       await savePhotos({
@@ -72,10 +88,13 @@ export default function VehicleDetail() {
       toast.success('Foto adicionada');
     } catch {
       toast.error('Erro ao adicionar foto');
+    } finally {
+      photoMutationInFlight.current = false;
     }
   };
 
   const handleUploadFile = async (file: File) => {
+    if (photoMutationInFlight.current || updateVehicle.isPending) return;
     if (!file.type.startsWith('image/')) {
       toast.error('Só imagens são suportadas');
       return;
@@ -84,12 +103,23 @@ export default function VehicleDetail() {
       toast.error('Imagem maior que 2MB — use um upload externo (ex.: imgur) e cole a URL');
       return;
     }
-    const dataUrl = await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
+    let dataUrl: string;
+    try {
+      dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error('Falha ao ler o arquivo'));
+        reader.readAsDataURL(file);
+      });
+    } catch {
+      toast.error('Não consegui ler o arquivo selecionado');
+      return;
+    }
+    if (currentPhotos.some((p: any) => p.url === dataUrl)) {
+      toast.error('Essa foto já está atribuída a esse veículo');
+      return;
+    }
+    photoMutationInFlight.current = true;
     try {
       const originais = [...currentPhotos, { url: dataUrl, publicId: '' }];
       await savePhotos({
@@ -99,10 +129,14 @@ export default function VehicleDetail() {
       toast.success('Foto adicionada');
     } catch {
       toast.error('Erro ao adicionar foto');
+    } finally {
+      photoMutationInFlight.current = false;
     }
   };
 
   const handleRemovePhoto = async (url: string) => {
+    if (photoMutationInFlight.current || updateVehicle.isPending) return;
+    photoMutationInFlight.current = true;
     try {
       const originais = currentPhotos.filter((p: any) => p.url !== url);
       const nextPrincipal = principalUrl === url ? (originais[0]?.url || '') : principalUrl;
@@ -110,15 +144,21 @@ export default function VehicleDetail() {
       toast.success('Foto removida');
     } catch {
       toast.error('Erro ao remover foto');
+    } finally {
+      photoMutationInFlight.current = false;
     }
   };
 
   const handleSetPrincipal = async (url: string) => {
+    if (photoMutationInFlight.current || updateVehicle.isPending) return;
+    photoMutationInFlight.current = true;
     try {
       await savePhotos({ principal: url, originais: currentPhotos });
       toast.success('Foto principal atualizada');
     } catch {
       toast.error('Erro ao atualizar foto principal');
+    } finally {
+      photoMutationInFlight.current = false;
     }
   };
 
@@ -254,8 +294,14 @@ export default function VehicleDetail() {
                 placeholder="Colar URL da foto (http(s)://…)"
                 value={newPhotoUrl}
                 onChange={(e) => setNewPhotoUrl(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddPhotoUrl(); } }}
-                className="flex-1 bg-slate-800/60 border border-slate-700/50 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500/60"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !photoMutationInFlight.current && !updateVehicle.isPending) {
+                    e.preventDefault();
+                    handleAddPhotoUrl();
+                  }
+                }}
+                disabled={updateVehicle.isPending}
+                className="flex-1 bg-slate-800/60 border border-slate-700/50 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500/60 disabled:opacity-50"
               />
               <button
                 type="button"
