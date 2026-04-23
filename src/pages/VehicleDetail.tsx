@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useVehicle, useGenerateAd, useDeleteVehicle } from '@/hooks/useVehicles';
+import { useVehicle, useGenerateAd, useDeleteVehicle, useUpdateVehicle } from '@/hooks/useVehicles';
 import { formatCurrency, formatKm, PIPELINE_STATUS, getScoreColor, cn } from '@/lib/utils';
 import { GlowCard } from '@/components/ui/GlowCard';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Pencil, Trash2, Sparkles, Copy, Check } from 'lucide-react';
+import { ArrowLeft, Pencil, Trash2, Sparkles, Copy, Check, ImagePlus, Star, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function VehicleDetail() {
@@ -14,9 +14,11 @@ export default function VehicleDetail() {
   const vehicle = response?.data;
   const generateAd = useGenerateAd(id!);
   const deleteVehicle = useDeleteVehicle();
+  const updateVehicle = useUpdateVehicle();
 
   const [adText, setAdText] = useState<{ whatsapp: string; facebook: string } | null>(null);
   const [copied, setCopied] = useState('');
+  const [newPhotoUrl, setNewPhotoUrl] = useState('');
 
   const handleGenerateAd = async () => {
     try {
@@ -42,6 +44,81 @@ export default function VehicleDetail() {
       } catch {
         toast.error('Erro ao remover');
       }
+    }
+  };
+
+  // Operações de foto vão pelo PATCH /vehicles/:id (campo fotos).
+  const currentPhotos = vehicle?.fotos?.originais || [];
+  const principalUrl = vehicle?.fotos?.principal || currentPhotos[0]?.url || '';
+
+  const savePhotos = async (next: { principal?: string; originais: Array<{ url: string; publicId?: string }> }) => {
+    await updateVehicle.mutateAsync({ id: id!, data: { fotos: next } as any });
+  };
+
+  const handleAddPhotoUrl = async () => {
+    const url = newPhotoUrl.trim();
+    if (!url) return;
+    if (!/^https?:\/\//.test(url) && !url.startsWith('data:image/')) {
+      toast.error('Cole uma URL http(s) de imagem ou um data URL');
+      return;
+    }
+    try {
+      const originais = [...currentPhotos, { url, publicId: '' }];
+      await savePhotos({
+        principal: principalUrl || url,
+        originais,
+      });
+      setNewPhotoUrl('');
+      toast.success('Foto adicionada');
+    } catch {
+      toast.error('Erro ao adicionar foto');
+    }
+  };
+
+  const handleUploadFile = async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      toast.error('Só imagens são suportadas');
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Imagem maior que 2MB — use um upload externo (ex.: imgur) e cole a URL');
+      return;
+    }
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+    try {
+      const originais = [...currentPhotos, { url: dataUrl, publicId: '' }];
+      await savePhotos({
+        principal: principalUrl || dataUrl,
+        originais,
+      });
+      toast.success('Foto adicionada');
+    } catch {
+      toast.error('Erro ao adicionar foto');
+    }
+  };
+
+  const handleRemovePhoto = async (url: string) => {
+    try {
+      const originais = currentPhotos.filter((p: any) => p.url !== url);
+      const nextPrincipal = principalUrl === url ? (originais[0]?.url || '') : principalUrl;
+      await savePhotos({ principal: nextPrincipal, originais });
+      toast.success('Foto removida');
+    } catch {
+      toast.error('Erro ao remover foto');
+    }
+  };
+
+  const handleSetPrincipal = async (url: string) => {
+    try {
+      await savePhotos({ principal: url, originais: currentPhotos });
+      toast.success('Foto principal atualizada');
+    } catch {
+      toast.error('Erro ao atualizar foto principal');
     }
   };
 
@@ -111,6 +188,89 @@ export default function VehicleDetail() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main info */}
         <div className="lg:col-span-2 space-y-6">
+          {/* Fotos */}
+          <GlowCard delay={0.05}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-semibold text-slate-100">Fotos</h2>
+              <label className="text-xs text-blue-400 hover:text-blue-300 cursor-pointer flex items-center gap-1">
+                <ImagePlus className="w-4 h-4" />
+                Enviar do dispositivo
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleUploadFile(file);
+                    e.target.value = '';
+                  }}
+                />
+              </label>
+            </div>
+
+            {currentPhotos.length === 0 ? (
+              <p className="text-sm text-slate-500 mb-3">Nenhuma foto atribuída a este veículo ainda.</p>
+            ) : (
+              <div className="grid grid-cols-3 gap-3 mb-3">
+                {currentPhotos.map((photo: any) => {
+                  const isPrincipal = photo.url === principalUrl;
+                  return (
+                    <div key={photo.url} className="relative group rounded-lg overflow-hidden border border-slate-700/40 bg-slate-800/40 aspect-[4/3]">
+                      <img src={photo.url} alt="" className="w-full h-full object-cover" />
+                      {isPrincipal && (
+                        <span className="absolute top-1 left-1 bg-yellow-500/20 border border-yellow-500/40 text-yellow-300 text-[10px] px-1.5 py-0.5 rounded flex items-center gap-1">
+                          <Star className="w-3 h-3" /> Principal
+                        </span>
+                      )}
+                      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-black/60 flex items-center justify-center gap-2">
+                        {!isPrincipal && (
+                          <button
+                            type="button"
+                            onClick={() => handleSetPrincipal(photo.url)}
+                            disabled={updateVehicle.isPending}
+                            className="text-[11px] text-yellow-300 hover:text-yellow-200 bg-black/40 px-2 py-1 rounded flex items-center gap-1"
+                          >
+                            <Star className="w-3 h-3" /> Principal
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => handleRemovePhoto(photo.url)}
+                          disabled={updateVehicle.isPending}
+                          className="text-[11px] text-red-300 hover:text-red-200 bg-black/40 px-2 py-1 rounded flex items-center gap-1"
+                        >
+                          <X className="w-3 h-3" /> Remover
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            <div className="flex gap-2">
+              <input
+                type="url"
+                placeholder="Colar URL da foto (http(s)://…)"
+                value={newPhotoUrl}
+                onChange={(e) => setNewPhotoUrl(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddPhotoUrl(); } }}
+                className="flex-1 bg-slate-800/60 border border-slate-700/50 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500/60"
+              />
+              <button
+                type="button"
+                onClick={handleAddPhotoUrl}
+                disabled={updateVehicle.isPending || !newPhotoUrl.trim()}
+                className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium transition-colors disabled:opacity-50"
+              >
+                Adicionar
+              </button>
+            </div>
+            <p className="text-[11px] text-slate-500 mt-2">
+              Colando URL: rápido e grátis. Upload do dispositivo: aceita até 2MB (salvo no banco como data URL).
+            </p>
+          </GlowCard>
+
           <GlowCard delay={0.1}>
             <h2 className="font-semibold text-slate-100 mb-4">Dados do Veículo</h2>
             <div className="grid grid-cols-2 gap-4 text-sm">

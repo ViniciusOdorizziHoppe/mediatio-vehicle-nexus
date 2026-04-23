@@ -13,17 +13,20 @@ import { GlowCard } from '@/components/ui/GlowCard';
 import { PageSkeleton } from '@/components/ui/PageSkeleton';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 
+// Shape real devolvido por GET /api/analytics/dashboard.
 interface DashboardData {
   success: boolean;
   data: {
-    veiculosAtivos: number;
-    totalVendidos: number;
-    vendasMes: number;
-    totalLeads: number;
-    taxaConversao: number;
-    comissaoMes: number;
-    comissaoTotal: number;
-    pipeline: Record<string, number>;
+    veiculos: {
+      total: number;
+      valorTotal: number;
+      comissaoTotal: number;
+      porStatus: Record<string, { count: number; valorTotal: number; comissaoTotal: number }>;
+    };
+    leads: {
+      total: number;
+      porStatus: Record<string, number>;
+    };
   };
 }
 
@@ -52,24 +55,38 @@ export default function Dashboard() {
     queryFn: () => api.get('/analytics/dashboard'),
   });
 
-  const isLoading = loadingV || loadingL || loadingD;
-  if (isLoading) return <PageSkeleton />;
+  // Mostra o skeleton só enquanto não houver nenhum sinal de dados — assim uma
+  // requisição lenta não trava a tela. Queries isoladas podem terminar depois.
+  if (loadingV && loadingL && loadingD && !vehicles && !leads && !dashData) {
+    return <PageSkeleton />;
+  }
 
   const vehicleList = vehicles || [];
   const leadList = leads || [];
   const dash = dashData?.data;
 
-  const totalVehicles = dash?.veiculosAtivos ?? vehicleList.length;
-  const totalLeads = dash?.totalLeads ?? leadList.length;
-  const totalCommission = dash?.comissaoTotal ?? vehicleList.reduce((sum: number, v: any) => sum + (v.precos?.comissaoEstimada || 0), 0);
-  const comissaoMes = dash?.comissaoMes ?? 0;
-  const taxaConversao = dash?.taxaConversao ?? 0;
+  const totalVehicles = dash?.veiculos?.total ?? vehicleList.length;
+  const totalLeads = dash?.leads?.total ?? leadList.length;
+  const totalCommission = dash?.veiculos?.comissaoTotal ?? vehicleList.reduce(
+    (sum: number, v: any) => sum + (v.precos?.comissaoEstimada || 0),
+    0,
+  );
+  const leadsFechados = dash?.leads?.porStatus?.fechado ?? 0;
+  const taxaConversao = totalLeads > 0 ? Math.round((leadsFechados / totalLeads) * 100) : 0;
 
+  // Conta veículos por status: preferimos o agregado do backend, com fallback
+  // pros dados carregados via useVehicles (quando dashData ainda está chegando).
   const statusCounts: Record<string, number> = {};
-  vehicleList.forEach((v: any) => {
-    const s = v.pipeline?.status || 'disponivel';
-    statusCounts[s] = (statusCounts[s] || 0) + 1;
-  });
+  if (dash?.veiculos?.porStatus) {
+    Object.entries(dash.veiculos.porStatus).forEach(([status, info]) => {
+      statusCounts[status] = info?.count || 0;
+    });
+  } else {
+    vehicleList.forEach((v: any) => {
+      const s = v.pipeline?.status || 'disponivel';
+      statusCounts[s] = (statusCounts[s] || 0) + 1;
+    });
+  }
 
   const recentVehicles = vehicleList.slice(0, 5);
   const recentLeads = leadList.slice(0, 5);
@@ -104,8 +121,8 @@ export default function Dashboard() {
           gradient="green"
         />
         <StatCard
-          title="Comissão do Mês"
-          value={formatCurrency(comissaoMes)}
+          title="Comissão Estimada"
+          value={formatCurrency(totalCommission)}
           icon={DollarSign}
           gradient="purple"
         />
