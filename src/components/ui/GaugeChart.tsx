@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+// import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 interface GaugeChartProps {
@@ -64,17 +64,13 @@ export function GaugeChart({
         />
         
         {/* Value arc */}
-        <motion.path
+        <path
           d="M 10 90 A 80 80 0 0 1 190 90"
           fill="none"
           stroke={getStrokeColor()}
           strokeWidth="12"
           strokeLinecap="round"
-          initial={{ pathLength: 0 }}
-          animate={{ pathLength: percentage / 100 }}
-          transition={{ duration: 1, ease: "easeOut" }}
           style={{
-            pathLength: percentage / 100,
             strokeDasharray: '251.2',
             strokeDashoffset: 251.2 * (1 - percentage / 100)
           }}

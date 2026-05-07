@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+// import { motion } from 'framer-motion';
 import { LucideIcon, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -50,11 +50,8 @@ export function KPICard({
   const DeltaIcon = getDeltaIcon();
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={{ scale: 1.02 }}
-      className="relative overflow-hidden rounded-xl border border-slate-800/50 bg-slate-900/40 backdrop-blur-sm p-6"
+    <div
+      className="relative overflow-hidden rounded-xl border border-slate-800/50 bg-slate-900/40 backdrop-blur-sm p-6 transition-all duration-200 hover:scale-[1.02]"
     >
       {/* Background gradient */}
       <div className={`absolute inset-0 bg-gradient-to-br ${gradientClasses[gradient]} opacity-5`} />
@@ -83,6 +80,6 @@ export function KPICard({
           </span>
         </div>
       )}
-    </motion.div>
+    </div>
   );
 }

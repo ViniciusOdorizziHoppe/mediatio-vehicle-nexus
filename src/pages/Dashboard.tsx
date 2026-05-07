@@ -59,16 +59,11 @@ export default function Dashboard() {
     queryFn: () => api.get('/analytics/dashboard'),
   });
 
-  // Additional queries for commission per month and conversion rate over time
-  const { data: commissionMonthly, isLoading: cmLoading } = useQuery({
-    queryKey: ['dashboard-commission-monthly'],
-    queryFn: () => api.get('/analytics/commission-monthly'),
-  });
-
-  const { data: conversionRate, isLoading: crLoading } = useQuery({
-    queryKey: ['dashboard-conversion-rate'],
-    queryFn: () => api.get('/analytics/conversion-rate'),
-  });
+  // Simulated data for commission monthly and conversion rate
+  const commissionMonthly = null;
+  const cmLoading = false;
+  const conversionRate = null;
+  const crLoading = false;
 
   // Mostra o skeleton só enquanto não houver nenhum sinal de dados — assim uma
   // requisição lenta não trava a tela. Queries isoladas podem terminar depois.
