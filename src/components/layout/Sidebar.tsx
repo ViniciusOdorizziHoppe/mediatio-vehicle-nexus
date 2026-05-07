@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, Car, Users, Columns3, BarChart3,
-  ChevronLeft, ChevronRight, LogOut,
+  ChevronLeft, ChevronRight, LogOut, CalendarDays, MessageSquareText,
 } from 'lucide-react';
 
 const navItems = [
@@ -12,6 +12,8 @@ const navItems = [
   { path: '/vehicles', label: 'Veículos', icon: Car },
   { path: '/pipeline', label: 'Pipeline', icon: Columns3 },
   { path: '/leads', label: 'Leads (CRM)', icon: Users },
+  { path: '/schedule', label: 'Agenda', icon: CalendarDays },
+  { path: '/nexus-chat', label: 'Nexus AI', icon: MessageSquareText },
   { path: '/analytics', label: 'Analytics', icon: BarChart3 },
 ];
 
@@ -30,9 +32,7 @@ export default function Sidebar() {
     >
       {/* Logo */}
       <div className="flex items-center gap-3 px-4 h-16 border-b border-slate-800/50">
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-glow-blue">
-          M
-        </div>
+        <img src="/mediatio-logo.png" alt="Mediatio Logo" className="w-9 h-9 object-contain shrink-0" />
         {!collapsed && (
           <span className="text-lg font-bold text-gradient tracking-tight">Mediatio</span>
         )}

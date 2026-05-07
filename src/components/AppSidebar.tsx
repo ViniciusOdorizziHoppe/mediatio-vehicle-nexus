@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Car, Users, MessageSquare, BarChart3, Settings,
-  LogOut, Zap, Plug,
+  LogOut, Zap, Plug, CalendarDays,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getUser, logout } from "@/lib/auth";
@@ -12,6 +12,7 @@ const navItems = [
   { title: "Veículos", url: "/vehicles", icon: Car },
   { title: "Pipeline", url: "/pipeline", icon: Zap },
   { title: "Conversas", url: "/nexus", icon: MessageSquare },
+  { title: "Agenda", url: "/schedule", icon: CalendarDays },
   { title: "Analytics", url: "/analytics", icon: BarChart3 },
   { title: "Integrações", url: "/integrations", icon: Plug },
   { title: "Configurações", url: "/settings", icon: Settings },

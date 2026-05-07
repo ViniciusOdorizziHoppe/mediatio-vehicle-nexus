@@ -9,6 +9,7 @@ import Vehicles from "./pages/Vehicles";
 import VehicleForm from "./pages/VehicleForm";
 import VehicleDetail from "./pages/VehicleDetail";
 import NexusChat from "./pages/NexusChat";
+import Schedule from "./pages/Schedule";
 import MorphPhotos from "./pages/MorphPhotos";
 import Analytics from "./pages/Analytics";
 import Leads from "./pages/Leads";
@@ -44,7 +45,8 @@ const App = () => (
             <Route path="/vehicles/new" element={<VehicleForm />} />
             <Route path="/vehicles/:id" element={<VehicleDetail />} />
             <Route path="/vehicles/:id/edit" element={<VehicleForm />} />
-            <Route path="/nexus" element={<NexusChat />} />
+            <Route path="/nexus-chat" element={<NexusChat />} />
+            <Route path="/schedule" element={<Schedule />} />
             <Route path="/morph" element={<MorphPhotos />} />
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/leads" element={<Leads />} />
