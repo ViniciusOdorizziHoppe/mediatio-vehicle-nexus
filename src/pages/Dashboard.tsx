@@ -122,6 +122,12 @@ export default function Dashboard() {
     ? Math.round(temposVenda.reduce((a, b) => a + b, 0) / temposVenda.length)
     : 0;
   
+  // Cálculo de comissão baseada na lucro (Venda - Compra)
+  const totalCommission = vehicleList.reduce(
+    (sum: number, v: any) => sum + (Math.max(0, (v.precos?.venda || 0) - (v.precos?.compra || 0))),
+    0,
+  );
+  
   // Spread total e médio
   const spreadTotal = totalCommission;
   const spreadMedio = vendidosMes.length > 0 ? Math.round(spreadTotal / vendidosMes.length) : 0;
@@ -137,12 +143,6 @@ export default function Dashboard() {
       }, 0) || 1)
     : 0;
   
-  // Cálculo de comissão baseada na lucro (Venda - Compra)
-  const totalCommission = vehicleList.reduce(
-    (sum: number, v: any) => sum + (Math.max(0, (v.precos?.venda || 0) - (v.precos?.compra || 0))),
-    0,
-  );
-
   const totalVehicles = dash?.veiculos?.total ?? vehicleList.length;
   const totalLeads = dash?.leads?.total ?? leadList.length;
 
