@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { motion } from 'framer-motion';
 import { Car, DollarSign, TrendingUp, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -55,9 +56,20 @@ export default function Dashboard() {
     queryFn: () => api.get('/analytics/dashboard'),
   });
 
+  // Additional queries for commission per month and conversion rate over time
+  const { data: commissionMonthly, isLoading: cmLoading } = useQuery({
+    queryKey: ['dashboard-commission-monthly'],
+    queryFn: () => api.get('/analytics/commission-monthly'),
+  });
+
+  const { data: conversionRate, isLoading: crLoading } = useQuery({
+    queryKey: ['dashboard-conversion-rate'],
+    queryFn: () => api.get('/analytics/conversion-rate'),
+  });
+
   // Mostra o skeleton só enquanto não houver nenhum sinal de dados — assim uma
   // requisição lenta não trava a tela. Queries isoladas podem terminar depois.
-  if (loadingV && loadingL && loadingD && !vehicles && !leads && !dashData) {
+  if (loadingV && loadingL && loadingD && cmLoading && crLoading && !vehicles && !leads && !dashData) {
     return <PageSkeleton />;
   }
 
@@ -132,6 +144,40 @@ export default function Dashboard() {
           icon={TrendingUp}
           gradient="cyan"
         />
+        {/* Commission per Month Chart */}
+        <GlowCard>
+          <h2 className="text-lg font-semibold text-white mb-4">Comissão por Mês</h2>
+          {commissionMonthly && commissionMonthly.data && commissionMonthly.data.length > 0 ? (
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={commissionMonthly.data}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.06)" />
+                <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#94a3b8' }} />
+                <YAxis tickFormatter={(v) => formatCurrency(Number(v))} tick={{ fontSize: 12, fill: '#94a3b8' }} />
+                <Tooltip formatter={(v) => formatCurrency(Number(v))} />
+                <Bar dataKey="total" fill="#2563eb" radius={[4,4,0,0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="text-slate-400 text-sm text-center py-4">Sem dados de comissão por mês</div>
+          )}
+        </GlowCard>
+        {/* Conversion Rate Over Time Chart */}
+        <GlowCard>
+          <h2 className="text-lg font-semibold text-white mb-4">Taxa de Conversão ao Longo do Tempo</h2>
+          {conversionRate && conversionRate.data && conversionRate.data.length > 0 ? (
+            <ResponsiveContainer width="100%" height={200}>
+              <LineChart data={conversionRate.data}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.06)" />
+                <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#94a3b8' }} />
+                <YAxis tickFormatter={(v) => `${v}%`} tick={{ fontSize: 12, fill: '#94a3b8' }} />
+                <Tooltip formatter={(v) => `${v}%`} />
+                <Line type="monotone" dataKey="rate" stroke="#22c55e" strokeWidth={2} dot={{ r: 3 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="text-slate-400 text-sm text-center py-4">Sem dados de taxa de conversão</div>
+          )}
+        </GlowCard>
       </motion.div>
 
       {/* Pipeline */}

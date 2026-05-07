@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { formatCurrency } from '@/lib/utils';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, AreaChart, Area } from 'recharts';
 import { PageSkeleton } from '@/components/ui/PageSkeleton';
 import { GlowCard } from '@/components/ui/GlowCard';
 import { motion } from 'framer-motion';
@@ -20,7 +20,38 @@ export default function Analytics() {
     queryFn: () => api.get('/analytics/comissoes'),
   });
 
-  if (l1 || l2) return <PageSkeleton />;
+  // New queries for additional metrics
+  const { data: avgSaleTime, isLoading: l3 } = useQuery({
+    queryKey: ['analytics-avg-sale-time'],
+    queryFn: () => api.get('/analytics/average-sale-time'),
+  });
+
+  const { data: totalPossibleCommission, isLoading: l4 } = useQuery({
+    queryKey: ['analytics-total-commission'],
+    queryFn: () => api.get('/analytics/commission-total'),
+  });
+
+  const { data: commissionPerBrand, isLoading: l5 } = useQuery({
+    queryKey: ['analytics-commission-per-brand'],
+    queryFn: () => api.get('/analytics/commission-per-brand'),
+  });
+
+  const { data: saleTimePerModel, isLoading: l6 } = useQuery({
+    queryKey: ['analytics-sale-time-per-model'],
+    queryFn: () => api.get('/analytics/sale-time-per-model'),
+  });
+
+  const { data: daysSinceLastSale, isLoading: l7 } = useQuery({
+    queryKey: ['analytics-days-since-last-sale'],
+    queryFn: () => api.get('/analytics/days-since-last-sale'),
+  });
+
+  const { data: monthlyVehicleEntries, isLoading: l8 } = useQuery({
+    queryKey: ['analytics-monthly-vehicle-entries'],
+    queryFn: () => api.get('/analytics/monthly-vehicle-entries'),
+  });
+
+  if (l1 || l2 || l3 || l4 || l5 || l6 || l7 || l8) return <PageSkeleton />;
 
   const pipelineData = (pipeline?.data || []).map((d: any) => ({
     name: d._id?.replace('_', ' ') || d._id,
@@ -35,6 +66,17 @@ export default function Analytics() {
       count: d.count,
     }))
     .reverse();
+
+  // Transformations for new charts
+  const avgSaleTimeValue = avgSaleTime?.data?.averageHours ?? 0;
+  const totalCommissionValue = totalPossibleCommission?.data?.total ?? 0;
+  const commissionBrandData = (commissionPerBrand?.data || []).map((d: any) => ({ name: d.brand, average: d.average }));
+  const saleTimeModelData = (saleTimePerModel?.data || []).map((d: any) => ({ name: d.model, averageHours: d.averageHours }));
+  const daysSinceLastSaleValue = daysSinceLastSale?.data?.days ?? 0;
+  const vehicleEntryData = (monthlyVehicleEntries?.data || []).map((d: any) => ({
+    name: `${MONTH_NAMES[d.month - 1]}/${String(d.year).slice(2)}`,
+    count: d.count,
+  }));
 
   const tooltipStyle = {
     contentStyle: {
@@ -147,6 +189,60 @@ export default function Analytics() {
               <p>Nenhum dado disponível</p>
             </div>
           )}
+        </GlowCard>
+
+        <GlowCard delay={0.4} className="lg:col-span-2">
+          <h2 className="text-lg font-semibold text-slate-100 mb-4">Métricas Adicionais</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-4 bg-slate-800/50 rounded-lg shadow-lg">
+              <h3 className="text-sm font-medium text-slate-300 mb-2">Tempo Médio de Venda</h3>
+              <p className="text-2xl font-bold text-white">{avgSaleTimeValue} hrs</p>
+            </div>
+            <div className="p-4 bg-slate-800/50 rounded-lg shadow-lg">
+              <h3 className="text-sm font-medium text-slate-300 mb-2">Comissão Total Possível</h3>
+              <p className="text-2xl font-bold text-white">{formatCurrency(totalCommissionValue)}</p>
+            </div>
+            <div className="p-4 bg-slate-800/50 rounded-lg shadow-lg">
+              <h3 className="text-sm font-medium text-slate-300 mb-2">Dias Desde Última Venda</h3>
+              <p className="text-2xl font-bold text-white">{daysSinceLastSaleValue} dias</p>
+            </div>
+            <div className="p-4 bg-slate-800/50 rounded-lg shadow-lg">
+              <h3 className="text-sm font-medium text-slate-300 mb-2">Comissão Média por Marca</h3>
+              <ResponsiveContainer width="100%" height={180}>
+                <BarChart data={commissionBrandData} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.06)" />
+                  <XAxis type="number" tickFormatter={(v) => formatCurrency(v)} />
+                  <YAxis type="category" dataKey="name" width={100} />
+                  <Tooltip formatter={(v) => formatCurrency(v)} {...tooltipStyle} />
+                  <Bar dataKey="average" fill="#f59e0b" radius={[0, 6, 6, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="p-4 bg-slate-800/50 rounded-lg shadow-lg">
+              <h3 className="text-sm font-medium text-slate-300 mb-2">Tempo Médio de Venda por Modelo</h3>
+              <ResponsiveContainer width="100%" height={180}>
+                <BarChart data={saleTimeModelData} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.06)" />
+                  <XAxis type="number" tick={{ fill: '#94a3b8' }} />
+                  <YAxis type="category" dataKey="name" width={100} />
+                  <Tooltip formatter={(v) => `${v} hrs`} {...tooltipStyle} />
+                  <Bar dataKey="averageHours" fill="#7c3aed" radius={[0, 6, 6, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="p-4 bg-slate-800/50 rounded-lg shadow-lg col-span-full">
+              <h3 className="text-sm font-medium text-slate-300 mb-2">Veículos Entrados por Mês</h3>
+              <ResponsiveContainer width="100%" height={240}>
+                <BarChart data={vehicleEntryData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.06)" />
+                  <XAxis dataKey="name" tick={{ fill: '#94a3b8' }} />
+                  <YAxis tick={{ fill: '#94a3b8' }} />
+                  <Tooltip {...tooltipStyle} />
+                  <Bar dataKey="count" fill="#22c55e" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
         </GlowCard>
       </div>
     </div>
