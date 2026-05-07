@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ComposedChart, Area, PieChart, Pie, Cell, ScatterChart, Scatter } from 'recharts';
-import { motion } from 'framer-motion';
+// import { motion } from 'framer-motion';
 import { Car, DollarSign, TrendingUp, Users, Clock, Target, Zap, Activity } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -169,20 +169,15 @@ export default function Dashboard() {
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
+      <div>
         <h1 className="text-2xl font-bold text-white">
           Olá, {user?.name?.split(' ')[0] || 'Vinícius'} 👋
         </h1>
         <p className="text-slate-400 text-sm mt-1">Aqui está o resumo do seu negócio hoje</p>
-      </motion.div>
+      </div>
 
       {/* KPI Cards Avançados */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4"
-      >
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4">
         <KPICard
           title="Carros Vendidos no Mês"
           value={vendidosMes.length}
@@ -216,15 +211,11 @@ export default function Dashboard() {
           gradient={tempoMedioVenda <= 15 ? 'green' : tempoMedioVenda <= 25 ? 'yellow' : 'red'}
           trend={tempoMedioVenda <= 15 ? 'up' : tempoMedioVenda <= 25 ? 'neutral' : 'down'}
         />
-      </motion.div>
+      </div>
       {/* Gráficos Principais */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Gráfico 1: Vendas e Receita */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
+        <div>
           <GlowCard>
             <h2 className="text-lg font-semibold text-white mb-4">Vendas e Receita Mensal</h2>
             {(() => {
@@ -277,14 +268,10 @@ export default function Dashboard() {
               );
             })()}
           </GlowCard>
-        </motion.div>
+        </div>
 
         {/* Gráfico 2: Funil de Conversão */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
+        <div>
           <GlowCard>
             <h2 className="text-lg font-semibold text-white mb-4">Funil de Conversão</h2>
             {(() => {
@@ -319,17 +306,13 @@ export default function Dashboard() {
               );
             })()}
           </GlowCard>
-        </motion.div>
+        </div>
       </div>
 
       {/* Segunda linha de gráficos */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Gráfico 3: Spread por Modelo */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-        >
+        <div>
           <GlowCard>
             <h2 className="text-lg font-semibold text-white mb-4">Spread por Modelo</h2>
             {(() => {
@@ -370,14 +353,10 @@ export default function Dashboard() {
               );
             })()}
           </GlowCard>
-        </motion.div>
+        </div>
 
         {/* Gráfico 4: Captação por Canal */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-        >
+        <div>
           <GlowCard>
             <h2 className="text-lg font-semibold text-white mb-4">Captação por Canal</h2>
             {(() => {
@@ -434,14 +413,10 @@ export default function Dashboard() {
               })()}
             </div>
           </GlowCard>
-        </motion.div>
+        </div>
 
         {/* Gráfico 5: Spread/Dia (Gauge) */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-        >
+        <div>
           <GlowCard>
             <h2 className="text-lg font-semibold text-white mb-4 text-center">Spread por Dia</h2>
             <div className="flex justify-center">
@@ -461,15 +436,11 @@ export default function Dashboard() {
               </div>
             </div>
           </GlowCard>
-        </motion.div>
+        </div>
       </div>
 
       {/* Tabela de Carros Ativos com Sparklines */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.7 }}
-      >
+      <div>
         <GlowCard>
           <h2 className="text-lg font-semibold text-white mb-4">Carros Ativos - Tendência Semanal</h2>
           {vehicleList.filter((v: any) => v.pipeline?.status !== 'vendido' && v.pipeline?.status !== 'arquivado').length === 0 ? (
@@ -542,14 +513,10 @@ export default function Dashboard() {
             </div>
           )}
         </GlowCard>
-      </motion.div>
+      </div>
 
       {/* Pipeline */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-      >
+      <div>
         <GlowCard>
           <h2 className="text-lg font-semibold text-white mb-4">Pipeline</h2>
           <div className="flex gap-2 flex-wrap">
@@ -562,11 +529,11 @@ export default function Dashboard() {
             ))}
           </div>
         </GlowCard>
-      </motion.div>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Vehicles */}
-        <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
+        <div>
           <GlowCard>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-white">Veículos Recentes</h2>
@@ -593,10 +560,10 @@ export default function Dashboard() {
               </div>
             )}
           </GlowCard>
-        </motion.div>
+        </div>
 
         {/* Recent Leads */}
-        <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
+        <div>
           <GlowCard>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-white">Leads Recentes</h2>
@@ -620,7 +587,7 @@ export default function Dashboard() {
               </div>
             )}
           </GlowCard>
-        </motion.div>
+        </div>
       </div>
     </div>
   );
