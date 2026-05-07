@@ -51,7 +51,8 @@ export default function Analytics() {
     queryFn: () => api.get('/analytics/monthly-vehicle-entries'),
   });
 
-  if (l1 || l2 || l3 || l4 || l5 || l6 || l7 || l8) return <PageSkeleton />;
+  // Show skeleton only while essential data is loading
+  if (l1 || l2) return <PageSkeleton />;
 
   const pipelineData = (pipeline?.data || []).map((d: any) => ({
     name: d._id?.replace('_', ' ') || d._id,
@@ -213,6 +214,7 @@ export default function Analytics() {
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.06)" />
                   <XAxis type="number" tickFormatter={(v) => formatCurrency(v)} />
                   <YAxis type="category" dataKey="name" width={100} />
+                  <YAxis type="category" dataKey="name" width={100} />
                   <Tooltip formatter={(v) => formatCurrency(v)} {...tooltipStyle} />
                   <Bar dataKey="average" fill="#f59e0b" radius={[0, 6, 6, 0]} />
                 </BarChart>
@@ -224,6 +226,7 @@ export default function Analytics() {
                 <BarChart data={saleTimeModelData} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.06)" />
                   <XAxis type="number" tick={{ fill: '#94a3b8' }} />
+                  <YAxis type="category" dataKey="name" width={100} />
                   <YAxis type="category" dataKey="name" width={100} />
                   <Tooltip formatter={(v) => `${v} hrs`} {...tooltipStyle} />
                   <Bar dataKey="averageHours" fill="#7c3aed" radius={[0, 6, 6, 0]} />
