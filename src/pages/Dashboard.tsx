@@ -79,11 +79,14 @@ export default function Dashboard() {
 
   const totalVehicles = dash?.veiculos?.total ?? vehicleList.length;
   const totalLeads = dash?.leads?.total ?? leadList.length;
-  const totalCommission = dash?.veiculos?.comissaoTotal ?? vehicleList.reduce(
-    (sum: number, v: any) => sum + (v.precos?.comissaoEstimada || 0),
+  
+  // Cálculo de comissão baseada na lucro (Venda - Compra)
+  const totalCommission = vehicleList.reduce(
+    (sum: number, v: any) => sum + (Math.max(0, (v.precos?.venda || 0) - (v.precos?.compra || 0))),
     0,
   );
-  const leadsFechados = dash?.leads?.porStatus?.fechado ?? 0;
+
+  const leadsFechados = leadList.filter((l: any) => l.status === 'fechado').length;
   const taxaConversao = totalLeads > 0 ? Math.round((leadsFechados / totalLeads) * 100) : 0;
 
   // Conta veículos por status: preferimos o agregado do backend, com fallback
@@ -147,19 +150,39 @@ export default function Dashboard() {
         {/* Commission per Month Chart */}
         <GlowCard>
           <h2 className="text-lg font-semibold text-white mb-4">Comissão por Mês</h2>
-          {commissionMonthly && commissionMonthly.data && commissionMonthly.data.length > 0 ? (
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={commissionMonthly.data}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.06)" />
-                <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#94a3b8' }} />
-                <YAxis tickFormatter={(v) => formatCurrency(Number(v))} tick={{ fontSize: 12, fill: '#94a3b8' }} />
-                <Tooltip formatter={(v) => formatCurrency(Number(v))} />
-                <Bar dataKey="total" fill="#2563eb" radius={[4,4,0,0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="text-slate-400 text-sm text-center py-4">Sem dados de comissão por mês</div>
-          )}
+          {(() => {
+            const monthlyData: Record<string, number> = {};
+            const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+            
+            vehicleList.forEach((v: any) => {
+              if (v.pipeline?.status === 'vendido' && v.pipeline?.dataVenda) {
+                const date = new Date(v.pipeline.dataVenda);
+                const monthName = months[date.getMonth()];
+                const profit = Math.max(0, (v.precos?.venda || 0) - (v.precos?.compra || 0));
+                monthlyData[monthName] = (monthlyData[monthName] || 0) + profit;
+              }
+            });
+
+            const chartData = months.map(m => ({ name: m, total: monthlyData[m] || 0 })).filter(d => d.total > 0 || months.indexOf(d.name) <= new Date().getMonth());
+
+            if (chartData.length === 0) return <div className="text-slate-400 text-sm text-center py-4">Sem dados de comissão</div>;
+
+            return (
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.06)" vertical={false} />
+                  <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                  <YAxis hide />
+                  <Tooltip 
+                    contentStyle={{ background: '#1e293b', border: 'none', borderRadius: '8px' }}
+                    itemStyle={{ color: '#60a5fa' }}
+                    formatter={(v) => formatCurrency(Number(v))} 
+                  />
+                  <Bar dataKey="total" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            );
+          })()}
         </GlowCard>
         {/* Conversion Rate Over Time Chart */}
         <GlowCard>

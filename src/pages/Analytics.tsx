@@ -6,6 +6,9 @@ import { PageSkeleton } from '@/components/ui/PageSkeleton';
 import { GlowCard } from '@/components/ui/GlowCard';
 import { motion } from 'framer-motion';
 
+import { useVehicles } from '@/hooks/use-vehicles';
+import { useLeads } from '@/hooks/use-leads';
+
 const COLORS = ['#2563eb', '#22c55e', '#f59e0b', '#7c3aed', '#06b6d4'];
 const MONTH_NAMES = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
@@ -51,8 +54,14 @@ export default function Analytics() {
     queryFn: () => api.get('/analytics/monthly-vehicle-entries'),
   });
 
+  const { data: vehicles, isLoading: loadingV } = useVehicles();
+  const { data: leads, isLoading: loadingL } = useLeads();
+
   // Show skeleton only while essential data is loading
-  if (l1 || l2) return <PageSkeleton />;
+  if (l1 || l2 || loadingV || loadingL) return <PageSkeleton />;
+
+  const vehicleList = vehicles || [];
+  const leadList = leads || [];
 
   const pipelineData = (pipeline?.data || []).map((d: any) => ({
     name: d._id?.replace('_', ' ') || d._id,
@@ -68,9 +77,19 @@ export default function Analytics() {
     }))
     .reverse();
 
-  // Transformations for new charts
   const avgSaleTimeValue = avgSaleTime?.data?.averageHours ?? 0;
-  const totalCommissionValue = totalPossibleCommission?.data?.total ?? 0;
+  
+  // Comissão total baseada no lucro (Venda - Compra)
+  const totalCommissionValue = vehicleList.reduce(
+    (sum: number, v: any) => sum + (Math.max(0, (v.precos?.venda || 0) - (v.precos?.compra || 0))),
+    0,
+  );
+
+  const leadsFechadosCount = leadList.filter((l: any) => l.status === 'fechado').length;
+  const conversionRateValue = leadList.length > 0 
+    ? Math.round((leadsFechadosCount / leadList.length) * 100) 
+    : 0;
+
   const commissionBrandData = (commissionPerBrand?.data || []).map((d: any) => ({ name: d.brand, average: d.average }));
   const saleTimeModelData = (saleTimePerModel?.data || []).map((d: any) => ({ name: d.model, averageHours: d.averageHours }));
   const daysSinceLastSaleValue = daysSinceLastSale?.data?.days ?? 0;
@@ -196,12 +215,16 @@ export default function Analytics() {
           <h2 className="text-lg font-semibold text-slate-100 mb-4">Métricas Adicionais</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-4 bg-slate-800/50 rounded-lg shadow-lg">
+              <h3 className="text-sm font-medium text-slate-300 mb-2">Taxa de Conversão</h3>
+              <p className="text-2xl font-bold text-green-400">{conversionRateValue}%</p>
+            </div>
+            <div className="p-4 bg-slate-800/50 rounded-lg shadow-lg">
               <h3 className="text-sm font-medium text-slate-300 mb-2">Tempo Médio de Venda</h3>
               <p className="text-2xl font-bold text-white">{avgSaleTimeValue} hrs</p>
             </div>
             <div className="p-4 bg-slate-800/50 rounded-lg shadow-lg">
-              <h3 className="text-sm font-medium text-slate-300 mb-2">Comissão Total Possível</h3>
-              <p className="text-2xl font-bold text-white">{formatCurrency(totalCommissionValue)}</p>
+              <h3 className="text-sm font-medium text-slate-300 mb-2">Comissão Total (Lucro Bruto)</h3>
+              <p className="text-2xl font-bold text-blue-400">{formatCurrency(totalCommissionValue)}</p>
             </div>
             <div className="p-4 bg-slate-800/50 rounded-lg shadow-lg">
               <h3 className="text-sm font-medium text-slate-300 mb-2">Dias Desde Última Venda</h3>
@@ -211,11 +234,13 @@ export default function Analytics() {
               <h3 className="text-sm font-medium text-slate-300 mb-2">Comissão Média por Marca</h3>
               <ResponsiveContainer width="100%" height={180}>
                 <BarChart data={commissionBrandData} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.06)" />
-                  <XAxis type="number" tickFormatter={(v) => formatCurrency(v)} />
-                  <YAxis type="category" dataKey="name" width={100} />
-                  <YAxis type="category" dataKey="name" width={100} />
-                  <Tooltip formatter={(v) => formatCurrency(v)} {...tooltipStyle} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.06)" horizontal={false} />
+                  <XAxis type="number" tickFormatter={(v) => formatCurrency(v)} tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} />
+                  <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} />
+                  <Tooltip 
+                    contentStyle={{ background: '#1e293b', border: 'none', borderRadius: '8px' }}
+                    formatter={(v) => formatCurrency(Number(v))} 
+                  />
                   <Bar dataKey="average" fill="#f59e0b" radius={[0, 6, 6, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -224,11 +249,13 @@ export default function Analytics() {
               <h3 className="text-sm font-medium text-slate-300 mb-2">Tempo Médio de Venda por Modelo</h3>
               <ResponsiveContainer width="100%" height={180}>
                 <BarChart data={saleTimeModelData} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.06)" />
-                  <XAxis type="number" tick={{ fill: '#94a3b8' }} />
-                  <YAxis type="category" dataKey="name" width={100} />
-                  <YAxis type="category" dataKey="name" width={100} />
-                  <Tooltip formatter={(v) => `${v} hrs`} {...tooltipStyle} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.06)" horizontal={false} />
+                  <XAxis type="number" tick={{ fill: '#94a3b8', fontSize: 10 }} axisLine={false} />
+                  <YAxis type="category" dataKey="name" width={100} tick={{ fill: '#94a3b8', fontSize: 10 }} axisLine={false} />
+                  <Tooltip 
+                    contentStyle={{ background: '#1e293b', border: 'none', borderRadius: '8px' }}
+                    formatter={(v) => [`${v} hrs`, 'Tempo Médio']} 
+                  />
                   <Bar dataKey="averageHours" fill="#7c3aed" radius={[0, 6, 6, 0]} />
                 </BarChart>
               </ResponsiveContainer>
