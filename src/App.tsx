@@ -15,6 +15,7 @@ import Analytics from "./pages/Analytics";
 import Leads from "./pages/Leads";
 import Settings from "./pages/Settings";
 import Pipeline from "./pages/Pipeline";
+import Anuncios from "./pages/Anuncios";
 import Integrations from "./pages/Integrations";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -51,6 +52,7 @@ const App = () => (
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/leads" element={<Leads />} />
             <Route path="/pipeline" element={<Pipeline />} />
+            <Route path="/anuncios" element={<Anuncios />} />
             <Route path="/integrations" element={<Integrations />} />
             <Route path="/settings" element={<Settings />} />
           </Route>
