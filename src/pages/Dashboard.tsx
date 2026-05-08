@@ -56,9 +56,14 @@ export default function Dashboard() {
   const user = getUser();
   const { data: vehicles, isLoading: loadingV } = useVehicles();
   const { data: leads, isLoading: loadingL } = useLeads();
-  const { data: dashData, isLoading: loadingD } = useQuery<DashboardData>({
-    queryKey: ['dashboard'],
+  const { data: dashData, isLoading: loadingDash } = useQuery({
+    queryKey: ['analytics-dashboard'],
     queryFn: () => api.get('/analytics/dashboard'),
+  });
+
+  const { data: pipelineData, isLoading: loadingPipeline } = useQuery({
+    queryKey: ['analytics-pipeline'],
+    queryFn: () => api.get('/analytics/pipeline'),
   });
 
   // Simulated data for commission monthly and conversion rate
@@ -69,7 +74,7 @@ export default function Dashboard() {
 
   // Mostra o skeleton só enquanto não houver nenhum sinal de dados — assim uma
   // requisição lenta não trava a tela. Queries isoladas podem terminar depois.
-  if (loadingV && loadingL && loadingD && cmLoading && crLoading && !vehicles && !leads && !dashData) {
+  if (loadingV && loadingL && loadingDash && cmLoading && crLoading && !vehicles && !leads && !dashData) {
     return <PageSkeleton />;
   }
 
@@ -216,75 +221,94 @@ export default function Dashboard() {
       </div>
       {/* Gráficos Principais */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Gráfico 1: Valor Anunciado no Mês */}
+        {/* Gráfico 1: Valor em Carteira */}
         <div>
           <GlowCard>
-            <h2 className="text-lg font-semibold text-white mb-4">Valor Anunciado no Mês</h2>
             {(() => {
-              const monthlyAnunciado: Record<string, number> = {};
-              const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-
-              vehicleList.forEach((v: any) => {
-                if (v.dataCadastro) {
-                  const date = new Date(v.dataCadastro);
-                  const monthName = months[date.getMonth()];
-                  const valor = v.precos?.venda || 0;
-                  monthlyAnunciado[monthName] = (monthlyAnunciado[monthName] || 0) + valor;
-                }
-              });
-
-              const chartDataMonths = months.map((m, idx) => ({
-                name: m,
-                valor: monthlyAnunciado[m] || 0,
-                mediaMovel: 0, // calculado abaixo
+              const pipelineItems = (pipelineData?.data || []).map((d: any) => ({
+                name: d._id === 'disponivel' ? 'Disponível' :
+                      d._id === 'contato_ativo' ? 'Contato Ativo' :
+                      d._id === 'proposta' ? 'Proposta' :
+                      d._id === 'vendido' ? 'Vendido' :
+                      d._id === 'arquivado' ? 'Arquivado' : d.id?.replace('', ' ') || d.id,
+                count: d.count || 0,
+                valor: d.valorTotal || 0,
               }));
 
-              // Média móvel dos últimos 3 meses
-              for (let i = 0; i < chartDataMonths.length; i++) {
-                if (i >= 2) {
-                  const last3 = chartDataMonths.slice(i - 2, i + 1);
-                  chartDataMonths[i].mediaMovel = Math.round(last3.reduce((s, d) => s + d.valor, 0) / 3);
-                } else {
-                  chartDataMonths[i].mediaMovel = chartDataMonths[i].valor;
-                }
-              }
+              const valorTotalCarteira = pipelineItems.reduce((sum: number, d: any) => sum + d.valor, 0);
 
-              if (chartDataMonths.every(d => d.valor === 0)) {
-                return <div className="text-slate-400 text-sm text-center py-4">Sem dados de anúncios</div>;
-              }
+              // Delta: total vendido vs carteira total (percentual já convertido em venda)
+              const valorVendido = pipelineItems.find((d: any) => d.name === 'Vendido')?.valor || 0;
+              const taxaConversao = valorTotalCarteira > 0 ? Math.round((valorVendido / valorTotalCarteira) * 100) : 0;
 
-              // Calcula delta vs mês anterior (para o mês atual)
-              const mesAtualIdx = new Date().getMonth();
-              const valorAtual = chartDataMonths[mesAtualIdx].valor;
-              const mesAnteriorIdx = mesAtualIdx === 0 ? 11 : mesAtualIdx - 1;
-              const valorAnterior = chartDataMonths[mesAnteriorIdx].valor;
-              const deltaAnuncio = valorAnterior > 0 ? Math.round(((valorAtual - valorAnterior) / valorAnterior) * 100) : 0;
+              if (pipelineItems.length === 0 || valorTotalCarteira === 0) {
+                return (
+                  <>
+                      <h2 className="text-lg font-semibold text-white mb-4">Valor em Carteira</h2>
+                      {loadingPipeline ? (
+                        <div className="h-[250px] bg-slate-800/30 rounded-lg animate-pulse flex items-center justify-center">
+                          <span className="text-slate-500 text-sm">Carregando...</span>
+                        </div>
+                      ) : (
+                        <div className="text-slate-400 text-sm text-center py-4">Nenhum veículo em carteira</div>
+                      )}
+                  </>
+                );
+              }
 
               return (
                 <>
-                  <div className="flex items-center gap-3 mb-4">
-                    <span className={`text-sm font-semibold ${deltaAnuncio >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                      {deltaAnuncio >= 0 ? '↑' : '↓'} {Math.abs(deltaAnuncio)}%
-                    </span>
-                    <span className="text-slate-400 text-xs">vs mês anterior</span>
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-semibold text-white">Valor em Carteira</h2>
+                    <span className="text-2xl font-bold text-blue-400">{formatCurrency(valorTotalCarteira)}</span>
                   </div>
-                  <ResponsiveContainer width="100%" height={250}>
-                    <ComposedChart data={chartDataMonths}>
+
+                  {/* Indicador de taxa de conversão */}
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="flex-1 bg-slate-800 rounded-full h-2 overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-green-500 to-emerald-500 rounded-full transition-all duration-700"
+                        style={{ width: `${taxaConversao}%` }}
+                      />
+                    </div>
+                    <span className="text-green-400 text-sm font-semibold whitespace-nowrap">{taxaConversao}% vendido</span>
+                  </div>
+
+                  <ResponsiveContainer width="100%" height={220}>
+                    <BarChart data={pipelineItems} layout="horizontal">
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.06)" />
-                      <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                      <YAxis tick={{ fontSize: 12, fill: '#94a3b8' }} tickFormatter={(v) => formatCurrency(v)} />
+                      <XAxis
+                        dataKey="name"
+                        tick={{ fontSize: 11, fill: '#94a3b8' }}
+                        axisLine={false}
+                        tickLine={false}
+                      />
+                      <YAxis
+                        tickFormatter={(v: number) => `R$${(v / 1000).toFixed(0)}k`}
+                        tick={{ fontSize: 11, fill: '#94a3b8' }}
+                        axisLine={false}
+                        tickLine={false}
+                      />
                       <Tooltip
                         contentStyle={{ background: '#1e293b', border: 'none', borderRadius: '8px' }}
-                        labelStyle={{ color: '#e2e8f0' }}
-                        formatter={(value: number, name: string) => {
-                          if (name === 'valor') return [formatCurrency(value), 'Valor Anunciado'];
-                          if (name === 'mediaMovel') return [formatCurrency(value), 'Média Móvel 3M'];
-                          return [value, name];
-                        }}
+                        labelStyle={{ color: '#e2e8f0', fontWeight: 600 }}
+                        formatter={(value: number) => [formatCurrency(value), 'Valor']}
                       />
-                      <Bar dataKey="valor" fill="#3b82f6" radius={[4, 4, 0, 0]} name="valor" />
-                      <Line type="monotone" dataKey="mediaMovel" stroke="#f59e0b" strokeWidth={2} strokeDasharray="5 5" name="mediaMovel" />
-                    </ComposedChart>
+                      <Bar dataKey="valor" radius={[4, 4, 0, 0]}>
+                        {pipelineItems.map((entry: any, idx: number) => (
+                          <Cell
+                            key={idx}
+                            fill={
+                              idx === 0 ? '#22c55e' :
+                              idx === 1 ? '#3b82f6' :
+                              idx === 2 ? '#f59e0b' :
+                              idx === 3 ? '#8b5cf6' :
+                              '#64748b'
+                            }
+                          />
+                        ))}
+                      </Bar>
+                    </BarChart>
                   </ResponsiveContainer>
                 </>
               );
