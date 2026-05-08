@@ -17,7 +17,7 @@ import { KPICard } from '@/components/ui/KPICard';
 import { GaugeChart } from '@/components/ui/GaugeChart';
 import { Sparkline } from '@/components/ui/Sparkline';
 import DashboardMap from '@/components/map/DashboardMap';
-import { convertVehicleToMapData, convertLeadToMapData } from '@/components/map/mapData';
+import { geocodeVehicles, VehicleMapData } from '@/lib/geocoding';
 
 // Shape real devolvido por GET /api/analytics/dashboard.
 interface DashboardData {
@@ -216,57 +216,77 @@ export default function Dashboard() {
       </div>
       {/* Gráficos Principais */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Gráfico 1: Vendas e Receita */}
+        {/* Gráfico 1: Valor Anunciado no Mês */}
         <div>
           <GlowCard>
-            <h2 className="text-lg font-semibold text-white mb-4">Vendas e Receita Mensal</h2>
+            <h2 className="text-lg font-semibold text-white mb-4">Valor Anunciado no Mês</h2>
             {(() => {
-              const monthlyData: Record<string, { vendas: number; receita: number }> = {};
+              const monthlyAnunciado: Record<string, number> = {};
               const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-              
+
               vehicleList.forEach((v: any) => {
-                if (v.pipeline?.status === 'vendido' && v.pipeline?.dataVenda) {
-                  const date = new Date(v.pipeline.dataVenda);
+                if (v.dataCadastro) {
+                  const date = new Date(v.dataCadastro);
                   const monthName = months[date.getMonth()];
-                  const profit = Math.max(0, (v.precos?.venda || 0) - (v.precos?.compra || 0));
-                  
-                  if (!monthlyData[monthName]) {
-                    monthlyData[monthName] = { vendas: 0, receita: 0 };
-                  }
-                  monthlyData[monthName].vendas += 1;
-                  monthlyData[monthName].receita += profit;
+                  const valor = v.precos?.venda || 0;
+                  monthlyAnunciado[monthName] = (monthlyAnunciado[monthName] || 0) + valor;
                 }
               });
 
-              const chartData = months.map(m => ({
+              const chartDataMonths = months.map((m, idx) => ({
                 name: m,
-                vendas: monthlyData[m]?.vendas || 0,
-                receita: monthlyData[m]?.receita || 0,
-                meta: 15000 // Meta mensal
-              })).filter(d => d.vendas > 0 || months.indexOf(d.name) <= new Date().getMonth());
+                valor: monthlyAnunciado[m] || 0,
+                mediaMovel: 0, // calculado abaixo
+              }));
 
-              if (chartData.length === 0) return <div className="text-slate-400 text-sm text-center py-4">Sem dados de vendas</div>;
+              // Média móvel dos últimos 3 meses
+              for (let i = 0; i < chartDataMonths.length; i++) {
+                if (i >= 2) {
+                  const last3 = chartDataMonths.slice(i - 2, i + 1);
+                  chartDataMonths[i].mediaMovel = Math.round(last3.reduce((s, d) => s + d.valor, 0) / 3);
+                } else {
+                  chartDataMonths[i].mediaMovel = chartDataMonths[i].valor;
+                }
+              }
+
+              if (chartDataMonths.every(d => d.valor === 0)) {
+                return <div className="text-slate-400 text-sm text-center py-4">Sem dados de anúncios</div>;
+              }
+
+              // Calcula delta vs mês anterior (para o mês atual)
+              const mesAtualIdx = new Date().getMonth();
+              const valorAtual = chartDataMonths[mesAtualIdx].valor;
+              const mesAnteriorIdx = mesAtualIdx === 0 ? 11 : mesAtualIdx - 1;
+              const valorAnterior = chartDataMonths[mesAnteriorIdx].valor;
+              const deltaAnuncio = valorAnterior > 0 ? Math.round(((valorAtual - valorAnterior) / valorAnterior) * 100) : 0;
 
               return (
-                <ResponsiveContainer width="100%" height={250}>
-                  <ComposedChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.06)" />
-                    <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                    <YAxis yAxisId="left" tick={{ fontSize: 12, fill: '#94a3b8' }} />
-                    <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 12, fill: '#94a3b8' }} />
-                    <Tooltip 
-                      contentStyle={{ background: '#1e293b', border: 'none', borderRadius: '8px' }}
-                      itemStyle={{ color: '#60a5fa' }}
-                      formatter={(value, name) => {
-                        if (name === 'receita' || name === 'meta') return formatCurrency(Number(value));
-                        return value;
-                      }}
-                    />
-                    <Bar yAxisId="left" dataKey="vendas" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                    <Line yAxisId="right" type="monotone" dataKey="receita" stroke="#22c55e" strokeWidth={2} />
-                    <Line yAxisId="right" type="monotone" dataKey="meta" stroke="#f59e0b" strokeWidth={2} strokeDasharray="5 5" />
-                  </ComposedChart>
-                </ResponsiveContainer>
+                <>
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className={`text-sm font-semibold ${deltaAnuncio >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      {deltaAnuncio >= 0 ? '↑' : '↓'} {Math.abs(deltaAnuncio)}%
+                    </span>
+                    <span className="text-slate-400 text-xs">vs mês anterior</span>
+                  </div>
+                  <ResponsiveContainer width="100%" height={250}>
+                    <ComposedChart data={chartDataMonths}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.06)" />
+                      <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fontSize: 12, fill: '#94a3b8' }} tickFormatter={(v) => formatCurrency(v)} />
+                      <Tooltip
+                        contentStyle={{ background: '#1e293b', border: 'none', borderRadius: '8px' }}
+                        labelStyle={{ color: '#e2e8f0' }}
+                        formatter={(value: number, name: string) => {
+                          if (name === 'valor') return [formatCurrency(value), 'Valor Anunciado'];
+                          if (name === 'mediaMovel') return [formatCurrency(value), 'Média Móvel 3M'];
+                          return [value, name];
+                        }}
+                      />
+                      <Bar dataKey="valor" fill="#3b82f6" radius={[4, 4, 0, 0]} name="valor" />
+                      <Line type="monotone" dataKey="mediaMovel" stroke="#f59e0b" strokeWidth={2} strokeDasharray="5 5" name="mediaMovel" />
+                    </ComposedChart>
+                  </ResponsiveContainer>
+                </>
               );
             })()}
           </GlowCard>
@@ -282,8 +302,27 @@ export default function Dashboard() {
               </div>
             ) : (
               <DashboardMap
-                vehicles={vehicleList.map(convertVehicleToMapData)}
-                leads={leadList.map(convertLeadToMapData)}
+                vehicles={geocodeVehicles(
+                  vehicleList
+                    .filter((v: any) => v.proprietario?.cidade)
+                    .map((v: any) => ({
+                      _id: v._id,
+                      marca: v.marca,
+                      modelo: v.modelo,
+                      ano: v.ano,
+                      cidade: v.proprietario?.cidade,
+                      precos: v.precos,
+                    }))
+                )}
+                leads={leadList
+                  .filter((l: any) => l.cidade)
+                  .map((l: any) => ({
+                    _id: l._id,
+                    nome: l.nome,
+                    cidade: l.cidade,
+                    lat: null as number | null,
+                    lng: null as number | null,
+                  }))}
                 isLoading={false}
               />
             )}

@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import { convertVehicleToMapData, convertLeadToMapData } from '@/components/map/mapData';
+import { VehicleMapData } from '@/lib/geocoding';
 import { MapContainer, TileLayer, Marker, Popup, CircleMarker } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -14,17 +16,6 @@ L.Icon.Default.mergeOptions({
   iconUrl: markerIcon,
   shadowUrl: markerShadow,
 });
-
-interface VehicleMapData {
-  _id: string;
-  marca: string;
-  modelo: string;
-  ano: number;
-  cidade?: string;
-  lat?: number;
-  lng?: number;
-  precos?: { venda?: number };
-}
 
 interface LeadMapData {
   _id: string;
