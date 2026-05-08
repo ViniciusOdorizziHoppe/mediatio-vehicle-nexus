@@ -16,6 +16,8 @@ import { StatusBadge } from '@/components/ui/StatusBadge';
 import { KPICard } from '@/components/ui/KPICard';
 import { GaugeChart } from '@/components/ui/GaugeChart';
 import { Sparkline } from '@/components/ui/Sparkline';
+import DashboardMap from '@/components/map/DashboardMap';
+import { convertVehicleToMapData, convertLeadToMapData } from '@/components/map/mapData';
 
 // Shape real devolvido por GET /api/analytics/dashboard.
 interface DashboardData {
@@ -269,6 +271,18 @@ export default function Dashboard() {
             })()}
           </GlowCard>
         </div>
+      </div>
+
+      {/* Mapa de Atividade - Alto Vale */}
+      <div className="col-span-1">
+        <GlowCard>
+          <h2 className="text-lg font-semibold text-white mb-4">Mapa de Atividade — Alto Vale</h2>
+          <DashboardMap
+            vehicles={vehicleList.map(convertVehicleToMapData)}
+            leads={leadList.map(convertLeadToMapData)}
+            isLoading={loadingV || loadingL}
+          />
+        </GlowCard>
       </div>
 
       {/* Pipeline */}
