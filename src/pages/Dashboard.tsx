@@ -271,18 +271,24 @@ export default function Dashboard() {
             })()}
           </GlowCard>
         </div>
-      </div>
 
-      {/* Mapa de Atividade - Alto Vale */}
-      <div className="col-span-1">
-        <GlowCard>
-          <h2 className="text-lg font-semibold text-white mb-4">Mapa de Atividade — Alto Vale</h2>
-          <DashboardMap
-            vehicles={vehicleList.map(convertVehicleToMapData)}
-            leads={leadList.map(convertLeadToMapData)}
-            isLoading={loadingV || loadingL}
-          />
-        </GlowCard>
+        {/* Mapa de Atividade - Alto Vale */}
+        <div>
+          <GlowCard>
+            <h2 className="text-lg font-semibold text-white mb-4">Mapa de Atividade — Alto Vale</h2>
+            {loadingV || loadingL ? (
+              <div className="animate-pulse bg-slate-800/50 rounded-lg h-[450px] flex items-center justify-center">
+                <p className="text-slate-400 text-sm">Carregando mapa...</p>
+              </div>
+            ) : (
+              <DashboardMap
+                vehicles={vehicleList.map(convertVehicleToMapData)}
+                leads={leadList.map(convertLeadToMapData)}
+                isLoading={false}
+              />
+            )}
+          </GlowCard>
+        </div>
       </div>
 
       {/* Pipeline */}
