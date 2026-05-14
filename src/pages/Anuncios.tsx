@@ -5,8 +5,8 @@ import { Car, DollarSign, Target, Camera, MessageSquare, AlertTriangle, MapPin, 
 
 import api from '@/lib/api';
 import { formatCurrency, getScoreColor, getScoreBg, PIPELINE_STATUS } from '@/lib/utils';
-import { useVehicles } from '@/hooks/use-vehicles';
-import { useLeads } from '@/hooks/use-leads';
+import { useVehicles } from '@/hooks/useVehicles';
+import { useLeads } from '@/hooks/useLeads';
 import { GlowCard } from '@/components/ui/GlowCard';
 import { PageSkeleton } from '@/components/ui/PageSkeleton';
 import { Badge } from '@/components/ui/badge';

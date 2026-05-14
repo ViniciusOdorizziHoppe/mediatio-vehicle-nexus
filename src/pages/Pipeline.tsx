@@ -4,8 +4,8 @@ import { motion } from 'framer-motion';
 import { Plus, Eye, MapPin, Camera, ImageOff, MessageSquare } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { useVehicles, useUpdateVehicleStatus } from '@/hooks/use-vehicles';
-import type { Vehicle } from '@/hooks/use-vehicles';
+import { useVehicles, useUpdateVehicleStatus } from '@/hooks/useVehicles';
+import type { Vehicle } from '@/hooks/useVehicles';
 import { formatCurrency, getScoreColor, getScoreBg } from '@/lib/utils';
 import { PageSkeleton } from '@/components/ui/PageSkeleton';
 

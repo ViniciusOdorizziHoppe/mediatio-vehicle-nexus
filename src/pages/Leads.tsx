@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useLeads, useCreateLead, useUpdateLeadStatus, useUpdateLead, useDeleteLead } from '@/hooks/use-leads';
+import { useLeads, useCreateLead, useUpdateLeadStatus, useUpdateLead, useDeleteLead } from '@/hooks/useLeads';
 import { LEAD_STATUS } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Search, Pencil, Trash2, Users, X, Loader2, ExternalLink } from 'lucide-react';

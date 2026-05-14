@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { useCreateVehicle, useUpdateVehicle, useVehicle } from '@/hooks/use-vehicles';
+import { useCreateVehicle, useUpdateVehicle, useVehicle } from '@/hooks/useVehicles';
 import { GlowCard } from '@/components/ui/GlowCard';
 
 export default function VehicleForm() {

@@ -8,8 +8,8 @@ import { GlowCard } from '@/components/ui/GlowCard';
 import { motion } from 'framer-motion';
 import { TrendingUp, TrendingDown, DollarSign, Target, Camera, MessageSquare, Clock, Zap, Award, AlertTriangle, BarChart3, Activity, Percent } from 'lucide-react';
 
-import { useVehicles } from '@/hooks/use-vehicles';
-import { useLeads } from '@/hooks/use-leads';
+import { useVehicles } from '@/hooks/useVehicles';
+import { useLeads } from '@/hooks/useLeads';
 
 const COLORS = ['#22c55e', '#3b82f6', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4', '#ec4899'];
 const MONTH_NAMES = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
