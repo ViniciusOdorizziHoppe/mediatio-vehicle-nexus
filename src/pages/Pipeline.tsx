@@ -1,16 +1,16 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Plus, Eye, MapPin } from 'lucide-react';
+import { Plus, Eye, MapPin, Camera, ImageOff, MessageSquare } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { useVehicles, useUpdateVehicleStatus } from '@/hooks/use-vehicles';
 import type { Vehicle } from '@/hooks/use-vehicles';
-import { formatCurrency, getScoreColor } from '@/lib/utils';
+import { formatCurrency, getScoreColor, getScoreBg } from '@/lib/utils';
 import { PageSkeleton } from '@/components/ui/PageSkeleton';
 
 const COLUMNS = [
-  { key: 'disponivel',   label: 'Disponível',    gradient: 'from-green-500 to-emerald-500' },
+  { key: 'disponivel',   label: 'Disponivel',    gradient: 'from-green-500 to-emerald-500' },
   { key: 'contato_ativo',label: 'Contato Ativo', gradient: 'from-blue-500 to-blue-600' },
   { key: 'proposta',     label: 'Proposta',       gradient: 'from-yellow-500 to-amber-500' },
   { key: 'vendido',      label: 'Vendido',        gradient: 'from-purple-500 to-violet-500' },
@@ -116,28 +116,48 @@ function VehicleCard({
   onMove: (id: string, status: string) => void;
 }) {
   const otherStatuses = COLUMNS.filter(c => c.key !== currentStatus);
+  const hasPhotos = (vehicle.fotos?.originais?.length || 0) > 0 || !!vehicle.fotos?.principal;
+  const leadCount = vehicle.leads?.length || 0;
+  const score = vehicle.score?.valor || 0;
 
   return (
     <div className="group bg-slate-800/40 hover:bg-slate-800/70 rounded-lg border border-slate-700/30 hover:border-slate-600/50 p-3 transition-all duration-200">
       <div className="flex items-start justify-between mb-2">
         <div className="min-w-0 flex-1">
           <p className="font-medium text-slate-200 text-sm truncate">{vehicle.marca} {vehicle.modelo}</p>
-          <p className="text-xs text-slate-500 mt-0.5">{vehicle.ano} • {vehicle.codigo}</p>
+          <p className="text-xs text-slate-500 mt-0.5">{vehicle.ano} &middot; {vehicle.codigo}</p>
         </div>
-        <span className={`text-xs font-bold ml-2 ${getScoreColor(vehicle.score?.valor || 0)}`}>
-          {vehicle.score?.valor || 0}
-        </span>
+        <div className={`text-xs font-bold ml-2 px-1.5 py-0.5 rounded ${getScoreBg(score)} ${getScoreColor(score)}`}>
+          {score}
+        </div>
       </div>
 
       <p className="text-sm font-semibold text-blue-400 mb-2">
         {formatCurrency(vehicle.precos.venda)}
       </p>
 
-      {vehicle.proprietario?.cidade && (
-        <p className="text-xs text-slate-500 mb-2 flex items-center gap-1">
-          <MapPin className="w-3 h-3 shrink-0" /> {vehicle.proprietario.cidade}
-        </p>
-      )}
+      {/* Indicadores visuais */}
+      <div className="flex items-center gap-3 mb-2 text-xs">
+        {hasPhotos ? (
+          <span className="flex items-center gap-1 text-green-400" title="Tem fotos">
+            <Camera className="w-3 h-3" /> {(vehicle.fotos?.originais?.length || 0) || 1}
+          </span>
+        ) : (
+          <span className="flex items-center gap-1 text-red-400" title="Sem fotos">
+            <ImageOff className="w-3 h-3" /> 0
+          </span>
+        )}
+        {leadCount > 0 && (
+          <span className="flex items-center gap-1 text-purple-400" title={`${leadCount} leads`}>
+            <MessageSquare className="w-3 h-3" /> {leadCount}
+          </span>
+        )}
+        {vehicle.proprietario?.cidade && (
+          <span className="flex items-center gap-1 text-slate-500 truncate" title={vehicle.proprietario.cidade}>
+            <MapPin className="w-3 h-3 shrink-0" /> {vehicle.proprietario.cidade}
+          </span>
+        )}
+      </div>
 
       <div className="flex items-center gap-2 pt-1 border-t border-slate-700/30">
         <Link

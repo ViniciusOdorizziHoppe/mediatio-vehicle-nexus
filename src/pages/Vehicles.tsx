@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Plus, Search, Eye, Pencil, Trash2, Car } from 'lucide-react';
+import { Plus, Search, Eye, Pencil, Trash2, Car, Download, Filter } from 'lucide-react';
 
 import { useVehicles, useDeleteVehicle, type Vehicle } from '@/hooks/useVehicles';
 import { formatCurrency, formatKm, PIPELINE_STATUS, getScoreColor } from '@/lib/utils';
@@ -10,19 +10,50 @@ export default function Vehicles() {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
   const [tipo, setTipo] = useState('');
+  const [minScore, setMinScore] = useState('');
 
   const params: any = {};
   if (search) params.search = search;
   if (status) params.status = status;
   if (tipo) params.tipo = tipo;
+  if (minScore) params.minScore = minScore;
 
   const { data, isLoading, error } = useVehicles(params);
   const deleteVehicle = useDeleteVehicle();
+  const vehicles = Array.isArray(data) ? data : (data as any)?.data || [];
 
   const handleDelete = (id: string, codigo: string) => {
-    if (confirm(`Deseja remover o veículo ${codigo}?`)) {
+    if (confirm(`Deseja remover o veiculo ${codigo}?`)) {
       deleteVehicle.mutate(id);
     }
+  };
+
+  const exportCSV = () => {
+    const headers = ['Codigo', 'Marca', 'Modelo', 'Ano', 'Cor', 'KM', 'Preco Venda', 'Preco Compra', 'Spread', 'Status', 'Score', 'Cidade', 'Fotos', 'Leads'];
+    const rows = vehicles.map((v: Vehicle) => [
+      v.codigo,
+      v.marca,
+      v.modelo,
+      v.ano,
+      v.cor || '',
+      v.km || '',
+      v.precos?.venda || 0,
+      v.precos?.compra || 0,
+      Math.max(0, (v.precos?.venda || 0) - (v.precos?.compra || 0)),
+      PIPELINE_STATUS[v.pipeline?.status]?.label || v.pipeline?.status || '',
+      v.score?.valor || 0,
+      v.proprietario?.cidade || '',
+      v.fotos?.originais?.length || 0,
+      v.leads?.length || 0,
+    ]);
+    const csv = [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `mediatio-veiculos-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -41,13 +72,19 @@ export default function Vehicles() {
           </p>
         </div>
 
-        <Link
-          to="/vehicles/new"
-          className="btn-brand flex items-center gap-2 text-sm"
-        >
-          <Plus className="w-4 h-4" />
-          Novo Veículo
-        </Link>
+        <div className="flex items-center gap-2">
+          <button onClick={exportCSV}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800/50 hover:bg-slate-800 text-slate-300 text-sm font-medium transition-colors border border-slate-700/50">
+            <Download className="w-4 h-4" /> Exportar CSV
+          </button>
+          <Link
+            to="/vehicles/new"
+            className="btn-brand flex items-center gap-2 text-sm"
+          >
+            <Plus className="w-4 h-4" />
+            Novo Veiculo
+          </Link>
+        </div>
       </motion.div>
 
       {/* Filters */}
@@ -90,6 +127,17 @@ export default function Vehicles() {
           <option value="">Todos os tipos</option>
           <option value="moto">Moto</option>
           <option value="carro">Carro</option>
+        </select>
+
+        <select
+          value={minScore}
+          onChange={e => setMinScore(e.target.value)}
+          className="input-dark w-auto min-w-[140px]"
+        >
+          <option value="">Score: todos</option>
+          <option value="60">Score 60+</option>
+          <option value="40">Score 40+</option>
+          <option value="0">Score baixo (&lt;40)</option>
         </select>
       </motion.div>
 

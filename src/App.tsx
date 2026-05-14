@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Layout from "@/components/layout/Layout";
 import { isAuthenticated } from "@/lib/auth";
+import ErrorBoundary from "@/components/ui/ErrorBoundary";
 import Dashboard from "./pages/Dashboard";
 import Vehicles from "./pages/Vehicles";
 import VehicleForm from "./pages/VehicleForm";
@@ -41,20 +42,20 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/vehicles" element={<Vehicles />} />
-            <Route path="/vehicles/new" element={<VehicleForm />} />
-            <Route path="/vehicles/:id" element={<VehicleDetail />} />
-            <Route path="/vehicles/:id/edit" element={<VehicleForm />} />
-            <Route path="/nexus-chat" element={<NexusChat />} />
-            <Route path="/schedule" element={<Schedule />} />
-            <Route path="/morph" element={<MorphPhotos />} />
-            <Route path="/analytics" element={<Analytics />} />
-            <Route path="/leads" element={<Leads />} />
-            <Route path="/pipeline" element={<Pipeline />} />
-            <Route path="/anuncios" element={<Anuncios />} />
-            <Route path="/integrations" element={<Integrations />} />
-            <Route path="/settings" element={<Settings />} />
+            <Route path="/" element={<ErrorBoundary><Dashboard /></ErrorBoundary>} />
+            <Route path="/vehicles" element={<ErrorBoundary><Vehicles /></ErrorBoundary>} />
+            <Route path="/vehicles/new" element={<ErrorBoundary><VehicleForm /></ErrorBoundary>} />
+            <Route path="/vehicles/:id" element={<ErrorBoundary><VehicleDetail /></ErrorBoundary>} />
+            <Route path="/vehicles/:id/edit" element={<ErrorBoundary><VehicleForm /></ErrorBoundary>} />
+            <Route path="/nexus-chat" element={<ErrorBoundary><NexusChat /></ErrorBoundary>} />
+            <Route path="/schedule" element={<ErrorBoundary><Schedule /></ErrorBoundary>} />
+            <Route path="/morph" element={<ErrorBoundary><MorphPhotos /></ErrorBoundary>} />
+            <Route path="/analytics" element={<ErrorBoundary><Analytics /></ErrorBoundary>} />
+            <Route path="/leads" element={<ErrorBoundary><Leads /></ErrorBoundary>} />
+            <Route path="/pipeline" element={<ErrorBoundary><Pipeline /></ErrorBoundary>} />
+            <Route path="/anuncios" element={<ErrorBoundary><Anuncios /></ErrorBoundary>} />
+            <Route path="/integrations" element={<ErrorBoundary><Integrations /></ErrorBoundary>} />
+            <Route path="/settings" element={<ErrorBoundary><Settings /></ErrorBoundary>} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
