@@ -49,6 +49,15 @@ export function useUpdateLead() {
   });
 }
 
+export function useUpdateLeadStatus() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, status }: { id: string; status: string }) =>
+      api.patch(`/leads/${id}/status`, { status }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['leads'] }),
+  });
+}
+
 export function useDeleteLead() {
   const qc = useQueryClient();
   return useMutation({
