@@ -1,317 +1,439 @@
 import { useQuery } from '@tanstack/react-query';
+import { useMemo } from 'react';
 import api from '@/lib/api';
-import { formatCurrency } from '@/lib/utils';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { formatCurrency, getScoreColor } from '@/lib/utils';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, ComposedChart, Line } from 'recharts';
 import { PageSkeleton } from '@/components/ui/PageSkeleton';
 import { GlowCard } from '@/components/ui/GlowCard';
 import { motion } from 'framer-motion';
+import { TrendingUp, TrendingDown, DollarSign, Target, Camera, MessageSquare, Clock, Zap, Award, AlertTriangle, BarChart3, Activity, Percent } from 'lucide-react';
 
 import { useVehicles } from '@/hooks/use-vehicles';
 import { useLeads } from '@/hooks/use-leads';
 
-const COLORS = ['#2563eb', '#22c55e', '#f59e0b', '#7c3aed', '#06b6d4'];
+const COLORS = ['#22c55e', '#3b82f6', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4', '#ec4899'];
 const MONTH_NAMES = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
 const STATUS_DISPLAY: Record<string, string> = {
-  disponivel: 'Disponivel',
-  contato_ativo: 'Contato Ativo',
-  proposta: 'Proposta',
-  vendido: 'Vendido',
-  arquivado: 'Arquivado',
+  disponivel: 'Disponivel', contato_ativo: 'Contato Ativo', proposta: 'Proposta',
+  vendido: 'Vendido', arquivado: 'Arquivado',
+};
+
+const LEAD_STATUS_DISPLAY: Record<string, string> = {
+  novo: 'Novo', contatado: 'Contatado', interessado: 'Interessado',
+  proposta_enviada: 'Proposta', fechado: 'Fechado', perdido: 'Perdido',
 };
 
 export default function Analytics() {
-  const { data: pipeline, isLoading: l1 } = useQuery({
-    queryKey: ['analytics-pipeline'],
-    queryFn: () => api.get('/analytics/pipeline'),
+  const { data: vehicles, isLoading: lv } = useVehicles();
+  const { data: leads, isLoading: ll } = useLeads();
+  const { data: pipeline, isLoading: lp } = useQuery({
+    queryKey: ['analytics-pipeline'], queryFn: () => api.get('/analytics/pipeline'),
+  });
+  const { data: comissoes, isLoading: lc } = useQuery({
+    queryKey: ['analytics-comissoes'], queryFn: () => api.get('/analytics/comissoes'),
+  });
+  const { data: dashboard, isLoading: ld } = useQuery({
+    queryKey: ['analytics-dashboard'], queryFn: () => api.get('/analytics/dashboard'),
   });
 
-  const { data: comissoes, isLoading: l2 } = useQuery({
-    queryKey: ['analytics-comissoes'],
-    queryFn: () => api.get('/analytics/comissoes'),
-  });
+  if (lv || ll || lp || lc || ld) return <PageSkeleton />;
 
-  // These endpoints exist and work
-  const { data: dashboard, isLoading: l3 } = useQuery({
-    queryKey: ['analytics-dashboard'],
-    queryFn: () => api.get('/analytics/dashboard'),
-  });
-
-  const { data: vehicles, isLoading: loadingV } = useVehicles();
-  const { data: leads, isLoading: loadingL } = useLeads();
-
-  const isLoading = l1 || l2 || l3 || loadingV || loadingL;
-  if (isLoading) return <PageSkeleton />;
-
-  const vehicleList = vehicles || [];
-  const leadList = leads || [];
-  const dashData = dashboard?.data;
-
-  // Pipeline data
+  const vehicleList = (vehicles || []) as any[];
+  const leadList = (leads || []) as any[];
+  const dash = dashboard?.data;
   const pipelineData = (pipeline?.data || []).map((d: any) => ({
     name: STATUS_DISPLAY[d._id] || d._id?.replace('_', ' ') || d._id,
-    original: d._id,
-    count: d.count,
-    valor: d.valorTotal || 0,
+    count: d.count, valor: d.valorTotal || 0,
   }));
+  const comissoesData = (comissoes?.data || []).map((d: any) => ({
+    name: `${MONTH_NAMES[d._id.month - 1]}/${String(d._id.year).slice(2)}`,
+    total: d.total || 0, count: d.count || 0,
+  })).reverse();
 
-  // Commission data
-  const comissoesData = (comissoes?.data || [])
-    .map((d: any) => ({
-      name: `${MONTH_NAMES[d._id.month - 1]}/${String(d._id.year).slice(2)}`,
-      total: d.total || 0,
-      count: d.count || 0,
-    }))
-    .reverse();
+  // ====== DERIVED METRICS ======
 
-  // Calculate metrics from real data
-  const totalVehicles = dashData?.veiculos?.total ?? vehicleList.length;
-  const totalValor = dashData?.veiculos?.valorTotal ?? vehicleList.reduce((s: number, v: any) => s + (v.precos?.venda || 0), 0);
-  const totalLeads = dashData?.leads?.total ?? leadList.length;
+  // Portfolio
+  const totalVehicles = dash?.veiculos?.total ?? vehicleList.length;
+  const totalValor = dash?.veiculos?.valorTotal ?? vehicleList.reduce((s: number, v: any) => s + (v.precos?.venda || 0), 0);
+  const totalLeads = dash?.leads?.total ?? leadList.length;
 
-  // Spread total (venda - compra)
-  const spreadTotal = vehicleList.reduce(
-    (sum: number, v: any) => sum + Math.max(0, (v.precos?.venda || 0) - (v.precos?.compra || 0)),
-    0,
-  );
+  // Spread & margin
+  const spreadTotal = vehicleList.reduce((s: number, v: any) => s + Math.max(0, (v.precos?.venda || 0) - (v.precos?.compra || 0)), 0);
   const spreadMedio = totalVehicles > 0 ? Math.round(spreadTotal / totalVehicles) : 0;
+  const margemMedia = totalValor > 0 ? ((spreadTotal / totalValor) * 100) : 0;
 
-  // Conversion rate
-  const leadsFechados = leadList.filter((l: any) => l.status === 'fechado').length;
-  const conversionRate = totalLeads > 0 ? Math.round((leadsFechados / totalLeads) * 100) : 0;
+  // Score distribution
+  const scoreDistribution = useMemo(() => {
+    const tiers = { excelente: 0, bom: 0, atencao: 0, critico: 0 };
+    vehicleList.forEach(v => {
+      const s = v.score?.valor || 0;
+      if (s >= 70) tiers.excelente++;
+      else if (s >= 55) tiers.bom++;
+      else if (s >= 35) tiers.atencao++;
+      else tiers.critico++;
+    });
+    return [
+      { name: 'Excelente (70+)', value: tiers.excelente, color: '#22c55e' },
+      { name: 'Bom (55-69)', value: tiers.bom, color: '#3b82f6' },
+      { name: 'Atencao (35-54)', value: tiers.atencao, color: '#f59e0b' },
+      { name: 'Critico (<35)', value: tiers.critico, color: '#ef4444' },
+    ];
+  }, [vehicleList]);
 
-  // Avg score
-  const avgScore = totalVehicles > 0
-    ? Math.round(vehicleList.reduce((s: number, v: any) => s + (v.score?.valor || 0), 0) / totalVehicles)
-    : 0;
+  const avgScore = totalVehicles > 0 ? Math.round(vehicleList.reduce((s, v) => s + (v.score?.valor || 0), 0) / totalVehicles) : 0;
 
-  // Vehicles with photos
-  const withPhotos = vehicleList.filter((v: any) =>
-    v.fotos?.originais?.length > 0 || v.fotos?.principal
-  ).length;
+  // Photos & FIPE coverage
+  const withPhotos = vehicleList.filter(v => (v.fotos?.originais?.length || 0) > 0 || v.fotos?.principal).length;
+  const photosPct = totalVehicles > 0 ? Math.round((withPhotos / totalVehicles) * 100) : 0;
+  const withFipe = vehicleList.filter(v => v.precos?.fipeReferencia).length;
+  const fipePct = totalVehicles > 0 ? Math.round((withFipe / totalVehicles) * 100) : 0;
 
-  // Leads by status
+  // Leads metrics
   const leadsByStatus = leadList.reduce((acc: Record<string, number>, l: any) => {
-    acc[l.status] = (acc[l.status] || 0) + 1;
-    return acc;
+    acc[l.status || 'novo'] = (acc[l.status || 'novo'] || 0) + 1; return acc;
+  }, {});
+  const leadsFechados = leadsByStatus.fechado || 0;
+  const leadsPerdidos = leadsByStatus.perdido || 0;
+  const conversionRate = totalLeads > 0 ? Math.round((leadsFechados / totalLeads) * 100) : 0;
+  const leadsByChannel = leadList.reduce((acc: Record<string, number>, l: any) => {
+    acc[l.canal || 'whatsapp'] = (acc[l.canal || 'whatsapp'] || 0) + 1; return acc;
   }, {});
 
+  // Pipeline metrics
+  const vehiclesWithLeads = vehicleList.filter(v => (v.leads?.length || 0) > 0).length;
+  const activeNegotiations = vehicleList.filter(v =>
+    v.pipeline?.status === 'contato_ativo' || v.pipeline?.status === 'proposta'
+  ).length;
+  const avgDaysInPipeline = totalVehicles > 0
+    ? Math.round(vehicleList.reduce((s, v) => s + (v.pipeline?.diasNoPipeline || 0), 0) / totalVehicles)
+    : 0;
+
+  // Price positioning vs FIPE
+  const priceVsFipe = vehicleList.filter(v => v.precos?.fipeReferencia).map(v => {
+    const diff = v.precos?.fipeReferencia ? ((v.precos.venda - v.precos.fipeReferencia) / v.precos.fipeReferencia * 100) : 0;
+    return { name: `${v.marca} ${v.modelo}`.substring(0, 15), diff: Math.round(diff), venda: v.precos.venda, fipe: v.precos.fipeReferencia };
+  });
+
+  // Brand distribution
+  const brandDistribution = useMemo(() => {
+    const brands: Record<string, number> = {};
+    vehicleList.forEach(v => { const b = v.marca || 'Outro'; brands[b] = (brands[b] || 0) + 1; });
+    return Object.entries(brands).map(([name, count]) => ({ name, count }));
+  }, [vehicleList]);
+
+  // Vehicle entry timeline (by month)
+  const vehiclesByMonth = useMemo(() => {
+    const months: Record<string, number> = {};
+    vehicleList.forEach(v => {
+      if (v.createdAt) {
+        const d = new Date(v.createdAt);
+        const key = `${MONTH_NAMES[d.getMonth()]}/${String(d.getFullYear()).slice(2)}`;
+        months[key] = (months[key] || 0) + 1;
+      }
+    });
+    return Object.entries(months).map(([name, count]) => ({ name, count }));
+  }, [vehicleList]);
+
   const tooltipStyle = {
-    contentStyle: {
-      background: 'rgba(15, 23, 42, 0.9)',
-      border: '1px solid rgba(148, 163, 184, 0.1)',
-      borderRadius: '12px',
-      color: '#f8fafc',
-      fontSize: '12px',
-      backdropFilter: 'blur(8px)',
-    },
-    itemStyle: { color: '#94a3b8' },
-    labelStyle: { color: '#f8fafc', fontWeight: 600 as const },
+    contentStyle: { background: 'rgba(15, 23, 42, 0.95)', border: '1px solid rgba(148, 163, 184, 0.15)', borderRadius: '12px', color: '#f8fafc', fontSize: '12px', backdropFilter: 'blur(8px)' },
+    itemStyle: { color: '#94a3b8' }, labelStyle: { color: '#f8fafc', fontWeight: 600 as const },
   };
 
   return (
     <div className="p-6 md:p-8 space-y-6">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
         <h1 className="text-2xl font-bold text-slate-100">Analytics</h1>
-        <p className="text-sm text-slate-400 mt-1">Metricas e performance do seu negocio</p>
+        <p className="text-sm text-slate-400 mt-1">
+          Portfolio de {totalVehicles} veiculos &middot; {formatCurrency(totalValor)} em carteira &middot; Margem media {margemMedia.toFixed(1)}%
+        </p>
       </motion.div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <GlowCard delay={0.05}>
-          <p className="text-xs text-slate-400">Veiculos em Carteira</p>
-          <p className="text-2xl font-bold text-white mt-1">{totalVehicles}</p>
-          <p className="text-xs text-slate-500 mt-1">{formatCurrency(totalValor)} total</p>
+      {/* ============ KPI ROW 1: FINANCEIRO ============ */}
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+        <GlowCard delay={0.02}>
+          <p className="text-xs text-slate-400 mb-1">Spread Total</p>
+          <p className="text-xl font-bold text-green-400">{formatCurrency(spreadTotal)}</p>
+          <p className="text-[10px] text-slate-500 mt-0.5">Lucro bruto potencial</p>
         </GlowCard>
-        <GlowCard delay={0.1}>
-          <p className="text-xs text-slate-400">Spread Total (Lucro Bruto)</p>
-          <p className="text-2xl font-bold text-green-400 mt-1">{formatCurrency(spreadTotal)}</p>
-          <p className="text-xs text-slate-500 mt-1">Medio: {formatCurrency(spreadMedio)}/veiculo</p>
+        <GlowCard delay={0.04}>
+          <p className="text-xs text-slate-400 mb-1">Margem Media</p>
+          <div className="flex items-center gap-1">
+            <Percent className="w-4 h-4 text-blue-400" />
+            <p className="text-xl font-bold text-blue-400">{margemMedia.toFixed(1)}%</p>
+          </div>
+          <p className="text-[10px] text-slate-500 mt-0.5">Spread / Valor venda</p>
         </GlowCard>
-        <GlowCard delay={0.15}>
-          <p className="text-xs text-slate-400">Leads Captados</p>
-          <p className="text-2xl font-bold text-blue-400 mt-1">{totalLeads}</p>
-          <p className="text-xs text-slate-500 mt-1">Taxa conversao: {conversionRate}%</p>
-        </GlowCard>
-        <GlowCard delay={0.2}>
-          <p className="text-xs text-slate-400">Score Medio</p>
-          <p className={`text-2xl font-bold mt-1 ${avgScore >= 55 ? 'text-green-400' : avgScore >= 35 ? 'text-yellow-400' : 'text-red-400'}`}>
+        <GlowCard delay={0.06}>
+          <p className="text-xs text-slate-400 mb-1">Score Medio</p>
+          <p className={`text-xl font-bold ${avgScore >= 55 ? 'text-green-400' : avgScore >= 35 ? 'text-yellow-400' : 'text-red-400'}`}>
             {avgScore}/100
           </p>
-          <p className="text-xs text-slate-500 mt-1">{withPhotos}/{totalVehicles} com fotos</p>
+          <p className="text-[10px] text-slate-500 mt-0.5">{scoreDistribution.find(d => d.value > 0)?.name || 'Sem dados'}</p>
+        </GlowCard>
+        <GlowCard delay={0.08}>
+          <p className="text-xs text-slate-400 mb-1">Taxa Conversao</p>
+          <p className="text-xl font-bold text-purple-400">{conversionRate}%</p>
+          <p className="text-[10px] text-slate-500 mt-0.5">{leadsFechados} fechados / {totalLeads} leads</p>
+        </GlowCard>
+        <GlowCard delay={0.1}>
+          <p className="text-xs text-slate-400 mb-1">Negociacoes Ativas</p>
+          <p className="text-xl font-bold text-amber-400">{activeNegotiations}</p>
+          <p className="text-[10px] text-slate-500 mt-0.5">{vehiclesWithLeads} veiculos com leads</p>
         </GlowCard>
       </div>
 
-      {/* Pipeline Distribution */}
+      {/* ============ KPI ROW 2: SAUDE DO PORTFOLIO ============ */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="rounded-xl bg-slate-900/30 border border-slate-800/50 p-4">
+          <div className="flex justify-between text-xs mb-2">
+            <span className="text-slate-400 flex items-center gap-1"><Camera className="w-3 h-3" /> Cobertura de Fotos</span>
+            <span className="font-bold text-white">{photosPct}%</span>
+          </div>
+          <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+            <div className="h-full bg-green-500 rounded-full transition-all duration-700" style={{ width: `${photosPct}%` }} />
+          </div>
+          <p className="text-[10px] text-slate-500 mt-1">{withPhotos}/{totalVehicles} veiculos com fotos</p>
+        </div>
+        <div className="rounded-xl bg-slate-900/30 border border-slate-800/50 p-4">
+          <div className="flex justify-between text-xs mb-2">
+            <span className="text-slate-400 flex items-center gap-1"><Target className="w-3 h-3" /> Cobertura FIPE</span>
+            <span className="font-bold text-white">{fipePct}%</span>
+          </div>
+          <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+            <div className="h-full bg-blue-500 rounded-full transition-all duration-700" style={{ width: `${fipePct}%` }} />
+          </div>
+          <p className="text-[10px] text-slate-500 mt-1">{withFipe}/{totalVehicles} com referencia FIPE</p>
+        </div>
+        <div className="rounded-xl bg-slate-900/30 border border-slate-800/50 p-4">
+          <div className="flex justify-between text-xs mb-2">
+            <span className="text-slate-400 flex items-center gap-1"><Clock className="w-3 h-3" /> Tempo Medio Pipeline</span>
+            <span className="font-bold text-white">{avgDaysInPipeline}d</span>
+          </div>
+          <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+            <div className={`h-full rounded-full transition-all duration-700 ${avgDaysInPipeline <= 15 ? 'bg-green-500' : avgDaysInPipeline <= 30 ? 'bg-yellow-500' : 'bg-red-500'}`}
+              style={{ width: `${Math.min(100, avgDaysInPipeline * 2)}%` }} />
+          </div>
+          <p className="text-[10px] text-slate-500 mt-1">{avgDaysInPipeline <= 15 ? 'Saudavel' : avgDaysInPipeline <= 30 ? 'Atencao' : 'Critico'}</p>
+        </div>
+        <div className="rounded-xl bg-slate-900/30 border border-slate-800/50 p-4">
+          <div className="flex justify-between text-xs mb-2">
+            <span className="text-slate-400 flex items-center gap-1"><MessageSquare className="w-3 h-3" /> Leads/Veiculo</span>
+            <span className="font-bold text-white">{(totalVehicles > 0 ? (totalLeads / totalVehicles) : 0).toFixed(1)}</span>
+          </div>
+          <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+            <div className="h-full bg-purple-500 rounded-full transition-all duration-700"
+              style={{ width: `${Math.min(100, totalVehicles > 0 ? (totalLeads / totalVehicles) * 20 : 0)}%` }} />
+          </div>
+          <p className="text-[10px] text-slate-500 mt-1">Meta: 3+ leads/veiculo</p>
+        </div>
+      </div>
+
+      {/* ============ CHARTS ROW 1 ============ */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Score Distribution */}
         <GlowCard delay={0.1}>
-          <h2 className="text-lg font-semibold text-slate-100 mb-4">Distribuicao do Pipeline</h2>
-          {pipelineData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={280}>
+          <h2 className="text-base font-semibold text-slate-100 mb-4">Distribuicao de Score</h2>
+          {totalVehicles > 0 ? (
+            <ResponsiveContainer width="100%" height={240}>
               <PieChart>
-                <Pie
-                  data={pipelineData}
-                  dataKey="count"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={90}
-                  innerRadius={50}
-                  label={({ name, count }) => `${name}: ${count}`}
-                  labelLine={{ stroke: '#475569' }}
-                >
-                  {pipelineData.map((_: any, index: number) => (
-                    <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                <Pie data={scoreDistribution} dataKey="value" nameKey="name" cx="50%" cy="50%"
+                  outerRadius={85} innerRadius={45}
+                  label={({ name, value }) => value > 0 ? `${name.split(' ')[0]}: ${value}` : ''}
+                  labelLine={{ stroke: '#475569' }}>
+                  {scoreDistribution.map((entry, i) => (
+                    <Cell key={i} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip
-                  formatter={(value: number, name: string) => [value, name]}
-                  {...tooltipStyle}
-                />
+                <Tooltip formatter={(v: number, n: string) => [`${v} veiculos`, n]} {...tooltipStyle} />
               </PieChart>
             </ResponsiveContainer>
           ) : (
-            <div className="flex items-center justify-center h-48 text-slate-500">
-              <p>Nenhum dado disponivel</p>
+            <p className="text-slate-500 text-sm text-center py-12">Sem veiculos cadastrados</p>
+          )}
+        </GlowCard>
+
+        {/* Pipeline Value Distribution */}
+        <GlowCard delay={0.15}>
+          <h2 className="text-base font-semibold text-slate-100 mb-4">Valor por Status do Pipeline</h2>
+          {pipelineData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={240}>
+              <BarChart data={pipelineData} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.06)" />
+                <XAxis type="number" tickFormatter={(v: number) => `R$${(v / 1000).toFixed(0)}k`}
+                  tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: '#94a3b8' }} width={90} axisLine={false} tickLine={false} />
+                <Tooltip formatter={(v: number) => [formatCurrency(v), 'Valor']} {...tooltipStyle} />
+                <Bar dataKey="valor" radius={[0, 4, 4, 0]}>
+                  {pipelineData.map((_: any, i: number) => (
+                    <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <p className="text-slate-500 text-sm text-center py-12">Sem dados de pipeline</p>
+          )}
+        </GlowCard>
+      </div>
+
+      {/* ============ CHARTS ROW 2 ============ */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Leads by Status */}
+        <GlowCard delay={0.2}>
+          <h2 className="text-base font-semibold text-slate-100 mb-4">Funil de Leads</h2>
+          {totalLeads > 0 ? (
+            <div className="space-y-3">
+              {Object.entries(LEAD_STATUS_DISPLAY).map(([key, label]) => {
+                const count = leadsByStatus[key] || 0;
+                const maxV = Math.max(...Object.values(leadsByStatus), 1);
+                const pct = Math.round((count / maxV) * 100);
+                return (
+                  <div key={key} className="flex items-center gap-3">
+                    <span className="text-xs text-slate-400 w-20 text-right">{label}</span>
+                    <div className="flex-1 h-5 bg-slate-800 rounded-full overflow-hidden">
+                      <div className="h-full rounded-full transition-all duration-700"
+                        style={{
+                          width: `${pct}%`,
+                          background: key === 'fechado' ? '#22c55e' : key === 'perdido' ? '#ef4444' :
+                            key === 'proposta_enviada' ? '#8b5cf6' : key === 'interessado' ? '#f59e0b' : '#3b82f6'
+                        }} />
+                    </div>
+                    <span className="text-sm font-bold text-white w-6 text-right">{count}</span>
+                  </div>
+                );
+              })}
             </div>
+          ) : (
+            <p className="text-slate-500 text-sm text-center py-8">Nenhum lead captado</p>
+          )}
+        </GlowCard>
+
+        {/* Brand Distribution */}
+        <GlowCard delay={0.25}>
+          <h2 className="text-base font-semibold text-slate-100 mb-4">Veiculos por Marca</h2>
+          {brandDistribution.length > 0 ? (
+            <ResponsiveContainer width="100%" height={240}>
+              <BarChart data={brandDistribution} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.06)" horizontal={false} />
+                <XAxis type="number" tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: '#94a3b8' }} width={90} axisLine={false} tickLine={false} />
+                <Tooltip formatter={(v: number) => [`${v} veiculos`, 'Quantidade']} {...tooltipStyle} />
+                <Bar dataKey="count" fill="#3b82f6" radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <p className="text-slate-500 text-sm text-center py-12">Sem veiculos</p>
+          )}
+        </GlowCard>
+      </div>
+
+      {/* ============ CHARTS ROW 3 ============ */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Vehicles by Month */}
+        <GlowCard delay={0.3}>
+          <h2 className="text-base font-semibold text-slate-100 mb-4">Entrada de Veiculos por Mes</h2>
+          {vehiclesByMonth.length > 0 ? (
+            <ResponsiveContainer width="100%" height={220}>
+              <AreaChart data={vehiclesByMonth}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.06)" />
+                <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} allowDecimals={false} />
+                <Tooltip formatter={(v: number) => [`${v} veiculos`, 'Entradas']} {...tooltipStyle} />
+                <defs>
+                  <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#22c55e" stopOpacity={0.3} />
+                    <stop offset="100%" stopColor="#22c55e" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <Area type="monotone" dataKey="count" stroke="#22c55e" strokeWidth={2} fill="url(#areaGrad)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          ) : (
+            <p className="text-slate-500 text-sm text-center py-12">Sem historico suficiente</p>
           )}
         </GlowCard>
 
         {/* Commissions per Month */}
-        <GlowCard delay={0.2}>
-          <h2 className="text-lg font-semibold text-slate-100 mb-4">Comissoes por Mes</h2>
+        <GlowCard delay={0.35}>
+          <h2 className="text-base font-semibold text-slate-100 mb-4">Comissoes por Mes (Vendidos)</h2>
           {comissoesData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={comissoesData}>
+            <ResponsiveContainer width="100%" height={220}>
+              <ComposedChart data={comissoesData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.06)" />
-                <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#64748b' }} axisLine={{ stroke: '#1e293b' }} tickLine={false} />
-                <YAxis tickFormatter={(v: number) => `R$${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 12, fill: '#64748b' }} axisLine={{ stroke: '#1e293b' }} tickLine={false} />
-                <Tooltip
-                  formatter={(value: number) => [formatCurrency(Number(value)), 'Comissao']}
-                  {...tooltipStyle}
-                />
-                <Bar dataKey="total" fill="url(#barGradient)" radius={[6, 6, 0, 0]} />
-                <defs>
-                  <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#2563eb" />
-                    <stop offset="100%" stopColor="#7c3aed" />
-                  </linearGradient>
-                </defs>
-              </BarChart>
+                <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                <YAxis yAxisId="left" tickFormatter={(v: number) => `R$${(v / 1000).toFixed(0)}k`}
+                  tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} allowDecimals={false} />
+                <Tooltip formatter={(v: number, n: string) => [n === 'total' ? formatCurrency(v) : `${v} vendas`, n === 'total' ? 'Comissao' : 'Vendas']} {...tooltipStyle} />
+                <Bar yAxisId="left" dataKey="total" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+                <Line yAxisId="right" type="monotone" dataKey="count" stroke="#f59e0b" strokeWidth={2} dot={{ fill: '#f59e0b', r: 4 }} />
+              </ComposedChart>
             </ResponsiveContainer>
           ) : (
-            <div className="flex items-center justify-center h-48 text-slate-500">
-              <p>Nenhuma venda registrada ainda</p>
-            </div>
+            <p className="text-slate-500 text-sm text-center py-12">Nenhuma venda registrada ainda</p>
           )}
         </GlowCard>
       </div>
 
-      {/* Valor em Carteira */}
-      <GlowCard delay={0.3}>
-        <h2 className="text-lg font-semibold text-slate-100 mb-4">Valor em Carteira por Status</h2>
-        {pipelineData.length > 0 ? (
-          <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={pipelineData} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.06)" />
-              <XAxis type="number" tickFormatter={(v: number) => `R$${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 12, fill: '#64748b' }} axisLine={{ stroke: '#1e293b' }} tickLine={false} />
-              <YAxis type="category" dataKey="name" tick={{ fontSize: 12, fill: '#94a3b8' }} width={100} axisLine={{ stroke: '#1e293b' }} tickLine={false} />
-              <Tooltip
-                formatter={(value: number) => [formatCurrency(Number(value)), 'Valor']}
-                {...tooltipStyle}
-              />
-              <Bar dataKey="valor" fill="url(#hBarGradient)" radius={[0, 6, 6, 0]} />
-              <defs>
-                <linearGradient id="hBarGradient" x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0%" stopColor="#22c55e" />
-                  <stop offset="100%" stopColor="#06b6d4" />
-                </linearGradient>
-              </defs>
-            </BarChart>
-          </ResponsiveContainer>
-        ) : (
-          <div className="flex items-center justify-center h-32 text-slate-500">
-            <p>Nenhum dado disponivel</p>
-          </div>
-        )}
-      </GlowCard>
-
-      {/* Leads & Vehicles Detail */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* ============ PRICE vs FIPE TABLE ============ */}
+      {priceVsFipe.length > 0 && (
         <GlowCard delay={0.4}>
-          <h2 className="text-lg font-semibold text-slate-100 mb-4">Leads por Status</h2>
-          <div className="space-y-3">
-            {Object.entries({
-              novo: 'Novo',
-              contatado: 'Contatado',
-              interessado: 'Interessado',
-              proposta_enviada: 'Proposta Enviada',
-              fechado: 'Fechado',
-              perdido: 'Perdido',
-            }).map(([key, label]) => {
-              const count = leadsByStatus[key] || 0;
-              const maxVal = Math.max(...Object.values(leadsByStatus), 1);
-              const pct = Math.round((count / maxVal) * 100);
-              return (
-                <div key={key} className="flex items-center gap-3">
-                  <span className="text-xs text-slate-400 w-24 text-right">{label}</span>
-                  <div className="flex-1 h-4 bg-slate-800 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-blue-500 rounded-full transition-all duration-500"
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                  <span className="text-sm font-semibold text-white w-6 text-right">{count}</span>
-                </div>
-              );
-            })}
+          <h2 className="text-base font-semibold text-slate-100 mb-4">Posicionamento de Preco vs FIPE</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-slate-800/50">
+                  <th className="text-left py-2 px-3 text-slate-400">Veiculo</th>
+                  <th className="text-right py-2 px-3 text-slate-400">Venda</th>
+                  <th className="text-right py-2 px-3 text-slate-400">FIPE</th>
+                  <th className="text-right py-2 px-3 text-slate-400">Diferenca</th>
+                  <th className="text-right py-2 px-3 text-slate-400">Posicionamento</th>
+                </tr>
+              </thead>
+              <tbody>
+                {priceVsFipe.map((v, i) => (
+                  <tr key={i} className="border-b border-slate-800/30 hover:bg-slate-800/20">
+                    <td className="py-2 px-3 text-slate-300">{v.name}</td>
+                    <td className="py-2 px-3 text-right text-slate-200">{formatCurrency(v.venda)}</td>
+                    <td className="py-2 px-3 text-right text-slate-400">{formatCurrency(v.fipe)}</td>
+                    <td className={`py-2 px-3 text-right font-bold ${v.diff <= 0 ? 'text-green-400' : v.diff <= 10 ? 'text-yellow-400' : 'text-red-400'}`}>
+                      {v.diff > 0 ? '+' : ''}{v.diff}%
+                    </td>
+                    <td className="py-2 px-3 text-right">
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                        v.diff <= 0 ? 'bg-green-500/10 text-green-400' : v.diff <= 10 ? 'bg-yellow-500/10 text-yellow-400' : 'bg-red-500/10 text-red-400'
+                      }`}>
+                        {v.diff <= 0 ? 'Abaixo FIPE' : v.diff <= 10 ? 'Na media' : 'Acima FIPE'}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </GlowCard>
+      )}
 
-        <GlowCard delay={0.5}>
-          <h2 className="text-lg font-semibold text-slate-100 mb-4">Saude do Portfolio</h2>
-          <div className="space-y-4">
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-slate-400">Veiculos com fotos</span>
-                <span className="text-white font-semibold">{withPhotos}/{totalVehicles}</span>
+      {/* ============ LEADS BY CHANNEL ============ */}
+      {Object.keys(leadsByChannel).length > 0 && (
+        <GlowCard delay={0.45}>
+          <h2 className="text-base font-semibold text-slate-100 mb-4">Leads por Canal de Origem</h2>
+          <div className="flex flex-wrap gap-4">
+            {Object.entries(leadsByChannel).map(([canal, count]) => (
+              <div key={canal} className="flex items-center gap-3 bg-slate-800/40 rounded-lg px-4 py-3">
+                <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center">
+                  <MessageSquare className="w-4 h-4 text-blue-400" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-white">{count}</p>
+                  <p className="text-[10px] text-slate-400 capitalize">{canal}</p>
+                </div>
               </div>
-              <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-green-500 rounded-full transition-all duration-500"
-                  style={{ width: `${totalVehicles > 0 ? (withPhotos / totalVehicles) * 100 : 0}%` }}
-                />
-              </div>
-            </div>
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-slate-400">Score medio</span>
-                <span className="text-white font-semibold">{avgScore}/100</span>
-              </div>
-              <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition-all duration-500 ${
-                    avgScore >= 55 ? 'bg-green-500' : avgScore >= 35 ? 'bg-yellow-500' : 'bg-red-500'
-                  }`}
-                  style={{ width: `${avgScore}%` }}
-                />
-              </div>
-            </div>
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-slate-400">Taxa de conversao</span>
-                <span className="text-white font-semibold">{conversionRate}%</span>
-              </div>
-              <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-blue-500 rounded-full transition-all duration-500"
-                  style={{ width: `${conversionRate}%` }}
-                />
-              </div>
-            </div>
+            ))}
           </div>
         </GlowCard>
-      </div>
+      )}
     </div>
   );
 }
