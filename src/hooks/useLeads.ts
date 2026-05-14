@@ -18,17 +18,20 @@ export interface Lead {
   createdAt: string;
 }
 
-interface LeadListResponse {
-  success: boolean;
-  data: Lead[];
-  meta: { total: number; page: number; limit: number; totalPages: number };
+function extractData<T>(response: any, fallback: T): T {
+  if (Array.isArray(response)) return response as T;
+  if (response?.data !== undefined) return response.data as T;
+  return fallback;
 }
 
 export function useLeads(filters?: Record<string, string>) {
   const params = new URLSearchParams(filters || {}).toString();
-  return useQuery<LeadListResponse>({
+  return useQuery<Lead[]>({
     queryKey: ['leads', filters],
-    queryFn: () => api.get(`/leads${params ? '?' + params : ''}`),
+    queryFn: async () => {
+      const res = await api.get(`/leads${params ? '?' + params : ''}`);
+      return extractData<Lead[]>(res, []);
+    },
   });
 }
 

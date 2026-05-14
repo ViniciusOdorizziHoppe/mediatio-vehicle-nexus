@@ -53,29 +53,32 @@ export interface Vehicle {
   updatedAt: string;
 }
 
-interface VehicleListResponse {
-  success: boolean;
-  data: Vehicle[];
-  meta: { total: number; page: number; limit: number; totalPages: number };
-}
-
-interface VehicleResponse {
-  success: boolean;
-  data: Vehicle;
+// O backend retorna { success, data: [...] } ou { success, data: {...} }
+// Extrai sempre o array/objeto de dentro de .data
+function extractData<T>(response: any, fallback: T): T {
+  if (Array.isArray(response)) return response as T;
+  if (response?.data !== undefined) return response.data as T;
+  return fallback;
 }
 
 export function useVehicles(filters?: Record<string, string>) {
   const params = new URLSearchParams(filters || {}).toString();
-  return useQuery<VehicleListResponse>({
+  return useQuery<Vehicle[]>({
     queryKey: ['vehicles', filters],
-    queryFn: () => api.get(`/vehicles${params ? '?' + params : ''}`),
+    queryFn: async () => {
+      const res = await api.get(`/vehicles${params ? '?' + params : ''}`);
+      return extractData<Vehicle[]>(res, []);
+    },
   });
 }
 
 export function useVehicle(id: string) {
-  return useQuery<VehicleResponse>({
+  return useQuery<Vehicle | null>({
     queryKey: ['vehicle', id],
-    queryFn: () => api.get(`/vehicles/${id}`),
+    queryFn: async () => {
+      const res = await api.get(`/vehicles/${id}`);
+      return extractData<Vehicle | null>(res, null);
+    },
     enabled: !!id,
   });
 }
