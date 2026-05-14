@@ -136,7 +136,7 @@ export default function Vehicles() {
                 </thead>
 
                 <tbody>
-                  {data?.data?.map((vehicle: Vehicle, idx: number) => {
+                  {(Array.isArray(data) ? data : (data as any)?.data || []).map((vehicle: Vehicle, idx: number) => {
                     const statusInfo = PIPELINE_STATUS[vehicle.pipeline.status];
 
                     return (
@@ -204,7 +204,7 @@ export default function Vehicles() {
               </table>
             </div>
 
-            {(!data?.data || data.data.length === 0) && (
+            {((Array.isArray(data) ? data.length === 0 : !(data as any)?.data || (data as any).data.length === 0)) && (
               <div className="text-center py-16">
                 <Car className="w-12 h-12 text-slate-700 mx-auto mb-3" />
                 <p className="text-slate-400">

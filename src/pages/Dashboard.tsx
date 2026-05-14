@@ -178,7 +178,7 @@ export default function Dashboard() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-white">
-          Olá, {user?.name?.split(' ')[0] || 'Vinícius'} 👋
+          Ola, {user?.name?.split(' ')[0] || 'Vinicius'}
         </h1>
         <p className="text-slate-400 text-sm mt-1">Aqui está o resumo do seu negócio hoje</p>
       </div>
