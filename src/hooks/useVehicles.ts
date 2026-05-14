@@ -48,6 +48,7 @@ export interface Vehicle {
     label: string;
     breakdown?: Array<{ nome: string; pontos: number; maximo: number; atingido: boolean }>;
   };
+  leads?: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -116,8 +117,18 @@ export function useDeleteVehicle() {
   });
 }
 
-export function useGenerateAd(vehicleId: string) {
+export function useGenerateAd() {
   return useMutation({
-    mutationFn: () => api.post(`/vehicles/${vehicleId}/generate-ad`, {}),
+    mutationFn: (id: string) => api.post(`/vehicles/${id}/generate-ad`, {}),
+  });
+}
+
+export function useRecalculateScore() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.post(`/vehicles/${id}/recalculate-score`, {}),
+    onSuccess: (_, id) => {
+      qc.invalidateQueries({ queryKey: ['vehicle', id] });
+    },
   });
 }
