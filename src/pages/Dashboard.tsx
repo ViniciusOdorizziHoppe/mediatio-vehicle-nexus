@@ -1,432 +1,311 @@
-import { useQuery } from '@tanstack/react-query';
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ComposedChart, Area, PieChart, Pie, Cell, ScatterChart, Scatter } from 'recharts';
-// import { motion } from 'framer-motion';
-import { Car, DollarSign, TrendingUp, Users, Clock, Target, Zap, Activity } from 'lucide-react';
+import { useQuery, useMemo } from '@tanstack/react-query';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { Car, DollarSign, Users, Clock, Target, Eye, AlertTriangle, TrendingUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
-
 import api from '@/lib/api';
 import { getUser } from '@/lib/auth';
 import { formatCurrency, getScoreColor } from '@/lib/utils';
 import { useVehicles } from '@/hooks/useVehicles';
 import { useLeads } from '@/hooks/useLeads';
-import { StatCard } from '@/components/ui/StatCard';
 import { GlowCard } from '@/components/ui/GlowCard';
 import { PageSkeleton } from '@/components/ui/PageSkeleton';
 import { StatusBadge } from '@/components/ui/StatusBadge';
-import { KPICard } from '@/components/ui/KPICard';
-import { GaugeChart } from '@/components/ui/GaugeChart';
-import { Sparkline } from '@/components/ui/Sparkline';
-import DashboardMap from '@/components/map/DashboardMap';
-import { geocodeVehicles, VehicleMapData } from '@/lib/geocoding';
+import { geocodeVehicles, getCityCoords, VehicleMapData } from '@/lib/geocoding';
 
-// Shape real devolvido por GET /api/analytics/dashboard.
-interface DashboardData {
-  success: boolean;
-  data: {
-    veiculos: {
-      total: number;
-      valorTotal: number;
-      comissaoTotal: number;
-      porStatus: Record<string, { count: number; valorTotal: number; comissaoTotal: number }>;
-    };
-    leads: {
-      total: number;
-      porStatus: Record<string, number>;
-    };
-  };
-}
+// Lazy load do mapa (evita erro se leaflet nao disponivel)
+let DashboardMap: any = null;
 
 const STATUS_LABELS: Record<string, string> = {
-  disponivel: 'Disponível',
-  contato_ativo: 'Contato Ativo',
-  proposta: 'Proposta',
-  vendido: 'Vendido',
-  arquivado: 'Arquivado',
+  disponivel: 'Disponivel', contato_ativo: 'Contato Ativo', proposta: 'Proposta',
+  vendido: 'Vendido', arquivado: 'Arquivado',
 };
-
 const STATUS_COLORS: Record<string, string> = {
-  disponivel: 'bg-green-500',
-  contato_ativo: 'bg-blue-500',
-  proposta: 'bg-yellow-500',
-  vendido: 'bg-purple-500',
-  arquivado: 'bg-slate-500',
+  disponivel: 'bg-green-500', contato_ativo: 'bg-blue-500', proposta: 'bg-yellow-500',
+  vendido: 'bg-purple-500', arquivado: 'bg-slate-500',
 };
 
 export default function Dashboard() {
   const user = getUser();
-  const { data: vehicles, isLoading: loadingV } = useVehicles();
-  const { data: leads, isLoading: loadingL } = useLeads();
-  const { data: dashData, isLoading: loadingDash } = useQuery({
-    queryKey: ['analytics-dashboard'],
-    queryFn: () => api.get('/analytics/dashboard'),
+  const { data: vehicles, isLoading: lv } = useVehicles();
+  const { data: leads, isLoading: ll } = useLeads();
+  const { data: pipelineData, isLoading: lp } = useQuery({
+    queryKey: ['analytics-pipeline'], queryFn: () => api.get('/analytics/pipeline'),
   });
 
-  const { data: pipelineData, isLoading: loadingPipeline } = useQuery({
-    queryKey: ['analytics-pipeline'],
-    queryFn: () => api.get('/analytics/pipeline'),
-  });
+  const vehicleList: any[] = useMemo(() => vehicles || [], [vehicles]);
+  const leadList: any[] = useMemo(() => leads || [], [leads]);
 
-  // Simulated data for commission monthly and conversion rate
-  const commissionMonthly = null;
-  const cmLoading = false;
-  const conversionRate = null;
-  const crLoading = false;
-
-  // Mostra o skeleton só enquanto não houver nenhum sinal de dados — assim uma
-  // requisição lenta não trava a tela. Queries isoladas podem terminar depois.
-  if (loadingV && loadingL && loadingDash && cmLoading && crLoading && !vehicles && !leads && !dashData) {
-    return <PageSkeleton />;
+  // Try lazy load map component
+  if (!DashboardMap) {
+    try { DashboardMap = require('@/components/map/DashboardMap').default; } catch {}
   }
 
-  const vehicleList = vehicles || [];
-  const leadList = leads || [];
-  const dash = dashData?.data;
+  // ===== CALCULOS =====
+  const totalVehicles = vehicleList.length;
+  const totalLeads = leadList.length;
+  const totalValor = vehicleList.reduce((s, v) => s + (v.precos?.venda || 0), 0);
+  const spreadTotal = vehicleList.reduce((s, v) => s + Math.max(0, (v.precos?.venda || 0) - (v.precos?.compra || 0)), 0);
 
-  // Cálculos para KPIs avançados
-  const currentMonth = new Date().getMonth();
-  const currentYear = new Date().getFullYear();
-  
-  // Carros vendidos no mês
-  const vendidosMes = vehicleList.filter((v: any) => {
-    if (v.pipeline?.status === 'vendido' && v.pipeline?.dataVenda) {
-      const dataVenda = new Date(v.pipeline.dataVenda);
-      return dataVenda.getMonth() === currentMonth && dataVenda.getFullYear() === currentYear;
-    }
-    return false;
-  });
-  
-  // Mês anterior para comparação
-  const mesAnterior = currentMonth === 0 ? 11 : currentMonth - 1;
-  const anoAnterior = currentMonth === 0 ? currentYear - 1 : currentYear;
-  const vendidosMesAnterior = vehicleList.filter((v: any) => {
-    if (v.pipeline?.status === 'vendido' && v.pipeline?.dataVenda) {
-      const dataVenda = new Date(v.pipeline.dataVenda);
-      return dataVenda.getMonth() === mesAnterior && dataVenda.getFullYear() === anoAnterior;
-    }
-    return false;
-  });
-  
-  const deltaVendas = vendidosMes.length - vendidosMesAnterior.length;
-  const deltaPercentual = vendidosMesAnterior.length > 0 
-    ? Math.round((deltaVendas / vendidosMesAnterior.length) * 100) 
-    : 0;
-  
-  // Leads ativos (em negociação)
-  const leadsAtivos = vehicleList.filter((v: any) => 
-    v.pipeline?.status === 'contato_ativo' || v.pipeline?.status === 'proposta'
-  ).length;
-  
-  // Tempo médio de venda
-  const temposVenda = vehicleList
-    .filter((v: any) => v.pipeline?.status === 'vendido' && v.pipeline?.dataVenda && v.dataCadastro)
-    .map((v: any) => {
-      const dataVenda = new Date(v.pipeline.dataVenda);
-      const dataCadastro = new Date(v.dataCadastro);
-      return Math.ceil((dataVenda.getTime() - dataCadastro.getTime()) / (1000 * 60 * 60 * 24));
-    });
-  
-  const tempoMedioVenda = temposVenda.length > 0 
-    ? Math.round(temposVenda.reduce((a, b) => a + b, 0) / temposVenda.length)
-    : 0;
-  
-  // Cálculo de comissão baseada na lucro (Venda - Compra)
-  const totalCommission = vehicleList.reduce(
-    (sum: number, v: any) => sum + (Math.max(0, (v.precos?.venda || 0) - (v.precos?.compra || 0))),
-    0,
-  );
-  
-  // Spread total e médio
-  const spreadTotal = totalCommission;
-  const spreadMedio = vendidosMes.length > 0 ? Math.round(spreadTotal / vendidosMes.length) : 0;
-  
-  // Spread por dia (métrica mais importante)
-  const spreadPorDia = vendidosMes.length > 0 
-    ? Math.round(spreadTotal / vendidosMes.reduce((acc: number, v: any) => {
-        if (v.pipeline?.dataVenda && v.dataCadastro) {
-          const dias = Math.ceil((new Date(v.pipeline.dataVenda).getTime() - new Date(v.dataCadastro).getTime()) / (1000 * 60 * 60 * 24));
-          return acc + dias;
-        }
-        return acc;
-      }, 0) || 1)
-    : 0;
-  
-  const totalVehicles = dash?.veiculos?.total ?? vehicleList.length;
-  const totalLeads = dash?.leads?.total ?? leadList.length;
+  const avgScore = totalVehicles > 0 ? Math.round(vehicleList.reduce((s, v) => s + (v.score?.valor || 0), 0) / totalVehicles) : 0;
+  const withPhotos = vehicleList.filter(v => (v.fotos?.originais?.length || 0) > 0 || v.fotos?.principal).length;
+  const activeNeg = vehicleList.filter(v => v.pipeline?.status === 'contato_ativo' || v.pipeline?.status === 'proposta').length;
+  const totalCliques = vehicleList.reduce((s, v) => s + (v.anuncio?.cliques || 0), 0);
+  const criticalVehicles = vehicleList.filter(v => (v.score?.valor || 0) < 35).length;
+  const leadsFechados = leadList.filter(l => l.status === 'fechado').length;
+  const conversao = totalLeads > 0 ? Math.round((leadsFechados / totalLeads) * 100) : 0;
 
-  const leadsFechados = leadList.filter((l: any) => l.status === 'fechado').length;
-  const taxaConversao = totalLeads > 0 ? Math.round((leadsFechados / totalLeads) * 100) : 0;
+  // Pipeline chart data
+  const pipelineItems = (pipelineData?.data || []).map((d: any) => ({
+    name: STATUS_LABELS[d._id] || d._id, count: d.count || 0, valor: d.valorTotal || 0,
+  }));
+  const valorTotalPipeline = pipelineItems.reduce((s: number, d: any) => s + d.valor, 0);
 
-  // Conta veículos por status: preferimos o agregado do backend, com fallback
-  // pros dados carregados via useVehicles (quando dashData ainda está chegando).
+  // Status counts
   const statusCounts: Record<string, number> = {};
-  if (dash?.veiculos?.porStatus) {
-    Object.entries(dash.veiculos.porStatus).forEach(([status, info]) => {
-      statusCounts[status] = info?.count || 0;
+  vehicleList.forEach(v => {
+    const s = v.pipeline?.status || 'disponivel';
+    statusCounts[s] = (statusCounts[s] || 0) + 1;
+  });
+
+  // Weekly vehicle entries (last 4 weeks)
+  const weeklyEntries = useMemo(() => {
+    const weeks: Record<string, number> = {};
+    const now = new Date();
+    for (let i = 3; i >= 0; i--) {
+      const d = new Date(now); d.setDate(d.getDate() - i * 7);
+      const key = `${d.getDate()}/${d.getMonth() + 1}`;
+      weeks[key] = 0;
+    }
+    vehicleList.forEach(v => {
+      if (v.createdAt) {
+        const d = new Date(v.createdAt);
+        const weekStart = new Date(now);
+        for (let i = 3; i >= 0; i--) {
+          const ws = new Date(now); ws.setDate(ws.getDate() - i * 7);
+          const we = new Date(ws); we.setDate(we.getDate() + 6);
+          if (d >= ws && d <= we) {
+            weeks[`${ws.getDate()}/${ws.getMonth() + 1}`] = (weeks[`${ws.getDate()}/${ws.getMonth() + 1}`] || 0) + 1;
+            break;
+          }
+        }
+      }
     });
-  } else {
-    vehicleList.forEach((v: any) => {
-      const s = v.pipeline?.status || 'disponivel';
-      statusCounts[s] = (statusCounts[s] || 0) + 1;
-    });
-  }
+    return Object.entries(weeks).map(([name, count]) => ({ name, count }));
+  }, [vehicleList]);
+
+  // Map data
+  const mapVehicles = geocodeVehicles(
+    vehicleList.filter((v: any) => v.proprietario?.cidade).map((v: any) => ({
+      _id: v._id, marca: v.marca, modelo: v.modelo, ano: v.ano,
+      cidade: v.proprietario?.cidade, precos: v.precos,
+    }))
+  );
+
+  const mapLeads = leadList.filter((l: any) => l.cidade).map((l: any) => {
+    const coords = getCityCoords(l.cidade);
+    return {
+      _id: l._id, nome: l.nome, cidade: l.cidade,
+      lat: coords?.lat ?? null, lng: coords?.lng ?? null,
+    };
+  });
+
+  if (lv || ll || lp) return <PageSkeleton />;
 
   const recentVehicles = vehicleList.slice(0, 5);
   const recentLeads = leadList.slice(0, 5);
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-white">
-          Ola, {user?.name?.split(' ')[0] || 'Vinicius'}
-        </h1>
-        <p className="text-slate-400 text-sm mt-1">Aqui está o resumo do seu negócio hoje</p>
-      </div>
-
-      {/* KPI Cards Avançados */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4">
-        <KPICard
-          title="Carros Vendidos no Mês"
-          value={vendidosMes.length}
-          icon={Car}
-          gradient="green"
-          delta={deltaPercentual}
-          deltaLabel="% vs mês anterior"
-          trend={deltaPercentual >= 0 ? 'up' : 'down'}
-        />
-        
-        <KPICard
-          title="Spread Total"
-          value={formatCurrency(spreadTotal)}
-          icon={DollarSign}
-          gradient="purple"
-          subtitle={`Média: ${formatCurrency(spreadMedio)}`}
-        />
-        
-        <KPICard
-          title="Leads Ativos"
-          value={leadsAtivos}
-          icon={Users}
-          gradient="blue"
-          subtitle="Donos em negociação"
-        />
-        
-        <KPICard
-          title="Tempo Médio de Venda"
-          value={`${tempoMedioVenda} dias`}
-          icon={Clock}
-          gradient={tempoMedioVenda <= 15 ? 'green' : tempoMedioVenda <= 25 ? 'yellow' : 'red'}
-          trend={tempoMedioVenda <= 15 ? 'up' : tempoMedioVenda <= 25 ? 'neutral' : 'down'}
-        />
-      </div>
-      {/* Gráficos Principais */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Gráfico 1: Valor em Carteira */}
+    <div className="p-6 space-y-5">
+      {/* Header com resumo */}
+      <div className="flex items-center justify-between">
         <div>
-          <GlowCard>
-            {(() => {
-              const pipelineItems = (pipelineData?.data || []).map((d: any) => ({
-                name: d._id === 'disponivel' ? 'Disponível' :
-                      d._id === 'contato_ativo' ? 'Contato Ativo' :
-                      d._id === 'proposta' ? 'Proposta' :
-                      d._id === 'vendido' ? 'Vendido' :
-                      d._id === 'arquivado' ? 'Arquivado' : d.id?.replace('', ' ') || d.id,
-                count: d.count || 0,
-                valor: d.valorTotal || 0,
-              }));
-
-              const valorTotalCarteira = pipelineItems.reduce((sum: number, d: any) => sum + d.valor, 0);
-
-              // Delta: total vendido vs carteira total (percentual já convertido em venda)
-              const valorVendido = pipelineItems.find((d: any) => d.name === 'Vendido')?.valor || 0;
-              const taxaConversao = valorTotalCarteira > 0 ? Math.round((valorVendido / valorTotalCarteira) * 100) : 0;
-
-              if (pipelineItems.length === 0 || valorTotalCarteira === 0) {
-                return (
-                  <>
-                      <h2 className="text-lg font-semibold text-white mb-4">Valor em Carteira</h2>
-                      {loadingPipeline ? (
-                        <div className="h-[250px] bg-slate-800/30 rounded-lg animate-pulse flex items-center justify-center">
-                          <span className="text-slate-500 text-sm">Carregando...</span>
-                        </div>
-                      ) : (
-                        <div className="text-slate-400 text-sm text-center py-4">Nenhum veículo em carteira</div>
-                      )}
-                  </>
-                );
-              }
-
-              return (
-                <>
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-semibold text-white">Valor em Carteira</h2>
-                    <span className="text-2xl font-bold text-blue-400">{formatCurrency(valorTotalCarteira)}</span>
-                  </div>
-
-                  {/* Indicador de taxa de conversão */}
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="flex-1 bg-slate-800 rounded-full h-2 overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-green-500 to-emerald-500 rounded-full transition-all duration-700"
-                        style={{ width: `${taxaConversao}%` }}
-                      />
-                    </div>
-                    <span className="text-green-400 text-sm font-semibold whitespace-nowrap">{taxaConversao}% vendido</span>
-                  </div>
-
-                  <ResponsiveContainer width="100%" height={220}>
-                    <BarChart data={pipelineItems} layout="horizontal">
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.06)" />
-                      <XAxis
-                        dataKey="name"
-                        tick={{ fontSize: 11, fill: '#94a3b8' }}
-                        axisLine={false}
-                        tickLine={false}
-                      />
-                      <YAxis
-                        tickFormatter={(v: number) => `R$${(v / 1000).toFixed(0)}k`}
-                        tick={{ fontSize: 11, fill: '#94a3b8' }}
-                        axisLine={false}
-                        tickLine={false}
-                      />
-                      <Tooltip
-                        contentStyle={{ background: '#1e293b', border: 'none', borderRadius: '8px' }}
-                        labelStyle={{ color: '#e2e8f0', fontWeight: 600 }}
-                        formatter={(value: number) => [formatCurrency(value), 'Valor']}
-                      />
-                      <Bar dataKey="valor" radius={[4, 4, 0, 0]}>
-                        {pipelineItems.map((entry: any, idx: number) => (
-                          <Cell
-                            key={idx}
-                            fill={
-                              idx === 0 ? '#22c55e' :
-                              idx === 1 ? '#3b82f6' :
-                              idx === 2 ? '#f59e0b' :
-                              idx === 3 ? '#8b5cf6' :
-                              '#64748b'
-                            }
-                          />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </>
-              );
-            })()}
-          </GlowCard>
+          <h1 className="text-2xl font-bold text-white">Ola, {user?.name?.split(' ')[0] || 'Vinicius'}</h1>
+          <p className="text-slate-400 text-sm mt-0.5">
+            {totalVehicles} veiculos &middot; {formatCurrency(totalValor)} em carteira &middot; {activeNeg} em negociacao
+          </p>
         </div>
-
-        {/* Mapa de Atividade - Alto Vale */}
-        <div>
-          <GlowCard>
-            <h2 className="text-lg font-semibold text-white mb-4">Mapa de Atividade — Alto Vale</h2>
-            {loadingV || loadingL ? (
-              <div className="animate-pulse bg-slate-800/50 rounded-lg h-[450px] flex items-center justify-center">
-                <p className="text-slate-400 text-sm">Carregando mapa...</p>
-              </div>
-            ) : (
-              <DashboardMap
-                vehicles={geocodeVehicles(
-                  vehicleList
-                    .filter((v: any) => v.proprietario?.cidade)
-                    .map((v: any) => ({
-                      _id: v._id,
-                      marca: v.marca,
-                      modelo: v.modelo,
-                      ano: v.ano,
-                      cidade: v.proprietario?.cidade,
-                      precos: v.precos,
-                    }))
-                )}
-                leads={leadList
-                  .filter((l: any) => l.cidade)
-                  .map((l: any) => ({
-                    _id: l._id,
-                    nome: l.nome,
-                    cidade: l.cidade,
-                    lat: null as number | null,
-                    lng: null as number | null,
-                  }))}
-                isLoading={false}
-              />
-            )}
-          </GlowCard>
-        </div>
+        {criticalVehicles > 0 && (
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20">
+            <AlertTriangle className="w-4 h-4 text-red-400" />
+            <span className="text-red-400 text-sm font-medium">{criticalVehicles} veiculo(s) critico(s)</span>
+          </div>
+        )}
       </div>
 
-      {/* Pipeline */}
-      <div>
+      {/* KPI Row 1 */}
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+        <GlowCard className="text-center">
+          <p className="text-xs text-slate-400 mb-1">Veiculos</p>
+          <p className="text-2xl font-bold text-white">{totalVehicles}</p>
+          <p className="text-[10px] text-slate-500">{withPhotos} com fotos</p>
+        </GlowCard>
+        <GlowCard className="text-center">
+          <p className="text-xs text-slate-400 mb-1">Valor Total</p>
+          <p className="text-xl font-bold text-blue-400">{formatCurrency(totalValor)}</p>
+          <p className="text-[10px] text-green-400">+{formatCurrency(spreadTotal)} spread</p>
+        </GlowCard>
+        <GlowCard className="text-center">
+          <p className="text-xs text-slate-400 mb-1">Leads</p>
+          <p className="text-2xl font-bold text-purple-400">{totalLeads}</p>
+          <p className="text-[10px] text-slate-500">{conversao}% conversao</p>
+        </GlowCard>
+        <GlowCard className="text-center">
+          <p className="text-xs text-slate-400 mb-1">Score Medio</p>
+          <p className={`text-2xl font-bold ${avgScore >= 55 ? 'text-green-400' : avgScore >= 35 ? 'text-yellow-400' : 'text-red-400'}`}>{avgScore}</p>
+          <p className="text-[10px] text-slate-500">/100</p>
+        </GlowCard>
+        <GlowCard className="text-center">
+          <p className="text-xs text-slate-400 mb-1">Cliques</p>
+          <div className="flex items-center justify-center gap-1">
+            <Eye className="w-4 h-4 text-slate-500" />
+            <p className="text-2xl font-bold text-white">{totalCliques}</p>
+          </div>
+          <p className="text-[10px] text-slate-500">nos anuncios</p>
+        </GlowCard>
+        <GlowCard className="text-center">
+          <p className="text-xs text-slate-400 mb-1">Negociando</p>
+          <p className="text-2xl font-bold text-amber-400">{activeNeg}</p>
+          <p className="text-[10px] text-slate-500">ativo{activeNeg !== 1 ? 's' : ''}</p>
+        </GlowCard>
+      </div>
+
+      {/* Charts + Map Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        {/* Pipeline bar chart */}
         <GlowCard>
-          <h2 className="text-lg font-semibold text-white mb-4">Pipeline</h2>
-          <div className="flex gap-2 flex-wrap">
-            {Object.entries(STATUS_LABELS).map(([key, label]) => (
-              <div key={key} className="flex items-center gap-2 bg-slate-800/50 rounded-lg px-3 py-2">
-                <div className={`w-2 h-2 rounded-full ${STATUS_COLORS[key]}`} />
-                <span className="text-slate-300 text-sm">{label}</span>
-                <span className="text-white font-semibold text-sm">{statusCounts[key] || 0}</span>
+          <h2 className="text-base font-semibold text-white mb-3">Valor em Carteira</h2>
+          {pipelineItems.length > 0 && valorTotalPipeline > 0 ? (
+            <>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs text-slate-400">{totalVehicles} veiculos no pipeline</span>
+                <span className="text-lg font-bold text-blue-400">{formatCurrency(valorTotalPipeline)}</span>
               </div>
-            ))}
+              <ResponsiveContainer width="100%" height={180}>
+                <BarChart data={pipelineItems}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.06)" />
+                  <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                  <YAxis tickFormatter={(v: number) => `R$${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={{ background: '#1e293b', border: 'none', borderRadius: '8px' }} labelStyle={{ color: '#e2e8f0' }} formatter={(v: number) => [formatCurrency(v), 'Valor']} />
+                  <Bar dataKey="valor" radius={[4, 4, 0, 0]}>
+                    {pipelineItems.map((_: any, i: number) => (
+                      <Cell key={i} fill={['#22c55e', '#3b82f6', '#f59e0b', '#8b5cf6', '#64748b'][i % 5]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </>
+          ) : (
+            <p className="text-slate-400 text-sm text-center py-8">Nenhum veiculo em carteira</p>
+          )}
+        </GlowCard>
+
+        {/* Mapa */}
+        <GlowCard>
+          <h2 className="text-base font-semibold text-white mb-3">Mapa de Atividade</h2>
+          {DashboardMap ? (
+            <DashboardMap vehicles={mapVehicles} leads={mapLeads} isLoading={false} />
+          ) : (
+            <div className="bg-slate-800/50 rounded-lg h-[250px] flex items-center justify-center">
+              <p className="text-slate-400 text-sm">Mapa indisponivel</p>
+            </div>
+          )}
+        </GlowCard>
+      </div>
+
+      {/* Weekly entries + Pipeline status */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        {/* Entrada semanal */}
+        <GlowCard>
+          <h2 className="text-base font-semibold text-white mb-3">Veiculos Entrados (Semanas)</h2>
+          <ResponsiveContainer width="100%" height={120}>
+            <BarChart data={weeklyEntries}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.06)" />
+              <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+              <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+              <Tooltip contentStyle={{ background: '#1e293b', border: 'none', borderRadius: '8px' }} labelStyle={{ color: '#e2e8f0' }} formatter={(v: number) => [`${v} veiculos`, 'Entradas']} />
+              <Bar dataKey="count" fill="#22c55e" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </GlowCard>
+
+        {/* Pipeline status */}
+        <GlowCard>
+          <h2 className="text-base font-semibold text-white mb-3">Pipeline</h2>
+          <div className="space-y-2">
+            {Object.entries(STATUS_LABELS).map(([key, label]) => {
+              const count = statusCounts[key] || 0;
+              const maxV = Math.max(...Object.values(statusCounts), 1);
+              return (
+                <div key={key} className="flex items-center gap-3">
+                  <span className="text-xs text-slate-400 w-24">{label}</span>
+                  <div className="flex-1 h-4 bg-slate-800 rounded-full overflow-hidden">
+                    <div className={`h-full ${STATUS_COLORS[key]} rounded-full transition-all`}
+                      style={{ width: `${Math.round((count / maxV) * 100)}%` }} />
+                  </div>
+                  <span className="text-sm font-bold text-white w-6 text-right">{count}</span>
+                </div>
+              );
+            })}
           </div>
         </GlowCard>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Vehicles */}
-        <div>
-          <GlowCard>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-white">Veículos Recentes</h2>
-              <Link to="/vehicles" className="text-blue-400 text-sm hover:text-blue-300 transition-colors">
-                Ver todos →
-              </Link>
-            </div>
-            {recentVehicles.length === 0 ? (
-              <p className="text-slate-400 text-sm text-center py-4">Nenhum veículo cadastrado</p>
-            ) : (
-              <div className="space-y-3">
-                {recentVehicles.map((v: any) => (
-                  <Link key={v._id} to={`/vehicles/${v._id}`} className="flex items-center justify-between p-3 rounded-lg bg-slate-800/40 hover:bg-slate-800/70 transition-colors">
-                    <div>
-                      <p className="text-white text-sm font-medium">{v.marca} {v.modelo} {v.ano}</p>
-                      <p className="text-slate-400 text-xs">{v.codigo}</p>
+      {/* Recent Vehicles + Leads */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <GlowCard>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-base font-semibold text-white">Veiculos Recentes</h2>
+            <Link to="/vehicles" className="text-blue-400 text-sm hover:text-blue-300">Ver todos</Link>
+          </div>
+          {recentVehicles.length === 0 ? (
+            <p className="text-slate-400 text-sm text-center py-4">Nenhum veiculo</p>
+          ) : (
+            <div className="space-y-2">
+              {recentVehicles.map((v: any) => (
+                <Link key={v._id} to={`/vehicles/${v._id}`}
+                  className="flex items-center justify-between p-3 rounded-lg bg-slate-800/40 hover:bg-slate-800/70 transition-colors">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-white text-sm font-medium truncate">{v.marca} {v.modelo} {v.ano}</p>
+                    <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
+                      <span>{v.codigo}</span>
+                      <span>&middot;</span>
+                      <span className={getScoreColor(v.score?.valor || 0)}>{v.score?.valor || 0}/100</span>
+                      {(v.anuncio?.cliques || 0) > 0 && (
+                        <><span>&middot;</span><Eye className="w-3 h-3" />{v.anuncio.cliques}</>
+                      )}
                     </div>
-                    <div className="text-right">
-                      <p className="text-green-400 text-sm font-semibold">{formatCurrency(v.precos?.venda || 0)}</p>
-                      <StatusBadge status={v.pipeline?.status} />
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </GlowCard>
-        </div>
-
-        {/* Recent Leads */}
-        <div>
-          <GlowCard>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-white">Leads Recentes</h2>
-              <Link to="/leads" className="text-blue-400 text-sm hover:text-blue-300 transition-colors">
-                Ver todos →
-              </Link>
-            </div>
-            {recentLeads.length === 0 ? (
-              <p className="text-slate-400 text-sm text-center py-4">Nenhum lead registrado</p>
-            ) : (
-              <div className="space-y-3">
-                {recentLeads.map((l: any) => (
-                  <div key={l._id} className="flex items-center justify-between p-3 rounded-lg bg-slate-800/40">
-                    <div>
-                      <p className="text-white text-sm font-medium">{l.nome}</p>
-                      <p className="text-slate-400 text-xs">{l.whatsapp}</p>
-                    </div>
-                    <StatusBadge status={l.status} type="lead" />
                   </div>
-                ))}
-              </div>
-            )}
-          </GlowCard>
-        </div>
+                  <div className="text-right ml-3">
+                    <p className="text-green-400 text-sm font-semibold">{formatCurrency(v.precos?.venda || 0)}</p>
+                    <StatusBadge status={v.pipeline?.status} />
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </GlowCard>
+
+        <GlowCard>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-base font-semibold text-white">Leads Recentes</h2>
+            <Link to="/leads" className="text-blue-400 text-sm hover:text-blue-300">Ver todos</Link>
+          </div>
+          {recentLeads.length === 0 ? (
+            <p className="text-slate-400 text-sm text-center py-4">Nenhum lead</p>
+          ) : (
+            <div className="space-y-2">
+              {recentLeads.map((l: any) => (
+                <div key={l._id} className="flex items-center justify-between p-3 rounded-lg bg-slate-800/40">
+                  <div className="min-w-0">
+                    <p className="text-white text-sm font-medium truncate">{l.nome}</p>
+                    <p className="text-slate-500 text-xs">{l.whatsapp} {l.cidade && `· ${l.cidade}`}</p>
+                  </div>
+                  <StatusBadge status={l.status} type="lead" />
+                </div>
+              ))}
+            </div>
+          )}
+        </GlowCard>
       </div>
     </div>
   );

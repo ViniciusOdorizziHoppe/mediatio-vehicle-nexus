@@ -1,10 +1,11 @@
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 import { useState, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useVehicle, useGenerateAd, useDeleteVehicle, useUpdateVehicle, useRecalculateScore } from '@/hooks/useVehicles';
 import { formatCurrency, formatKm, formatDate, PIPELINE_STATUS, getScoreColor, getScoreBg, cn } from '@/lib/utils';
 import { GlowCard } from '@/components/ui/GlowCard';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Pencil, Trash2, Sparkles, Copy, Check, ImagePlus, Star, X, Upload, Camera, Eye, MessageSquare, Clock, Target, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
+import { ArrowLeft, Pencil, Trash2, Sparkles, Copy, Check, ImagePlus, Star, X, Upload, Camera, Eye, MessageSquare, Clock, Target, AlertCircle, CheckCircle, XCircle, BarChart3 } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '@/lib/api';
 
@@ -169,7 +170,7 @@ export default function VehicleDetail() {
       </motion.div>
 
       {/* Metricas rapidas */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         <div className="bg-slate-800/30 rounded-lg p-3 text-center">
           <p className="text-xs text-slate-400 mb-1">Cliques</p>
           <div className="flex items-center justify-center gap-1.5">
@@ -195,7 +196,40 @@ export default function VehicleDetail() {
           <p className="text-xs text-slate-400 mb-1">Spread</p>
           <span className={`text-lg font-bold ${spread > 0 ? 'text-green-400' : 'text-slate-500'}`}>{formatCurrency(spread)}</span>
         </div>
+        <div className="bg-slate-800/30 rounded-lg p-3 text-center">
+          <p className="text-xs text-slate-400 mb-1">Score</p>
+          <span className={`text-lg font-bold ${getScoreColor(score)}`}>{score}/100</span>
+        </div>
       </div>
+
+      {/* Grafico Clicks vs Leads */}
+      <GlowCard delay={0.03}>
+        <h2 className="font-semibold text-slate-100 mb-3 flex items-center gap-2">
+          <BarChart3 className="w-4 h-4 text-blue-400" />
+          Metricas do Anuncio
+        </h2>
+        <ResponsiveContainer width="100%" height={120}>
+          <BarChart data={[
+            { name: 'Cliques', value: vehicle.anuncio?.cliques || 0, fill: '#3b82f6' },
+            { name: 'Leads', value: leadCount, fill: '#8b5cf6' },
+            { name: 'Fotos', value: currentPhotos.length, fill: '#22c55e' },
+          ]} layout="vertical">
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.06)" horizontal={false} />
+            <XAxis type="number" tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} />
+            <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: '#94a3b8' }} width={60} axisLine={false} tickLine={false} />
+            <RechartsTooltip contentStyle={{ background: '#1e293b', border: 'none', borderRadius: '8px' }} labelStyle={{ color: '#e2e8f0' }} />
+            <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+              {[{ fill: '#3b82f6' }, { fill: '#8b5cf6' }, { fill: '#22c55e' }].map((c, i) => (
+                <Cell key={i} fill={c.fill} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+        <div className="flex gap-4 mt-2 text-[10px] text-slate-500">
+          <span>Cliques: {vehicle.anuncio?.cliques || 0} {((vehicle.anuncio?.cliques || 0) >= 50 ? ' (+5pts score)' : (vehicle.anuncio?.cliques || 0) >= 10 ? ' (+1pt score)' : '')}</span>
+          <span>Leads: {leadCount} {leadCount >= 3 ? ' (+5pts)' : leadCount >= 1 ? ' (+3pts)' : ''}</span>
+        </div>
+      </GlowCard>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main info */}
