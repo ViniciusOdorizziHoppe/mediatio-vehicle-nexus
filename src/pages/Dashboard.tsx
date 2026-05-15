@@ -11,11 +11,9 @@ import { useLeads } from '@/hooks/useLeads';
 import { GlowCard } from '@/components/ui/GlowCard';
 import { PageSkeleton } from '@/components/ui/PageSkeleton';
 import { StatusBadge } from '@/components/ui/StatusBadge';
-import { geocodeVehicles, getCityCoords, VehicleMapData } from '@/lib/geocoding';
+import { geocodeVehicles, getCityCoords } from '@/lib/geocoding';
 import FipeBadge from '@/components/ui/FipeBadge';
-
-// Lazy load do mapa (evita erro se leaflet nao disponivel)
-let DashboardMap: any = null;
+import CityMap from '@/components/map/CityMap';
 
 const STATUS_LABELS: Record<string, string> = {
   disponivel: 'Disponivel', contato_ativo: 'Contato Ativo', proposta: 'Proposta',
@@ -212,16 +210,10 @@ export default function Dashboard() {
           )}
         </GlowCard>
 
-        {/* Mapa */}
+        {/* Mapa de Cidades */}
         <GlowCard>
           <h2 className="text-base font-semibold text-white mb-3">Mapa de Atividade</h2>
-          {DashboardMap ? (
-            <DashboardMap vehicles={mapVehicles} leads={mapLeads} isLoading={false} />
-          ) : (
-            <div className="bg-slate-800/50 rounded-lg h-[250px] flex items-center justify-center">
-              <p className="text-slate-400 text-sm">Mapa indisponivel</p>
-            </div>
-          )}
+          <CityMap vehicles={mapVehicles} leads={mapLeads} isLoading={false} />
         </GlowCard>
       </div>
 

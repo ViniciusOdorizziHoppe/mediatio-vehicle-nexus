@@ -31,8 +31,10 @@ export default function VehicleForm() {
     concessionaria: { nome: '', contato: '', whatsapp: '', cidade: '', comissaoPadrao: '' as string },
   });
 
+  const [loaded, setLoaded] = useState(false);
+
   useEffect(() => {
-    if (existingData) {
+    if (existingData && !loaded) {
       const v = existingData as any;
       setForm({
         tipo: v.tipo || 'moto',
@@ -66,8 +68,9 @@ export default function VehicleForm() {
           comissaoPadrao: String(v.concessionaria?.comissaoPadrao || ''),
         },
       });
+      setLoaded(true);
     }
-  }, [existingData]);
+  }, [existingData, loaded]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
