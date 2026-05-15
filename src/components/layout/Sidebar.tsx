@@ -14,7 +14,7 @@ const navItems = [
   { path: '/pipeline', label: 'Pipeline', icon: Columns3 },
   { path: '/leads', label: 'Leads (CRM)', icon: Users },
   { path: '/schedule', label: 'Agenda', icon: CalendarDays },
-  { path: '/nexus-chat', label: 'Nexus AI', icon: MessageSquareText },
+  { path: '/nexus-chat', label: 'Morph IA', icon: MessageSquareText },
   { path: '/analytics', label: 'Analytics', icon: BarChart3 },
 ];
 
