@@ -202,7 +202,7 @@ export default function VehicleForm() {
         {/* Origem do Veiculo */}
         <GlowCard>
           <h2 className="text-lg font-semibold text-white mb-4">Origem do Veiculo</h2>
-          <select value={form.origem}
+          <select value={form.origem} autoComplete="off"
             onChange={e => setForm(f => ({ ...f, origem: e.target.value as 'particular' | 'concessionaria' }))}
             className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4">
             <option value="particular">Particular</option>
