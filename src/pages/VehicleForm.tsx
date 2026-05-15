@@ -27,6 +27,8 @@ export default function VehicleForm() {
     condicoes: { aceitaTroca: false, aceitaFinanciamento: false, documentacao: 'ok' as 'ok' | 'pendente' | 'irregular' },
     proprietario: { nome: '', whatsapp: '', cidade: '' },
     anuncio: { observacoes: '' },
+    origem: 'particular' as 'particular' | 'concessionaria',
+    concessionaria: { nome: '', contato: '', whatsapp: '', cidade: '', comissaoPadrao: '' as string },
   });
 
   useEffect(() => {
@@ -55,6 +57,14 @@ export default function VehicleForm() {
           cidade: v.proprietario?.cidade || '',
         },
         anuncio: { observacoes: v.anuncio?.observacoes || '' },
+        origem: v.origem || 'particular',
+        concessionaria: {
+          nome: v.concessionaria?.nome || '',
+          contato: v.concessionaria?.contato || '',
+          whatsapp: v.concessionaria?.whatsapp || '',
+          cidade: v.concessionaria?.cidade || '',
+          comissaoPadrao: String(v.concessionaria?.comissaoPadrao || ''),
+        },
       });
     }
   }, [existingData]);
@@ -76,6 +86,16 @@ export default function VehicleForm() {
       condicoes: form.condicoes,
       proprietario: form.proprietario,
       anuncio: form.anuncio,
+      origem: form.origem,
+      ...(form.origem === 'concessionaria' && form.concessionaria.nome ? {
+        concessionaria: {
+          nome: form.concessionaria.nome,
+          contato: form.concessionaria.contato || undefined,
+          whatsapp: form.concessionaria.whatsapp || undefined,
+          cidade: form.concessionaria.cidade || undefined,
+          comissaoPadrao: form.concessionaria.comissaoPadrao ? Number(form.concessionaria.comissaoPadrao) : undefined,
+        }
+      } : {}),
     };
     try {
       if (isEdit && id) {
@@ -174,6 +194,52 @@ export default function VehicleForm() {
               />
             </div>
           </div>
+        </GlowCard>
+
+        {/* Origem do Veiculo */}
+        <GlowCard>
+          <h2 className="text-lg font-semibold text-white mb-4">Origem do Veiculo</h2>
+          <select value={form.origem}
+            onChange={e => setForm(f => ({ ...f, origem: e.target.value as 'particular' | 'concessionaria' }))}
+            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4">
+            <option value="particular">Particular</option>
+            <option value="concessionaria">Concessionaria</option>
+          </select>
+
+          {form.origem === 'concessionaria' && (
+            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-700/50">
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1">Nome da Concessionaria *</label>
+                <input type="text" value={form.concessionaria.nome} placeholder="Ex: Wilson Tank"
+                  onChange={e => setForm(f => ({ ...f, concessionaria: { ...f.concessionaria, nome: e.target.value } }))}
+                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1">Comissao (%)</label>
+                <input type="number" value={form.concessionaria.comissaoPadrao} placeholder="30" min="0" max="100"
+                  onChange={e => setForm(f => ({ ...f, concessionaria: { ...f.concessionaria, comissaoPadrao: e.target.value } }))}
+                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1">Contato</label>
+                <input type="text" value={form.concessionaria.contato} placeholder="Nome do responsavel"
+                  onChange={e => setForm(f => ({ ...f, concessionaria: { ...f.concessionaria, contato: e.target.value } }))}
+                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1">WhatsApp</label>
+                <input type="text" value={form.concessionaria.whatsapp} placeholder="47 99999-9999"
+                  onChange={e => setForm(f => ({ ...f, concessionaria: { ...f.concessionaria, whatsapp: e.target.value } }))}
+                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+              <div className="col-span-2">
+                <label className="block text-sm font-medium text-slate-300 mb-1">Cidade</label>
+                <input type="text" value={form.concessionaria.cidade} placeholder="Ex: Presidente Getulio"
+                  onChange={e => setForm(f => ({ ...f, concessionaria: { ...f.concessionaria, cidade: e.target.value } }))}
+                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+            </div>
+          )}
         </GlowCard>
 
         <GlowCard>
