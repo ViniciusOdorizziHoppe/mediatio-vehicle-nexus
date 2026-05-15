@@ -3,13 +3,14 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 import {
-  LayoutDashboard, Car, Users, Columns3, BarChart3,
+  LayoutDashboard, Car, Users, Columns3, BarChart3, Building2,
   ChevronLeft, ChevronRight, LogOut, CalendarDays, MessageSquareText,
 } from 'lucide-react';
 
 const navItems = [
   { path: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { path: '/vehicles', label: 'Veículos', icon: Car },
+  { path: '/vehicles', label: 'Veiculos', icon: Car },
+  { path: '/concessionarias', label: 'Concessionarias', icon: Building2 },
   { path: '/pipeline', label: 'Pipeline', icon: Columns3 },
   { path: '/leads', label: 'Leads (CRM)', icon: Users },
   { path: '/schedule', label: 'Agenda', icon: CalendarDays },

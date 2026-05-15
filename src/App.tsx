@@ -18,6 +18,7 @@ import Settings from "./pages/Settings";
 import Pipeline from "./pages/Pipeline";
 import Anuncios from "./pages/Anuncios";
 import Integrations from "./pages/Integrations";
+import Concessionarias from "./pages/Concessionarias";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
@@ -54,6 +55,7 @@ const App = () => (
             <Route path="/leads" element={<ErrorBoundary><Leads /></ErrorBoundary>} />
             <Route path="/pipeline" element={<ErrorBoundary><Pipeline /></ErrorBoundary>} />
             <Route path="/anuncios" element={<ErrorBoundary><Anuncios /></ErrorBoundary>} />
+            <Route path="/concessionarias" element={<ErrorBoundary><Concessionarias /></ErrorBoundary>} />
             <Route path="/integrations" element={<ErrorBoundary><Integrations /></ErrorBoundary>} />
             <Route path="/settings" element={<ErrorBoundary><Settings /></ErrorBoundary>} />
           </Route>

@@ -11,12 +11,14 @@ export default function Vehicles() {
   const [status, setStatus] = useState('');
   const [tipo, setTipo] = useState('');
   const [minScore, setMinScore] = useState('');
+  const [origem, setOrigem] = useState('');
 
   const params: any = {};
   if (search) params.search = search;
   if (status) params.status = status;
   if (tipo) params.tipo = tipo;
   if (minScore) params.minScore = minScore;
+  if (origem) params.origem = origem;
 
   const { data, isLoading, error } = useVehicles(params);
   const deleteVehicle = useDeleteVehicle();
@@ -138,6 +140,13 @@ export default function Vehicles() {
           <option value="60">Score 60+</option>
           <option value="40">Score 40+</option>
           <option value="0">Score baixo (&lt;40)</option>
+        </select>
+
+        <select value={origem} onChange={e => setOrigem(e.target.value)}
+          className="input-dark w-auto min-w-[150px]">
+          <option value="">Origem: todas</option>
+          <option value="particular">Particular</option>
+          <option value="concessionaria">Concessionaria</option>
         </select>
       </motion.div>
 
