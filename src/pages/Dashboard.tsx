@@ -35,11 +35,6 @@ export default function Dashboard() {
   const vehicleList: any[] = useMemo(() => vehicles || [], [vehicles]);
   const leadList: any[] = useMemo(() => leads || [], [leads]);
 
-  // Try lazy load map component
-  if (!DashboardMap) {
-    try { DashboardMap = require('@/components/map/DashboardMap').default; } catch {}
-  }
-
   // ===== CALCULOS =====
   const totalVehicles = vehicleList.length;
   const totalLeads = leadList.length;
