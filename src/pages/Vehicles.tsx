@@ -210,6 +210,11 @@ export default function Vehicles() {
 
                         <td className="px-5 py-4 text-sm font-semibold text-slate-200">
                           {formatCurrency(vehicle.precos.venda)}
+                          {vehicle.precos?.fipeReferencia && (
+                            <span className={`text-[10px] ml-1 ${vehicle.precos.fipeReferencia >= vehicle.precos.venda ? 'text-green-400' : 'text-yellow-400'}`}>
+                              {Math.round(((vehicle.precos.venda - vehicle.precos.fipeReferencia) / vehicle.precos.fipeReferencia) * 100)}%
+                            </span>
+                          )}
                         </td>
 
                         <td className="px-5 py-4 text-sm text-slate-400">

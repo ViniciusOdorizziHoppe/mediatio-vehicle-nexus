@@ -10,6 +10,7 @@ import { useLeads } from '@/hooks/useLeads';
 import { GlowCard } from '@/components/ui/GlowCard';
 import { PageSkeleton } from '@/components/ui/PageSkeleton';
 import { Badge } from '@/components/ui/badge';
+import FipeBadge from '@/components/ui/FipeBadge';
 
 export default function Anuncios() {
   const { data: vehicles, isLoading: loadingV } = useVehicles();
@@ -199,6 +200,9 @@ export default function Anuncios() {
                             Spread {formatCurrency(spread)}
                           </span>
                         )}
+                      </div>
+                      <div className="mt-1">
+                        <FipeBadge precoVenda={vehicle.precos?.venda} fipeReferencia={vehicle.precos?.fipeReferencia} />
                       </div>
 
                       {/* Metrics Row */}

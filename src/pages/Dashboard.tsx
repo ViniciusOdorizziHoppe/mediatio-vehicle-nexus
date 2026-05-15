@@ -12,6 +12,7 @@ import { GlowCard } from '@/components/ui/GlowCard';
 import { PageSkeleton } from '@/components/ui/PageSkeleton';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { geocodeVehicles, getCityCoords, VehicleMapData } from '@/lib/geocoding';
+import FipeBadge from '@/components/ui/FipeBadge';
 
 // Lazy load do mapa (evita erro se leaflet nao disponivel)
 let DashboardMap: any = null;
@@ -125,12 +126,23 @@ export default function Dashboard() {
             {totalVehicles} veiculos &middot; {formatCurrency(totalValor)} em carteira &middot; {activeNeg} em negociacao
           </p>
         </div>
-        {criticalVehicles > 0 && (
-          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20">
-            <AlertTriangle className="w-4 h-4 text-red-400" />
-            <span className="text-red-400 text-sm font-medium">{criticalVehicles} veiculo(s) critico(s)</span>
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          {/* Alerta de sazonalidade */}
+          {(() => {
+            const m = new Date().getMonth();
+            if (m === 0 || m === 1 || m === 11) return <span className="px-2 py-1 rounded bg-green-500/10 text-green-400 text-xs border border-green-500/20">Alta temporada</span>;
+            if (m === 4 || m === 5) return <span className="px-2 py-1 rounded bg-yellow-500/10 text-yellow-400 text-xs border border-yellow-500/20">Baixa temporada</span>;
+            if (m === 6) return <span className="px-2 py-1 rounded bg-blue-500/10 text-blue-400 text-xs border border-blue-500/20">Ferias escolares</span>;
+            if (m >= 7 && m <= 9) return <span className="px-2 py-1 rounded bg-green-500/10 text-green-400 text-xs border border-green-500/20">Boa temporada</span>;
+            return null;
+          })()}
+          {criticalVehicles > 0 && (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20">
+              <AlertTriangle className="w-4 h-4 text-red-400" />
+              <span className="text-red-400 text-sm font-medium">{criticalVehicles} veiculo(s) critico(s)</span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* KPI Row 1 */}
@@ -278,7 +290,10 @@ export default function Dashboard() {
                   </div>
                   <div className="text-right ml-3">
                     <p className="text-green-400 text-sm font-semibold">{formatCurrency(v.precos?.venda || 0)}</p>
-                    <StatusBadge status={v.pipeline?.status} />
+                    <div className="flex items-center gap-1 justify-end mt-0.5">
+                      <FipeBadge precoVenda={v.precos?.venda} fipeReferencia={v.precos?.fipeReferencia} />
+                      <StatusBadge status={v.pipeline?.status} />
+                    </div>
                   </div>
                 </Link>
               ))}
