@@ -50,7 +50,7 @@ export default function Morph() {
     try {
       const token = localStorage.getItem('mediatio_token');
       const formData = new FormData();
-      images.slice(0, 5).forEach(img => formData.append('images', img.file));
+      images.slice(0, 5).forEach(img => formData.append('images', img.file, img.file.name));
       formData.append('style', 'professional');
       formData.append('prompt', 'Transforme esta foto de carro em uma foto profissional de showroom, com iluminacao perfeita, fundo neutro, alta qualidade. Mantenha o carro exatamente igual.');
 
