@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { GlowCard } from '@/components/ui/GlowCard';
 import api from '@/lib/api';
 
-const MORPH_API = 'https://realistic-viper-morph-82184336.koyeb.app/api';
+const MEDIATIO_API = import.meta.env.VITE_API_URL || '';
 
 interface PreviewImage {
   id: string;
@@ -54,7 +54,8 @@ export default function Morph() {
       formData.append('style', 'professional');
       formData.append('prompt', 'Transforme esta foto de carro em uma foto profissional de showroom, com iluminacao perfeita, fundo neutro, alta qualidade. Mantenha o carro exatamente igual.');
 
-      const res = await fetch(`${MORPH_API}/batch/generate`, {
+      const baseUrl = MEDIATIO_API ? `${MEDIATIO_API}/api` : "/api";
+      const res = await fetch(`${baseUrl}/morph/transform`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
