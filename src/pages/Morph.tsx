@@ -61,33 +61,18 @@ export default function Morph() {
         body: formData,
       });
       
-      const data = await res.json();
-      if (data.success) {
-        toast.success(`${images.length} fotos enviadas para transformacao!`);
-        
-        // Poll for results
-        if (data.batchId) {
-          setTimeout(async () => {
-            try {
-              const statusRes = await fetch(`${MORPH_API}/batch/${data.batchId}`, {
-                headers: { Authorization: `Bearer ${token}` },
-              });
-              const statusData = await statusRes.json();
-              if (statusData.success && statusData.generations) {
-                setImages(prev => prev.map((img, i) => ({
-                  ...img,
-                  transformedUrl: statusData.generations[i]?.outputUrl || undefined,
-                  loading: false,
-                })));
-              }
-            } catch { /* polling falhou, sem problema */ }
-          }, 15000);
-        }
+      if (data.success && data.results) {
+        const results = data.results;
+        setImages(prev => prev.map((img, i) => {
+          const result = results.find(r => r.index === i);
+          if (result && result.success && result.outputUrl) return { ...img, transformedUrl: result.outputUrl, loading: false };
+          return { ...img, loading: false };
+        }));
+        const ok = results.filter(r => r.success).length;
+        toast.success(ok + ' foto(s) transformadas!');
       } else {
-        toast.error(data.message || 'Erro na transformacao');
+        toast.error(data.error || data.message || 'Erro na transformacao');
       }
-    } catch {
-      toast.error('Erro ao conectar com Morph');
     } finally {
       setTransforming(false);
     }
