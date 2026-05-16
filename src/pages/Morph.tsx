@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { GlowCard } from '@/components/ui/GlowCard';
 import api from '@/lib/api';
 
-const MEDIATIO_API = import.meta.env.VITE_API_URL || '';
+const MEDIATIO_API = import.meta.env.PROD ? '' : (import.meta.env.VITE_API_URL || '');
 
 interface PreviewImage {
   id: string;
