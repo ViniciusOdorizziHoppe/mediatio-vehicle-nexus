@@ -1,183 +1,85 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Plus, Eye, MapPin, Camera, ImageOff, MessageSquare } from 'lucide-react';
-import { toast } from 'sonner';
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { TrendingUp, Phone, Calendar, Eye, CheckCircle, XCircle, DollarSign, Target } from "lucide-react";
+import { GlowCard } from "@/components/ui/GlowCard";
 
-import { useVehicles, useUpdateVehicleStatus } from '@/hooks/useVehicles';
-import type { Vehicle } from '@/hooks/useVehicles';
-import { formatCurrency, getScoreColor, getScoreBg } from '@/lib/utils';
-import { PageSkeleton } from '@/components/ui/PageSkeleton';
-
-const COLUMNS = [
-  { key: 'disponivel',   label: 'Disponivel',    gradient: 'from-green-500 to-emerald-500' },
-  { key: 'contato_ativo',label: 'Contato Ativo', gradient: 'from-blue-500 to-blue-600' },
-  { key: 'proposta',     label: 'Proposta',       gradient: 'from-yellow-500 to-amber-500' },
-  { key: 'vendido',      label: 'Vendido',        gradient: 'from-purple-500 to-violet-500' },
-  { key: 'arquivado',    label: 'Arquivado',      gradient: 'from-slate-500 to-slate-600' },
-] as const;
-
-export default function Pipeline() {
-  const { data, isLoading } = useVehicles();
-  const updateStatus = useUpdateVehicleStatus();
-
-  const vehicles = (data as Vehicle[]) || [];
-
-  const getByStatus = (status: string) =>
-    vehicles.filter((v) => (v.pipeline?.status || 'disponivel') === status);
-
-  const handleMove = async (vehicleId: string, newStatus: string) => {
-    try {
-      await updateStatus.mutateAsync({ id: vehicleId, status: newStatus });
-      toast.success('Status atualizado');
-    } catch {
-      toast.error('Erro ao mover veículo');
-    }
-  };
-
-  if (isLoading) return <PageSkeleton />;
-
-  return (
-    <div className="p-6 md:p-8 space-y-6">
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between"
-      >
-        <div>
-          <h1 className="text-2xl font-bold text-slate-100">Pipeline de Negociação</h1>
-          <p className="text-sm text-slate-400 mt-1">{vehicles.length} veículo(s) no sistema</p>
-        </div>
-        <Link
-          to="/vehicles/new"
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium transition-colors"
-        >
-          <Plus className="w-4 h-4" /> Novo Veículo
-        </Link>
-      </motion.div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        {COLUMNS.map((col, colIdx) => {
-          const colVehicles = getByStatus(col.key);
-          return (
-            <motion.div
-              key={col.key}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: colIdx * 0.08 }}
-              className="rounded-xl border border-slate-800/50 bg-slate-900/30 backdrop-blur-sm min-h-[400px] flex flex-col"
-            >
-              <div className="p-3 border-b border-slate-800/50">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className={`w-2 h-2 rounded-full bg-gradient-to-r ${col.gradient}`} />
-                    <h3 className="font-semibold text-slate-200 text-sm">{col.label}</h3>
-                  </div>
-                  <span className="bg-slate-800 text-slate-400 text-xs font-medium px-2 py-0.5 rounded-full">
-                    {colVehicles.length}
-                  </span>
-                </div>
-              </div>
-
-              <div className="p-2 space-y-2 flex-1">
-                {colVehicles.map((vehicle, idx) => (
-                  <motion.div
-                    key={vehicle._id}
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: colIdx * 0.08 + idx * 0.05 }}
-                  >
-                    <VehicleCard
-                      vehicle={vehicle}
-                      currentStatus={col.key}
-                      onMove={handleMove}
-                    />
-                  </motion.div>
-                ))}
-                {colVehicles.length === 0 && (
-                  <p className="text-center text-slate-600 text-xs mt-8 px-3">Nenhum veículo</p>
-                )}
-              </div>
-            </motion.div>
-          );
-        })}
-      </div>
-    </div>
-  );
+interface Lead {
+  id: string; veiculo: string; nome: string; whatsapp: string;
+  origem: "marketplace" | "whatsapp" | "instagram" | "indicacao" | "olx";
+  estagio: "novo" | "contatado" | "agendado" | "visitou" | "proposta" | "vendido" | "perdido";
+  criadoEm: string; notas: string; valorProposta?: number;
 }
 
-function VehicleCard({
-  vehicle,
-  currentStatus,
-  onMove,
-}: {
-  vehicle: Vehicle;
-  currentStatus: string;
-  onMove: (id: string, status: string) => void;
-}) {
-  const otherStatuses = COLUMNS.filter(c => c.key !== currentStatus);
-  const hasPhotos = (vehicle.fotos?.originais?.length || 0) > 0 || !!vehicle.fotos?.principal;
-  const leadCount = vehicle.leads?.length || 0;
-  const score = vehicle.score?.valor || 0;
+interface VeiculoPipeline {
+  id: string; modelo: string; marca: string; ano: number; preco: number; fipe?: number;
+  cliques: number; diasNoAr: number; fotos: boolean; leadsEstimados: number; leadsReais: Lead[];
+}
+
+const ESTAGIOS = [
+  { key: "novo", label: "Novo", icon: Target, color: "text-blue-400", bg: "bg-blue-500/10" },
+  { key: "contatado", label: "Contatado", icon: Phone, color: "text-yellow-400", bg: "bg-yellow-500/10" },
+  { key: "agendado", label: "Agendado", icon: Calendar, color: "text-purple-400", bg: "bg-purple-500/10" },
+  { key: "visitou", label: "Visitou", icon: Eye, color: "text-orange-400", bg: "bg-orange-500/10" },
+  { key: "proposta", label: "Proposta", icon: DollarSign, color: "text-pink-400", bg: "bg-pink-500/10" },
+  { key: "vendido", label: "Vendido", icon: CheckCircle, color: "text-green-400", bg: "bg-green-500/10" },
+  { key: "perdido", label: "Perdido", icon: XCircle, color: "text-red-400", bg: "bg-red-500/10" },
+];
+
+function calcProb(leads: number, preco: number, fipe?: number): number {
+  let r = Math.min(leads * 0.15, 1);
+  if (fipe) { const disc = (fipe - preco) / fipe; if (disc > 0.05) r *= 2; else if (disc > 0.02) r *= 1.5; else if (disc < 0) r *= 0.7; }
+  return Math.min(r, 1);
+}
+
+const VEICULOS: VeiculoPipeline[] = [
+  { id: "1", marca: "Chevrolet", modelo: "Astra 2009", ano: 2009, preco: 37000, fipe: 35000, cliques: 92, diasNoAr: 6, fotos: true, leadsEstimados: 3, leadsReais: [] },
+  { id: "2", marca: "Volkswagen", modelo: "Polo 2018", ano: 2018, preco: 60000, fipe: 60000, cliques: 69, diasNoAr: 5, fotos: true, leadsEstimados: 2, leadsReais: [] },
+  { id: "3", marca: "Volkswagen", modelo: "up! 2017", ano: 2017, preco: 56900, fipe: 45000, cliques: 57, diasNoAr: 4, fotos: true, leadsEstimados: 2, leadsReais: [] },
+  { id: "4", marca: "Jeep", modelo: "Renegade 2018", ano: 2018, preco: 85000, fipe: 85000, cliques: 42, diasNoAr: 3, fotos: true, leadsEstimados: 1, leadsReais: [] },
+  { id: "5", marca: "Volkswagen", modelo: "Fox 2021", ano: 2021, preco: 71900, fipe: 50000, cliques: 36, diasNoAr: 4, fotos: true, leadsEstimados: 1, leadsReais: [] },
+  { id: "6", marca: "Volkswagen", modelo: "Amarok 2018", ano: 2018, preco: 130000, fipe: 120000, cliques: 19, diasNoAr: 1, fotos: true, leadsEstimados: 1, leadsReais: [] },
+  { id: "7", marca: "FIAT", modelo: "Strada 2023", ano: 2023, preco: 97000, fipe: 92000, cliques: 18, diasNoAr: 1, fotos: true, leadsEstimados: 1, leadsReais: [] },
+  { id: "8", marca: "Honda", modelo: "Civic 2020", ano: 2020, preco: 95000, fipe: 95000, cliques: 12, diasNoAr: 1, fotos: true, leadsEstimados: 1, leadsReais: [] },
+];
+
+export default function Pipeline() {
+  const [veiculos, setVeiculos] = useState(VEICULOS);
+  const [selectedVeiculo, setSelectedVeiculo] = useState(null);
+  const [showAddLead, setShowAddLead] = useState(false);
+  const [newLead, setNewLead] = useState({ nome: "", whatsapp: "", origem: "marketplace", notas: "" });
+
+  const totalCliques = veiculos.reduce((s, v) => s + v.cliques, 0);
+  const totalLeads = veiculos.reduce((s, v) => s + v.leadsEstimados + v.leadsReais.length, 0);
+  const veiculo = veiculos.find(v => v.id === selectedVeiculo);
+
+  const addLead = () => {
+    if (!selectedVeiculo || !newLead.nome) return;
+    setVeiculos(prev => prev.map(v => {
+      if (v.id !== selectedVeiculo) return v;
+      return { ...v, leadsReais: [...v.leadsReais, {
+        id: Math.random().toString(36).substr(2, 6), veiculo: v.modelo,
+        nome: newLead.nome, whatsapp: newLead.whatsapp, origem: newLead.origem as any,
+        estagio: "contatado", criadoEm: new Date().toISOString().split("T")[0], notas: newLead.notas
+      }]};
+    }));
+    setNewLead({ nome: "", whatsapp: "", origem: "marketplace", notas: "" });
+    setShowAddLead(false);
+  };
+
+  const moverEstagio = (veiculoId, leadId, novoEstagio) => {
+    setVeiculos(prev => prev.map(v => {
+      if (v.id !== veiculoId) return v;
+      return { ...v, leadsReais: v.leadsReais.map(l => l.id === leadId ? { ...l, estagio: novoEstagio } : l) };
+    }));
+  };
 
   return (
-    <div className="group bg-slate-800/40 hover:bg-slate-800/70 rounded-lg border border-slate-700/30 hover:border-slate-600/50 p-3 transition-all duration-200">
-      <div className="flex items-start justify-between mb-2">
-        <div className="min-w-0 flex-1">
-          <p className="font-medium text-slate-200 text-sm truncate">{vehicle.marca} {vehicle.modelo}</p>
-          <p className="text-xs text-slate-500 mt-0.5">{vehicle.ano} &middot; {vehicle.codigo}</p>
-        </div>
-        <div className={`text-xs font-bold ml-2 px-1.5 py-0.5 rounded ${getScoreBg(score)} ${getScoreColor(score)}`}>
-          {score}
-        </div>
-      </div>
-
-      <p className="text-sm font-semibold text-blue-400 mb-2">
-        {formatCurrency(vehicle.precos.venda)}
-      </p>
-
-      {/* Indicadores visuais */}
-      <div className="flex items-center gap-3 mb-2 text-xs">
-        {hasPhotos ? (
-          <span className="flex items-center gap-1 text-green-400" title="Tem fotos">
-            <Camera className="w-3 h-3" /> {(vehicle.fotos?.originais?.length || 0) || 1}
-          </span>
-        ) : (
-          <span className="flex items-center gap-1 text-red-400" title="Sem fotos">
-            <ImageOff className="w-3 h-3" /> 0
-          </span>
-        )}
-        {leadCount > 0 && (
-          <span className="flex items-center gap-1 text-purple-400" title={`${leadCount} leads`}>
-            <MessageSquare className="w-3 h-3" /> {leadCount}
-          </span>
-        )}
-        {vehicle.proprietario?.cidade && (
-          <span className="flex items-center gap-1 text-slate-500 truncate" title={vehicle.proprietario.cidade}>
-            <MapPin className="w-3 h-3 shrink-0" /> {vehicle.proprietario.cidade}
-          </span>
-        )}
-      </div>
-
-      <div className="flex items-center gap-2 pt-1 border-t border-slate-700/30">
-        <Link
-          to={`/vehicles/${vehicle._id}`}
-          className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1 transition-colors"
-        >
-          <Eye className="w-3 h-3" /> Ver
-        </Link>
-        <span className="text-slate-700">|</span>
-        <select
-          onChange={e => e.target.value && onMove(vehicle._id, e.target.value)}
-          value=""
-          className="text-xs text-slate-400 bg-transparent border-0 cursor-pointer focus:ring-0 p-0 flex-1"
-        >
-          <option value="">Mover para...</option>
-          {otherStatuses.map(s => (
-            <option key={s.key} value={s.key}>{s.label}</option>
-          ))}
-        </select>
-      </div>
-    </div>
-  );
+    <div className="p-6 space-y-6 max-w-7xl mx-auto">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+        <h1 className="text-2xl font-bold text-white flex items-center gap-3">
+          <TrendingUp className="w-6 h-6 text-green-400" /> Pipeline de Leads
+        </h1>
+        <p className="text-slate-400 text-sm mt-1">{veiculos.length} veiculos | {totalCliques} cliques | ~{totalLeads} leads | {veiculos.filter(v => v.leadsReais.some(l => l.estagio === "vendido")).length} vendidos</p>
+      </motion.div>
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">{veiculos.map(v => { const prob = calcProb(v.leadsEstimados + v.leadsReais.length, v.preco, v.fipe); const pp = Math.round(prob * 100); const pc = pp >= 25 ? "text-green-400" : pp >= 12 ? "text-yellow-400" : "text-red-400"; return (<motion.div key={v.id} whileHover={{ scale: 1.02 }} onClick={() => setSelectedVeiculo(v.id)} className={`cursor-pointer bg-slate-800/80 border rounded-xl p-4 transition-all ${selectedVeiculo === v.id ? "border-green-500 ring-2 ring-green-500/30" : "border-slate-700/50 hover:border-slate-600"}`}><div className="flex justify-between items-start mb-3"><div><h3 className="font-semibold text-white">{v.marca} {v.modelo}</h3><p className="text-sm text-slate-400">{v.ano} | R$ {v.preco.toLocaleString("pt-BR")}</p></div><span className={`text-lg font-bold ${pc}`}>{pp}%</span></div><div className="flex gap-4 text-xs text-slate-400 mb-3"><span>{v.cliques} clicks</span><span>{v.diasNoAr}d</span><span>{v.leadsEstimados + v.leadsReais.length} leads</span></div>{v.fipe && (() => { const d = ((v.fipe - v.preco) / v.fipe * 100); return (<p className={`text-xs mt-2 ${d > 0 ? "text-green-400" : d < 0 ? "text-red-400" : "text-yellow-400"}`}>{d > 0 ? d.toFixed(0) + "% abaixo FIPE" : d < 0 ? Math.abs(d).toFixed(0) + "% acima FIPE" : "Na FIPE"}</p>)})()}</motion.div>)})}</div>{veiculo && (<GlowCard><div className="flex justify-between items-center mb-4"><h2 className="font-semibold text-white">{veiculo.marca} {veiculo.modelo} {veiculo.ano}</h2><button onClick={() => setShowAddLead(true)} className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-500 text-white text-sm font-medium">+ Novo Lead</button></div>{showAddLead && (<div className="bg-slate-800 rounded-lg p-4 mb-4 space-y-3"><div className="grid grid-cols-2 gap-3"><input placeholder="Nome *" value={newLead.nome} onChange={e => setNewLead(p => ({ ...p, nome: e.target.value }))} className="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-green-500" /><input placeholder="WhatsApp" value={newLead.whatsapp} onChange={e => setNewLead(p => ({ ...p, whatsapp: e.target.value }))} className="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-green-500" /></div><div className="flex gap-3"><select value={newLead.origem} onChange={e => setNewLead(p => ({ ...p, origem: e.target.value }))} className="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm"><option value="marketplace">Marketplace</option><option value="whatsapp">WhatsApp</option><option value="instagram">Instagram</option><option value="olx">OLX</option><option value="indicacao">Indicacao</option></select><input placeholder="Notas" value={newLead.notas} onChange={e => setNewLead(p => ({ ...p, notas: e.target.value }))} className="flex-1 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-green-500" /></div><div className="flex gap-2 justify-end"><button onClick={() => setShowAddLead(false)} className="px-3 py-2 rounded-lg bg-slate-700 text-slate-300 text-sm">Cancelar</button><button onClick={addLead} className="px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-medium">Salvar Lead</button></div></div>)}<div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">{ESTAGIOS.map(estagio => { const leads = veiculo.leadsReais.filter(l => l.estagio === estagio.key); const Icon = estagio.icon; return (<div key={estagio.key} className={`rounded-lg p-3 ${estagio.bg} border border-slate-700/30 min-h-[100px]`}><div className={`flex items-center gap-1.5 mb-2 ${estagio.color}`}><Icon className="w-4 h-4" /><span className="text-xs font-semibold">{estagio.label}</span><span className="ml-auto text-xs opacity-60">{leads.length}</span></div>{leads.map(lead => (<div key={lead.id} className="bg-slate-800/80 rounded-lg p-2 text-xs"><p className="text-white font-medium">{lead.nome}</p><p className="text-slate-400">{lead.origem}</p>{lead.notas && <p className="text-slate-500 mt-1">{lead.notas}</p>}<div className="flex gap-1 mt-2 flex-wrap">{ESTAGIOS.filter(e => e.key !== estagio.key && e.key !== "novo").map(e => (<button key={e.key} onClick={() => moverEstagio(veiculo.id, lead.id, e.key)} className={`text-[10px] px-2 py-0.5 rounded ${e.bg} ${e.color} hover:opacity-80`}>{e.label}</button>))}</div></div>))}{leads.length === 0 && <p className="text-xs text-slate-600 text-center py-4">Vazio</p>}</div>)})}</div><div className="mt-4 grid grid-cols-4 gap-3 text-center text-xs">{[{ l: "Cliques", v: veiculo.cliques },{ l: "Leads Est.", v: veiculo.leadsEstimados },{ l: "Leads Reais", v: veiculo.leadsReais.length },{ l: "Dias no Ar", v: veiculo.diasNoAr }].map(m => (<div key={m.l} className="bg-slate-800 rounded-lg p-2"><div className="text-slate-500">{m.l}</div><div className="text-white font-bold text-lg">{m.v}</div></div>))}</div></GlowCard>)}{!selectedVeiculo && (<div className="text-center py-20 text-slate-600"><Target className="w-12 h-12 mx-auto mb-3 opacity-30" /><p>Selecione um veiculo para ver o pipeline</p></div>)}</div>);
 }
