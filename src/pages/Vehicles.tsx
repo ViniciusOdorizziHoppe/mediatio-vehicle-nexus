@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Plus, Search, Eye, Pencil, Trash2, Car, Download, Filter } from 'lucide-react';
+import { Plus, Search, Eye, Pencil, Trash2, Car, Download, Filter, BarChart3, MousePointer } from 'lucide-react';
 
 import { useVehicles, useDeleteVehicle, type Vehicle } from '@/hooks/useVehicles';
 import { formatCurrency, formatKm, PIPELINE_STATUS, getScoreColor } from '@/lib/utils';
@@ -31,7 +31,7 @@ export default function Vehicles() {
   };
 
   const exportCSV = () => {
-    const headers = ['Codigo', 'Marca', 'Modelo', 'Ano', 'Cor', 'KM', 'Preco Venda', 'Preco Compra', 'Spread', 'Status', 'Score', 'Cidade', 'Fotos', 'Leads'];
+    const headers = ['Codigo', 'Marca', 'Modelo', 'Ano', 'Cor', 'KM', 'Preco Venda', 'Preco Compra', 'Spread', 'Status', 'Score', 'Cidade', 'Fotos', 'Leads', 'Turbinamento', 'Impressoes', 'Cliques', 'Contatos', 'CTR', 'CPC'];
     const rows = vehicles.map((v: Vehicle) => [
       v.codigo,
       v.marca,
@@ -47,6 +47,12 @@ export default function Vehicles() {
       v.proprietario?.cidade || '',
       v.fotos?.originais?.length || 0,
       v.leads?.length || 0,
+      v.marketing?.turbinamento || 0,
+      v.marketing?.impressoes || 0,
+      v.marketing?.cliques || 0,
+      v.marketing?.contatos || 0,
+      v.marketing?.impressoes > 0 ? ((v.marketing?.cliques || 0) / v.marketing?.impressoes * 100).toFixed(1) + '%' : '0%',
+      v.marketing?.cliques > 0 ? 'R$ ' + ((v.marketing?.turbinamento || 0) / v.marketing?.cliques).toFixed(2) : 'R$ 0',
     ]);
     const csv = [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
