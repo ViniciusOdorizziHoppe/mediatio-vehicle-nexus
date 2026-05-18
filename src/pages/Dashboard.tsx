@@ -50,8 +50,7 @@ export default function Dashboard() {
   const avgScore = totalVehicles > 0 ? Math.round(vehicleList.reduce((s, v) => s + (v.score?.valor || 0), 0) / totalVehicles) : 0;
   const withPhotos = vehicleList.filter(v => (v.fotos?.originais?.length || 0) > 0 || v.fotos?.principal).length;
   const activeNeg = vehicleList.filter(v => v.pipeline?.status === 'contato_ativo' || v.pipeline?.status === 'proposta').length;
-  const totalCliques = vehicleList.reduce((s, v) => s + (v.anuncio?.cliques || 0), 0);
-  const criticalVehicles = vehicleList.filter(v => (v.score?.valor || 0) < 35).length;
+    const criticalVehicles = vehicleList.filter(v => (v.score?.valor || 0) < 35).length;
   const leadsFechados = leadList.filter(l => l.status === 'fechado').length;
   const conversao = totalLeads > 0 ? Math.round((leadsFechados / totalLeads) * 100) : 0;
 
