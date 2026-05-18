@@ -78,7 +78,7 @@ export default function Leads() {
       >
         <div>
           <h1 className="text-2xl font-bold text-slate-100">Pipeline de Leads</h1>
-          <p className="text-sm text-slate-400 mt-1">Messenger -> WhatsApp -> Negociacao -> Visita -> Venda</p>
+          <p className="text-sm text-slate-400 mt-1">Messenger -{'>'}- WhatsApp -{'>'}- Negociacao -{'>'}- </p>
         </div>
         <button onClick={() => setShowForm(true)} className="btn-brand flex items-center gap-2 text-sm">
           <Plus className="w-4 h-4" /> Novo Lead
