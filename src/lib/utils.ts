@@ -29,15 +29,15 @@ export const PIPELINE_STATUS: Record<string, { label: string; color: string }> =
 };
 
 export const LEAD_STATUS: Record<string, { label: string; color: string }> = {
-  messenger: { label: 'Messenger', color: 'bg-indigo-500/15 text-indigo-400' },
-  whatsapp: { label: 'WhatsApp', color: 'bg-emerald-500/15 text-emerald-400' },
-  negociacao: { label: 'Negociacao', color: 'bg-amber-500/15 text-amber-400' },
-  visita: { label: 'Visita', color: 'bg-orange-500/15 text-orange-400' },
-  venda: { label: 'Venda', color: 'bg-green-500/15 text-green-400' },
+  novo: { label: 'Novo', color: 'bg-indigo-500/15 text-indigo-400' },
+  contatado: { label: 'Contatado', color: 'bg-emerald-500/15 text-emerald-400' },
+  interessado: { label: 'Interessado', color: 'bg-amber-500/15 text-amber-400' },
+  proposta_enviada: { label: 'Proposta', color: 'bg-orange-500/15 text-orange-400' },
+  fechado: { label: 'Fechado', color: 'bg-green-500/15 text-green-400' },
   perdido: { label: 'Perdido', color: 'bg-red-500/15 text-red-400' },
 };
 
-export const LEAD_PIPELINE_ORDER = ['messenger', 'whatsapp', 'negociacao', 'visita', 'venda'] as const;
+export const LEAD_PIPELINE_ORDER = ['novo', 'contatado', 'interessado', 'proposta_enviada', 'fechado'] as const;
 
 export function getScoreColor(score: number): string {
   if (score >= 80) return 'text-green-400';
