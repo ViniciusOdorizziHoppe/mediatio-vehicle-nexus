@@ -272,7 +272,7 @@ export default function Pipeline() {
         <div className="text-center py-20 text-slate-600">
           <Target className="w-12 h-12 mx-auto mb-3 opacity-30" />
           <p>Selecione um veiculo para ver o pipeline de leads</p>
-          <p className="text-xs mt-1 text-slate-700">Messenger -> WhatsApp -> Negociacao -> Visita -> Venda</p>
+          <p className="text-xs mt-1 text-slate-700">false</p>
         </div>
       )}
     </div>
