@@ -21,7 +21,7 @@ export function formatDate(date: string | Date): string {
 }
 
 export const PIPELINE_STATUS: Record<string, { label: string; color: string }> = {
-  disponivel: { label: 'Disponível', color: 'bg-green-500/15 text-green-400' },
+  disponivel: { label: 'Disponivel', color: 'bg-green-500/15 text-green-400' },
   contato_ativo: { label: 'Contato Ativo', color: 'bg-blue-500/15 text-blue-400' },
   proposta: { label: 'Proposta', color: 'bg-yellow-500/15 text-yellow-400' },
   vendido: { label: 'Vendido', color: 'bg-purple-500/15 text-purple-400' },
@@ -29,13 +29,15 @@ export const PIPELINE_STATUS: Record<string, { label: string; color: string }> =
 };
 
 export const LEAD_STATUS: Record<string, { label: string; color: string }> = {
-  novo: { label: 'Novo', color: 'bg-blue-500/15 text-blue-400' },
-  contatado: { label: 'Contatado', color: 'bg-yellow-500/15 text-yellow-400' },
-  interessado: { label: 'Interessado', color: 'bg-orange-500/15 text-orange-400' },
-  proposta_enviada: { label: 'Proposta Enviada', color: 'bg-purple-500/15 text-purple-400' },
-  fechado: { label: 'Fechado', color: 'bg-green-500/15 text-green-400' },
+  messenger: { label: 'Messenger', color: 'bg-indigo-500/15 text-indigo-400' },
+  whatsapp: { label: 'WhatsApp', color: 'bg-emerald-500/15 text-emerald-400' },
+  negociacao: { label: 'Negociacao', color: 'bg-amber-500/15 text-amber-400' },
+  visita: { label: 'Visita', color: 'bg-orange-500/15 text-orange-400' },
+  venda: { label: 'Venda', color: 'bg-green-500/15 text-green-400' },
   perdido: { label: 'Perdido', color: 'bg-red-500/15 text-red-400' },
 };
+
+export const LEAD_PIPELINE_ORDER = ['messenger', 'whatsapp', 'negociacao', 'visita', 'venda'] as const;
 
 export function getScoreColor(score: number): string {
   if (score >= 80) return 'text-green-400';
