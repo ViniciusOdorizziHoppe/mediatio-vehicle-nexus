@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { Car, DollarSign, Users, Clock, Target, Eye, AlertTriangle, TrendingUp } from 'lucide-react';
+import { Car, DollarSign, Users, Clock, Target, Eye, AlertTriangle, TrendingUp, Zap, MousePointer, BarChart3 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import api from '@/lib/api';
 import { getUser } from '@/lib/auth';
@@ -39,6 +39,12 @@ export default function Dashboard() {
   const totalVehicles = vehicleList.length;
   const totalLeads = leadList.length;
   const totalValor = vehicleList.reduce((s, v) => s + (v.precos?.venda || 0), 0);
+  const totalTurbinamento = vehicleList.reduce((s, v) => s + (v.marketing?.turbinamento || 0), 0);
+  const totalImpressoes = vehicleList.reduce((s, v) => s + (v.marketing?.impressoes || 0), 0);
+  const totalCliques = vehicleList.reduce((s, v) => s + (v.marketing?.cliques || 0), 0);
+  const totalContatos = vehicleList.reduce((s, v) => s + (v.marketing?.contatos || 0), 0);
+  const ctrGeral = totalImpressoes > 0 ? ((totalCliques / totalImpressoes) * 100).toFixed(1) : "0";
+  const cpcGeral = totalCliques > 0 ? (totalTurbinamento / totalCliques).toFixed(2) : "0";
   const spreadTotal = vehicleList.reduce((s, v) => s + Math.max(0, (v.precos?.venda || 0) - (v.precos?.compra || 0)), 0);
 
   const avgScore = totalVehicles > 0 ? Math.round(vehicleList.reduce((s, v) => s + (v.score?.valor || 0), 0) / totalVehicles) : 0;
