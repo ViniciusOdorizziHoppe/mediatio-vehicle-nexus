@@ -45,7 +45,7 @@ function calcProb(leads: number, preco: number, fipe?: number): number {
 // ─── DADOS INICIAIS ───────────────────────────────────────
 
 const VEICULOS: VeiculoPipeline[] = [
-  { id: "1", marca: "Chevrolet", modelo: "Astra 2009", ano: 2009, preco: 37000, fipe: 33000, turbinamento: 250, impressoes: 4800, cliques: 92, contatos: 5, diasNoAr: 6, fotos: true, leadsReais: [] },
+  { id: "1", marca: "Chevrolet", modelo: "Astra 2009", ano: 2009, preco: 37000, fipe: 33000, turbinamento: 1.11, impressoes: 828, cliques: 43, contatos: 0, diasNoAr: 2, fotos: true, leadsReais: [{ id: "lead1", veiculo: "Astra 2009", nome: "Marcio", whatsapp: "", origem: "messenger", estagio: "negociacao", criadoEm: "2026-05-18", notas: "Proposta: Palio 2012/2013 completo. Falta R$14.000 quitar. Troca com volta." }] },
   { id: "2", marca: "Volkswagen", modelo: "Polo 2018", ano: 2018, preco: 60000, fipe: 60000, turbinamento: 180, impressoes: 3200, cliques: 69, contatos: 4, diasNoAr: 5, fotos: true, leadsReais: [] },
   { id: "3", marca: "Volkswagen", modelo: "up! 2017", ano: 2017, preco: 56900, fipe: 45000, turbinamento: 150, impressoes: 2900, cliques: 57, contatos: 3, diasNoAr: 4, fotos: true, leadsReais: [] },
   { id: "4", marca: "Jeep", modelo: "Renegade 2018", ano: 2018, preco: 85000, fipe: 85000, turbinamento: 300, impressoes: 5100, cliques: 42, contatos: 2, diasNoAr: 3, fotos: true, leadsReais: [] },
@@ -88,7 +88,7 @@ export default function Pipeline() {
     setVeiculos(prev => prev.map(v => {
       if (v.id !== selectedVeiculo) return v;
       return { ...v, leadsReais: [...v.leadsReais, {
-        id: Math.random().toString(36).substr(2, 6), veiculo: v.modelo,
+        id: Math.random().toString(36).substring(2, 8), veiculo: v.modelo,
         nome: newLead.nome, whatsapp: newLead.whatsapp, origem: newLead.origem,
         estagio: "messenger", criadoEm: new Date().toISOString().split("T")[0], notas: newLead.notas
       }]};
