@@ -13,11 +13,11 @@ interface Lead {
 }
 
 const COLUNAS = [
-  { key: 'messenger', label: 'Messenger', icon: MessageCircle, color: 'border-indigo-500/50', bg: 'bg-indigo-500/5', dot: 'bg-indigo-400' },
-  { key: 'whatsapp', label: 'WhatsApp', icon: Phone, color: 'border-emerald-500/50', bg: 'bg-emerald-500/5', dot: 'bg-emerald-400' },
-  { key: 'negociacao', label: 'Negociacao', icon: DollarSign, color: 'border-amber-500/50', bg: 'bg-amber-500/5', dot: 'bg-amber-400' },
-  { key: 'visita', label: 'Visita', icon: Eye, color: 'border-orange-500/50', bg: 'bg-orange-500/5', dot: 'bg-orange-400' },
-  { key: 'venda', label: 'Venda', icon: CheckCircle, color: 'border-green-500/50', bg: 'bg-green-500/5', dot: 'bg-green-400' },
+  { key: 'novo', label: 'Novo', icon: MessageCircle, color: 'border-indigo-500/50', bg: 'bg-indigo-500/5', dot: 'bg-indigo-400' },
+  { key: 'contatado', label: 'Contatado', icon: Phone, color: 'border-emerald-500/50', bg: 'bg-emerald-500/5', dot: 'bg-emerald-400' },
+  { key: 'interessado', label: 'Interessado', icon: DollarSign, color: 'border-amber-500/50', bg: 'bg-amber-500/5', dot: 'bg-amber-400' },
+  { key: 'proposta_enviada', label: 'Proposta', icon: Eye, color: 'border-orange-500/50', bg: 'bg-orange-500/5', dot: 'bg-orange-400' },
+  { key: 'fechado', label: 'Fechado', icon: CheckCircle, color: 'border-green-500/50', bg: 'bg-green-500/5', dot: 'bg-green-400' },
   { key: 'perdido', label: 'Perdido', icon: XCircle, color: 'border-red-500/50', bg: 'bg-red-500/5', dot: 'bg-red-400' },
 ] as const;
 
