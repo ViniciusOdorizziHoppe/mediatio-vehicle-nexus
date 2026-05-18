@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useLeads, useCreateLead, useUpdateLeadStatus, useUpdateLead, useDeleteLead } from '@/hooks/useLeads';
-import { LEAD_STATUS } from '@/lib/utils';
+import { LEAD_STATUS, LEAD_PIPELINE_ORDER } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Search, Pencil, Trash2, Users, X, Loader2, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
@@ -77,8 +77,8 @@ export default function Leads() {
         className="flex items-center justify-between"
       >
         <div>
-          <h1 className="text-2xl font-bold text-slate-100">Leads (CRM)</h1>
-          <p className="text-sm text-slate-400 mt-1">Gerencie seus contatos e oportunidades</p>
+          <h1 className="text-2xl font-bold text-slate-100">Pipeline de Leads</h1>
+          <p className="text-sm text-slate-400 mt-1">Messenger -> WhatsApp -> Negociacao -> Visita -> Venda</p>
         </div>
         <button onClick={() => setShowForm(true)} className="btn-brand flex items-center gap-2 text-sm">
           <Plus className="w-4 h-4" /> Novo Lead
