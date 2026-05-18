@@ -14,14 +14,26 @@ interface Integration {
 export default function Settings() {
   const user = getUser();
   const [saved, setSaved] = useState('');
-  const [integrations, setIntegrations] = useState<Integration[]>([
+  const loadIntegrations = (): Integration[] => {
+    try {
+      const saved = localStorage.getItem("mediatio-integrations");
+      return saved ? JSON.parse(saved) : DEFAULT_INTEGRATIONS;
+    } catch { return DEFAULT_INTEGRATIONS; }
+  };
+  const DEFAULT_INTEGRATIONS: Integration[] = [
     { name: "Motor Match API", fields: [{ key: "url", label: "URL", placeholder: "https://api.motormatch.com" }], status: "idle" },
     { name: "Nexus / Dify", fields: [{ key: "url", label: "URL", placeholder: "https://dify.example.com" }, { key: "apiKey", label: "API Key", placeholder: "sk-..." }], status: "idle" },
     { name: "MORPH API", fields: [{ key: "url", label: "URL", placeholder: "https://morph.example.com" }], status: "idle" },
-  ]);
+];
+  const [integrations, setIntegrations] = useState<Integration[]>(loadIntegrations);
+
+  const persistIntegrations = (updated: Integration[]) => {
+    setIntegrations(updated);
+    localStorage.setItem("mediatio-integrations", JSON.stringify(updated));
+  };
 
   const testConnection = (index: number) => {
-    setIntegrations(prev => prev.map((ig, i) => i === index ? { ...ig, status: (Math.random() > 0.3 ? "ok" : "error") as any } : ig));
+    persistIntegrations(integrations.map((ig, i) => i === index ? { ...ig, status: (Math.random() > 0.3 ? "ok" : "error") as any } : ig));
   };
 
   const handleSave = (section: string) => {
