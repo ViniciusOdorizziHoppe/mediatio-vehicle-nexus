@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { Car, DollarSign, Users, Clock, Target, Eye, AlertTriangle, TrendingUp, Zap, MousePointer, BarChart3 } from 'lucide-react';
+import { Car, DollarSign, Users, Clock, Target, Eye, AlertTriangle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import api from '@/lib/api';
 import { getUser } from '@/lib/auth';
