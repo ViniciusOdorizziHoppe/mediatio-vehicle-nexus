@@ -9,14 +9,18 @@ import Dashboard from "./pages/Dashboard";
 import Vehicles from "./pages/Vehicles";
 import VehicleForm from "./pages/VehicleForm";
 import VehicleDetail from "./pages/VehicleDetail";
-import NexusChat from "./pages/NexusChat";
+import Morph from "./pages/Morph";
 import Schedule from "./pages/Schedule";
-import MorphPhotos from "./pages/MorphPhotos";
 import Analytics from "./pages/Analytics";
 import Leads from "./pages/Leads";
 import Settings from "./pages/Settings";
 import Pipeline from "./pages/Pipeline";
 import Anuncios from "./pages/Anuncios";
+<<<<<<< HEAD
+=======
+import Integrations from "./pages/Integrations";
+import Concessionarias from "./pages/Concessionarias";
+>>>>>>> b8c89d1d8d05ce4ca43de3d05b69490593f6c4ce
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
@@ -46,13 +50,18 @@ const App = () => (
             <Route path="/vehicles/new" element={<ErrorBoundary><VehicleForm /></ErrorBoundary>} />
             <Route path="/vehicles/:id" element={<ErrorBoundary><VehicleDetail /></ErrorBoundary>} />
             <Route path="/vehicles/:id/edit" element={<ErrorBoundary><VehicleForm /></ErrorBoundary>} />
-            <Route path="/nexus-chat" element={<ErrorBoundary><NexusChat /></ErrorBoundary>} />
+            <Route path="/nexus-chat" element={<ErrorBoundary><Morph /></ErrorBoundary>} />
+            <Route path="/morph" element={<ErrorBoundary><Morph /></ErrorBoundary>} />
             <Route path="/schedule" element={<ErrorBoundary><Schedule /></ErrorBoundary>} />
-            <Route path="/morph" element={<ErrorBoundary><MorphPhotos /></ErrorBoundary>} />
             <Route path="/analytics" element={<ErrorBoundary><Analytics /></ErrorBoundary>} />
             <Route path="/leads" element={<ErrorBoundary><Leads /></ErrorBoundary>} />
             <Route path="/pipeline" element={<ErrorBoundary><Pipeline /></ErrorBoundary>} />
             <Route path="/anuncios" element={<ErrorBoundary><Anuncios /></ErrorBoundary>} />
+<<<<<<< HEAD
+=======
+            <Route path="/concessionarias" element={<ErrorBoundary><Concessionarias /></ErrorBoundary>} />
+            <Route path="/integrations" element={<ErrorBoundary><Integrations /></ErrorBoundary>} />
+>>>>>>> b8c89d1d8d05ce4ca43de3d05b69490593f6c4ce
             <Route path="/settings" element={<ErrorBoundary><Settings /></ErrorBoundary>} />
           </Route>
           <Route path="*" element={<NotFound />} />

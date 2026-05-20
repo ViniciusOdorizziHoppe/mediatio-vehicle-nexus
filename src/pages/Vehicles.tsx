@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Plus, Search, Eye, Pencil, Trash2, Car, Download, Filter } from 'lucide-react';
+import { Plus, Search, Eye, Pencil, Trash2, Car, Download, Filter, BarChart3, MousePointer } from 'lucide-react';
 
 import { useVehicles, useDeleteVehicle, type Vehicle } from '@/hooks/useVehicles';
 import { formatCurrency, formatKm, PIPELINE_STATUS, getScoreColor } from '@/lib/utils';
@@ -11,12 +11,14 @@ export default function Vehicles() {
   const [status, setStatus] = useState('');
   const [tipo, setTipo] = useState('');
   const [minScore, setMinScore] = useState('');
+  const [origem, setOrigem] = useState('');
 
   const params: any = {};
   if (search) params.search = search;
   if (status) params.status = status;
   if (tipo) params.tipo = tipo;
   if (minScore) params.minScore = minScore;
+  if (origem) params.origem = origem;
 
   const { data, isLoading, error } = useVehicles(params);
   const deleteVehicle = useDeleteVehicle();
@@ -29,7 +31,7 @@ export default function Vehicles() {
   };
 
   const exportCSV = () => {
-    const headers = ['Codigo', 'Marca', 'Modelo', 'Ano', 'Cor', 'KM', 'Preco Venda', 'Preco Compra', 'Spread', 'Status', 'Score', 'Cidade', 'Fotos', 'Leads'];
+    const headers = ['Codigo', 'Marca', 'Modelo', 'Ano', 'Cor', 'KM', 'Preco Venda', 'Preco Compra', 'Spread', 'Status', 'Score', 'Cidade', 'Fotos', 'Leads', 'Turbinamento', 'Impressoes', 'Cliques', 'Contatos', 'CTR', 'CPC'];
     const rows = vehicles.map((v: Vehicle) => [
       v.codigo,
       v.marca,
@@ -45,6 +47,12 @@ export default function Vehicles() {
       v.proprietario?.cidade || '',
       v.fotos?.originais?.length || 0,
       v.leads?.length || 0,
+      v.marketing?.turbinamento || 0,
+      v.marketing?.impressoes || 0,
+      v.marketing?.cliques || 0,
+      v.marketing?.contatos || 0,
+      v.marketing?.impressoes > 0 ? ((v.marketing?.cliques || 0) / v.marketing?.impressoes * 100).toFixed(1) + '%' : '0%',
+      v.marketing?.cliques > 0 ? 'R$ ' + ((v.marketing?.turbinamento || 0) / v.marketing?.cliques).toFixed(2) : 'R$ 0',
     ]);
     const csv = [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
@@ -139,6 +147,13 @@ export default function Vehicles() {
           <option value="40">Score 40+</option>
           <option value="0">Score baixo (&lt;40)</option>
         </select>
+
+        <select value={origem} onChange={e => setOrigem(e.target.value)}
+          className="input-dark w-auto min-w-[150px]">
+          <option value="">Origem: todas</option>
+          <option value="particular">Particular</option>
+          <option value="concessionaria">Concessionaria</option>
+        </select>
       </motion.div>
 
       {/* Loading */}
@@ -210,6 +225,11 @@ export default function Vehicles() {
 
                         <td className="px-5 py-4 text-sm font-semibold text-slate-200">
                           {formatCurrency(vehicle.precos.venda)}
+                          {vehicle.precos?.fipeReferencia && (
+                            <span className={`text-[10px] ml-1 ${vehicle.precos.fipeReferencia >= vehicle.precos.venda ? 'text-green-400' : 'text-yellow-400'}`}>
+                              {Math.round(((vehicle.precos.venda - vehicle.precos.fipeReferencia) / vehicle.precos.fipeReferencia) * 100)}%
+                            </span>
+                          )}
                         </td>
 
                         <td className="px-5 py-4 text-sm text-slate-400">

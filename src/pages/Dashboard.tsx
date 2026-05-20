@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { Car, DollarSign, Users, Clock, Target, Eye, AlertTriangle, TrendingUp } from 'lucide-react';
+import { Car, DollarSign, Users, Clock, Target, Eye, AlertTriangle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import api from '@/lib/api';
 import { getUser } from '@/lib/auth';
@@ -12,10 +12,9 @@ import { useMetaAds } from '@/hooks/useMetaAds';
 import { GlowCard } from '@/components/ui/GlowCard';
 import { PageSkeleton } from '@/components/ui/PageSkeleton';
 import { StatusBadge } from '@/components/ui/StatusBadge';
-import { geocodeVehicles, getCityCoords, VehicleMapData } from '@/lib/geocoding';
-
-// Lazy load do mapa (evita erro se leaflet nao disponivel)
-let DashboardMap: any = null;
+import { geocodeVehicles, getCityCoords } from '@/lib/geocoding';
+import FipeBadge from '@/components/ui/FipeBadge';
+import CityMap from '@/components/map/CityMap';
 
 const STATUS_LABELS: Record<string, string> = {
   disponivel: 'Disponivel', contato_ativo: 'Contato Ativo', proposta: 'Proposta',
@@ -37,22 +36,22 @@ export default function Dashboard() {
   const vehicleList: any[] = useMemo(() => vehicles || [], [vehicles]);
   const leadList: any[] = useMemo(() => leads || [], [leads]);
 
-  // Try lazy load map component
-  if (!DashboardMap) {
-    try { DashboardMap = require('@/components/map/DashboardMap').default; } catch {}
-  }
-
   // ===== CALCULOS =====
   const totalVehicles = vehicleList.length;
   const totalLeads = leadList.length;
   const totalValor = vehicleList.reduce((s, v) => s + (v.precos?.venda || 0), 0);
+  const totalTurbinamento = vehicleList.reduce((s, v) => s + (v.marketing?.turbinamento || 0), 0);
+  const totalImpressoes = vehicleList.reduce((s, v) => s + (v.marketing?.impressoes || 0), 0);
+  const totalCliques = vehicleList.reduce((s, v) => s + (v.marketing?.cliques || 0), 0);
+  const totalContatos = vehicleList.reduce((s, v) => s + (v.marketing?.contatos || 0), 0);
+  const ctrGeral = totalImpressoes > 0 ? ((totalCliques / totalImpressoes) * 100).toFixed(1) : "0";
+  const cpcGeral = totalCliques > 0 ? (totalTurbinamento / totalCliques).toFixed(2) : "0";
   const spreadTotal = vehicleList.reduce((s, v) => s + Math.max(0, (v.precos?.venda || 0) - (v.precos?.compra || 0)), 0);
 
   const avgScore = totalVehicles > 0 ? Math.round(vehicleList.reduce((s, v) => s + (v.score?.valor || 0), 0) / totalVehicles) : 0;
   const withPhotos = vehicleList.filter(v => (v.fotos?.originais?.length || 0) > 0 || v.fotos?.principal).length;
   const activeNeg = vehicleList.filter(v => v.pipeline?.status === 'contato_ativo' || v.pipeline?.status === 'proposta').length;
-  const totalCliques = vehicleList.reduce((s, v) => s + (v.anuncio?.cliques || 0), 0);
-  const criticalVehicles = vehicleList.filter(v => (v.score?.valor || 0) < 35).length;
+    const criticalVehicles = vehicleList.filter(v => (v.score?.valor || 0) < 35).length;
   const leadsFechados = leadList.filter(l => l.status === 'fechado').length;
   const conversao = totalLeads > 0 ? Math.round((leadsFechados / totalLeads) * 100) : 0;
 
@@ -126,12 +125,23 @@ export default function Dashboard() {
             {totalVehicles} veiculos &middot; {formatCurrency(totalValor)} em carteira &middot; {activeNeg} em negociacao
           </p>
         </div>
-        {criticalVehicles > 0 && (
-          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20">
-            <AlertTriangle className="w-4 h-4 text-red-400" />
-            <span className="text-red-400 text-sm font-medium">{criticalVehicles} veiculo(s) critico(s)</span>
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          {/* Alerta de sazonalidade */}
+          {(() => {
+            const m = new Date().getMonth();
+            if (m === 0 || m === 1 || m === 11) return <span className="px-2 py-1 rounded bg-green-500/10 text-green-400 text-xs border border-green-500/20">Alta temporada</span>;
+            if (m === 4 || m === 5) return <span className="px-2 py-1 rounded bg-yellow-500/10 text-yellow-400 text-xs border border-yellow-500/20">Baixa temporada</span>;
+            if (m === 6) return <span className="px-2 py-1 rounded bg-blue-500/10 text-blue-400 text-xs border border-blue-500/20">Ferias escolares</span>;
+            if (m >= 7 && m <= 9) return <span className="px-2 py-1 rounded bg-green-500/10 text-green-400 text-xs border border-green-500/20">Boa temporada</span>;
+            return null;
+          })()}
+          {criticalVehicles > 0 && (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20">
+              <AlertTriangle className="w-4 h-4 text-red-400" />
+              <span className="text-red-400 text-sm font-medium">{criticalVehicles} veiculo(s) critico(s)</span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* KPI Row 1 */}
@@ -201,16 +211,10 @@ export default function Dashboard() {
           )}
         </GlowCard>
 
-        {/* Mapa */}
+        {/* Mapa de Cidades */}
         <GlowCard>
           <h2 className="text-base font-semibold text-white mb-3">Mapa de Atividade</h2>
-          {DashboardMap ? (
-            <DashboardMap vehicles={mapVehicles} leads={mapLeads} isLoading={false} />
-          ) : (
-            <div className="bg-slate-800/50 rounded-lg h-[250px] flex items-center justify-center">
-              <p className="text-slate-400 text-sm">Mapa indisponivel</p>
-            </div>
-          )}
+          <CityMap vehicles={mapVehicles} leads={mapLeads} isLoading={false} />
         </GlowCard>
       </div>
 
@@ -279,7 +283,10 @@ export default function Dashboard() {
                   </div>
                   <div className="text-right ml-3">
                     <p className="text-green-400 text-sm font-semibold">{formatCurrency(v.precos?.venda || 0)}</p>
-                    <StatusBadge status={v.pipeline?.status} />
+                    <div className="flex items-center gap-1 justify-end mt-0.5">
+                      <FipeBadge precoVenda={v.precos?.venda} fipeReferencia={v.precos?.fipeReferencia} />
+                      <StatusBadge status={v.pipeline?.status} />
+                    </div>
                   </div>
                 </Link>
               ))}
