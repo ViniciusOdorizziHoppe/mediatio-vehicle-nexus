@@ -16,11 +16,6 @@ import Leads from "./pages/Leads";
 import Settings from "./pages/Settings";
 import Pipeline from "./pages/Pipeline";
 import Anuncios from "./pages/Anuncios";
-<<<<<<< HEAD
-=======
-import Integrations from "./pages/Integrations";
-import Concessionarias from "./pages/Concessionarias";
->>>>>>> b8c89d1d8d05ce4ca43de3d05b69490593f6c4ce
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
@@ -57,11 +52,6 @@ const App = () => (
             <Route path="/leads" element={<ErrorBoundary><Leads /></ErrorBoundary>} />
             <Route path="/pipeline" element={<ErrorBoundary><Pipeline /></ErrorBoundary>} />
             <Route path="/anuncios" element={<ErrorBoundary><Anuncios /></ErrorBoundary>} />
-<<<<<<< HEAD
-=======
-            <Route path="/concessionarias" element={<ErrorBoundary><Concessionarias /></ErrorBoundary>} />
-            <Route path="/integrations" element={<ErrorBoundary><Integrations /></ErrorBoundary>} />
->>>>>>> b8c89d1d8d05ce4ca43de3d05b69490593f6c4ce
             <Route path="/settings" element={<ErrorBoundary><Settings /></ErrorBoundary>} />
           </Route>
           <Route path="*" element={<NotFound />} />
