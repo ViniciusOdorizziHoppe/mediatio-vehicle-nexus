@@ -12,7 +12,7 @@ export default function VehicleForm() {
   const navigate = useNavigate();
   const isEdit = !!id;
 
-  const { data: existingData } = useVehicle(id);
+  const { data: existingData } = useVehicle(id || '');
   const createMutation = useCreateVehicle();
   const updateMutation = useUpdateVehicle();
 
@@ -108,7 +108,7 @@ export default function VehicleForm() {
     };
     try {
       if (isEdit && id) {
-        await updateMutation.mutateAsync({ id, ...payload });
+        await updateMutation.mutateAsync({ id, data: payload });
         toast.success('Veículo atualizado com sucesso!');
       } else {
         await createMutation.mutateAsync(payload);
