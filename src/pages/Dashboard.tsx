@@ -8,6 +8,7 @@ import { getUser } from '@/lib/auth';
 import { formatCurrency, getScoreColor } from '@/lib/utils';
 import { useVehicles } from '@/hooks/useVehicles';
 import { useLeads } from '@/hooks/useLeads';
+import { useMetaAds } from '@/hooks/useMetaAds';
 import { GlowCard } from '@/components/ui/GlowCard';
 import { PageSkeleton } from '@/components/ui/PageSkeleton';
 import { StatusBadge } from '@/components/ui/StatusBadge';

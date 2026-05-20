@@ -8,7 +8,7 @@ import { toast } from "sonner";
 
 export default function MorphPhotos() {
   const { data: vehiclesData } = useVehicles();
-  const vehicles = Array.isArray(vehiclesData) ? vehiclesData : vehiclesData?.data || [];
+  const vehicles = Array.isArray(vehiclesData) ? vehiclesData : [];
 
   const [processing, setProcessing] = useState(false);
   const [enhanced, setEnhanced] = useState(false);
@@ -25,13 +25,18 @@ export default function MorphPhotos() {
     `${v.marca} ${v.modelo}`.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleEnhance = () => {
+  const handleEnhance = async () => {
     setProcessing(true);
-    setTimeout(() => {
-      setProcessing(false);
+    try {
+      const api = (await import('@/lib/api')).default;
+      await api.post('/morph/enhance', { vehicleId: selectedVehicle });
       setEnhanced(true);
       toast.success("Foto melhorada com IA!");
-    }, 2500);
+    } catch {
+      toast.error("Erro ao processar foto. Tente novamente.");
+    } finally {
+      setProcessing(false);
+    }
   };
 
   return (
