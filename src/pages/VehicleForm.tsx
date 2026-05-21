@@ -85,12 +85,6 @@ export default function VehicleForm() {
         compra: form.precos.compra ? Number(form.precos.compra) : undefined,
         venda: Number(form.precos.venda),
         minimo: form.precos.minimo ? Number(form.precos.minimo) : undefined,
-        marketing: {
-          turbinamento: form.marketing.turbinamento ? Number(form.marketing.turbinamento) : undefined,
-          impressoes: form.marketing.impressoes ? Number(form.marketing.impressoes) : undefined,
-          cliques: form.marketing.cliques ? Number(form.marketing.cliques) : undefined,
-          contatos: form.marketing.contatos ? Number(form.marketing.contatos) : undefined,
-        },
       },
       condicoes: form.condicoes,
       proprietario: form.proprietario,
