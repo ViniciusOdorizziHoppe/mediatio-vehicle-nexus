@@ -10,6 +10,7 @@ import Vehicles from "./pages/Vehicles";
 import VehicleForm from "./pages/VehicleForm";
 import VehicleDetail from "./pages/VehicleDetail";
 import MorphPhotos from "./pages/MorphPhotos";
+import Turbinamentos from "./pages/Turbinamentos";
 import Schedule from "./pages/Schedule";
 import Analytics from "./pages/Analytics";
 import Leads from "./pages/Leads";
@@ -53,6 +54,7 @@ const App = () => (
             <Route path="/leads" element={<ErrorBoundary><Leads /></ErrorBoundary>} />
             <Route path="/pipeline" element={<ErrorBoundary><Pipeline /></ErrorBoundary>} />
             <Route path="/anuncios" element={<ErrorBoundary><Anuncios /></ErrorBoundary>} />
+            <Route path="/turbinamentos" element={<ErrorBoundary><Turbinamentos /></ErrorBoundary>} />
             <Route path="/concessionarias" element={<ErrorBoundary><Concessionarias /></ErrorBoundary>} />
             <Route path="/settings" element={<ErrorBoundary><Settings /></ErrorBoundary>} />
           </Route>
